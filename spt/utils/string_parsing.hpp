@@ -71,9 +71,9 @@ inline T ParseValue(std::string s)
 {
 	T result = 0;
 	std::stringstream ss(s);
-	ss >> result;
+	bool success = bool(ss >> result);
 	
-	if (ss.good() || s.empty() || (result == 0 && ss.tellg() != -1))
+	if (!success)
 	{
 		std::ostringstream oss;
 		oss << "Unable to parse value " << s << " \n";

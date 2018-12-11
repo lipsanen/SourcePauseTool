@@ -42,6 +42,11 @@ void __cdecl EngineDLL::HOOKED__Host_RunFrame_Server(int bFinalTick)
 	return engineDLL.HOOKED__Host_RunFrame_Server_Func(bFinalTick);
 }
 
+void __cdecl EngineDLL::HOOKED_Host_AccumulateTime(float dt)
+{
+	engineDLL.HOOKED_Host_AccumulateTime_Func(dt);
+}
+
 void __cdecl EngineDLL::HOOKED_Cbuf_Execute()
 {
 	return engineDLL.HOOKED_Cbuf_Execute_Func();
@@ -63,13 +68,19 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		pFinishRestore = NULL,
 		pSetPaused = NULL,
 		pMiddleOfSV_InitGameDLL = NULL,
-		pRecord = NULL;
+		pRecord = NULL,
+		pHost_AccumulateTime = NULL,
+		pMiddle_Of_Host_AccumulateTime = NULL,
+		p_Host_RunFrame = NULL;
 
 	auto fActivateServer = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsSV_ActivateServer, &pSV_ActivateServer);
 	auto fFinishRestore = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsFinishRestore, &pFinishRestore);
 	auto fSetPaused = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsSetPaused, &pSetPaused);
 	auto fMiddleOfSV_InitGameDLL = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsMiddleOfSV_InitGameDLL, &pMiddleOfSV_InitGameDLL);
 	auto fRecord = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsRecord, &pRecord);
+	auto fHost_AccumulateTime = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsHost_AccumulateTime, &pHost_AccumulateTime);
+	auto f_Host_RunFrame = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptns_Host_RunFrame, &p_Host_RunFrame);
+
 
 	// m_bLoadgame and pGameServer (&sv)
 	ptnNumber = MemUtils::FindUniqueSequence(moduleStart, moduleLength, Patterns::ptnsSpawnPlayer, &pSpawnPlayer);
@@ -212,6 +223,36 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		EngineWarning("y_spt_pause_demo_on_tick is not available.\n");
 	}
 
+	ptnNumber = fHost_AccumulateTime.get();
+	if (pHost_AccumulateTime)
+	{
+		pHost_Realtime = *reinterpret_cast<float**>(pHost_AccumulateTime + 5);
+		ORIG_Host_AccumulateTime = (_Host_AccumulateTime)pHost_AccumulateTime;
+
+		EngineDevMsg("Found Host_AccumulateTime at %p (using the build %s pattern).\n", pHost_AccumulateTime, Patterns::ptnsHost_AccumulateTime[ptnNumber].build.c_str());
+		EngineDevMsg("Found realtime at %p.\n", pHost_Realtime);
+	}
+	else
+	{
+		EngineDevWarning("Could not find record!\n");
+		EngineWarning("y_spt_pause_demo_on_tick is not available.\n");
+	}
+
+	ptnNumber = f_Host_RunFrame.get();
+	if (p_Host_RunFrame)
+	{
+		pHost_Frametime = *reinterpret_cast<float**>(p_Host_RunFrame + 227);
+		pM_nSignonState = *reinterpret_cast<int**>(p_Host_RunFrame + 438);
+
+		EngineDevMsg("Found _Host_RunFrame at %p (using the build %s pattern).\n", p_Host_RunFrame, Patterns::ptns_Host_RunFrame[ptnNumber].build.c_str());
+		EngineDevMsg("Found host_Frametime at %p.\n", pHost_Frametime);
+	}
+	else
+	{
+		EngineDevWarning("Could not find _Host_RunFrame!\n");
+	}
+
+
 	DetoursUtils::AttachDetours(moduleName, {
 		{ (PVOID *)(&ORIG_SV_ActivateServer), HOOKED_SV_ActivateServer },
 		{ (PVOID *)(&ORIG_FinishRestore), HOOKED_FinishRestore },
@@ -219,6 +260,7 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		{ (PVOID *)(&ORIG__Host_RunFrame), HOOKED__Host_RunFrame },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Input), HOOKED__Host_RunFrame_Input },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
+		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
 		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute }
 	});
 }
@@ -232,6 +274,7 @@ void EngineDLL::Unhook()
 		{ (PVOID *)(&ORIG__Host_RunFrame), HOOKED__Host_RunFrame },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Input), HOOKED__Host_RunFrame_Input },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
+		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
 		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute }
 	});
 
@@ -247,6 +290,7 @@ void EngineDLL::Clear()
 	ORIG__Host_RunFrame = nullptr;
 	ORIG__Host_RunFrame_Input = nullptr;
 	ORIG__Host_RunFrame_Server = nullptr;
+	ORIG_Host_AccumulateTime = nullptr;
 	ORIG_Cbuf_Execute = nullptr;
 	pGameServer = nullptr;
 	pM_bLoadgame = nullptr;
@@ -307,6 +351,7 @@ bool EngineDLL::Demo_IsPlaybackPaused() const
 bool __cdecl EngineDLL::HOOKED_SV_ActivateServer_Func()
 {
 	bool result = ORIG_SV_ActivateServer();
+	tas_pause.SetValue(0);
 
 	EngineDevMsg("Engine call: SV_ActivateServer() => %s;\n", (result ? "true" : "false"));
 
@@ -323,6 +368,7 @@ bool __cdecl EngineDLL::HOOKED_SV_ActivateServer_Func()
 
 	if (_y_spt_afterframes_reset_on_server_activate.GetBool())
 		clientDLL.ResetAfterframesQueue();
+		
 
 	return result;
 }
@@ -403,6 +449,17 @@ void __cdecl EngineDLL::HOOKED__Host_RunFrame_Server_Func(int bFinalTick)
 	ORIG__Host_RunFrame_Server(bFinalTick);
 
 	EngineDevMsg("_Host_RunFrame_Server end.\n");
+}
+
+void __cdecl EngineDLL::HOOKED_Host_AccumulateTime_Func(float dt)
+{
+	if (tas_pause.GetBool())
+	{
+		*pHost_Realtime += dt;
+		*pHost_Frametime = 0;
+	}
+	else
+		ORIG_Host_AccumulateTime(dt);
 }
 
 void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()

@@ -26,6 +26,8 @@
 // https://github.com/HLTAS/hlstrafe
 
 static const constexpr double SAFEGUARD_THETA_DIFFERENCE_RAD = M_PI / 65536;
+static float lastYaw = 0;
+static bool jumpedLastTick = false;
 
 // Convert both arguments to doubles.
 inline double Atan2(double a, double b)
@@ -252,11 +254,11 @@ void MapSpeeds(ProcessedFrame &out, const MovementVars& vars)
 	}
 }
 
-bool StrafeJump(PlayerData& player, const MovementVars& vars, bool ducking, ProcessedFrame& out)
+bool StrafeJump(PlayerData& player, const MovementVars& vars, bool ducking, ProcessedFrame& out, float yaw)
 {
 	if (tas_strafe_jumptype.GetInt() == 2) {
 		// OE bhop
-		out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat());
+		out.Yaw = NormalizeDeg(yaw);
 		out.Forward = false;
 		out.Back = false;
 		out.Right = false;
@@ -265,7 +267,7 @@ bool StrafeJump(PlayerData& player, const MovementVars& vars, bool ducking, Proc
 	} else if (player.Velocity.Length2D() >= vars.Maxspeed * ((ducking || (vars.Maxspeed == 320)) ? 0.1 : 0.5)) {
 		if (tas_strafe_jumptype.GetInt() == 1) {
 			// ABH
-			out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat() + 180);
+			out.Yaw = NormalizeDeg(yaw + 180);
 			out.Forward = false;
 			out.Back = false;
 			out.Right = false;
@@ -289,28 +291,49 @@ bool StrafeJump(PlayerData& player, const MovementVars& vars, bool ducking, Proc
 
 void StrafeVectorial(PlayerData& player, const MovementVars& vars, bool onground, bool jumped, bool ducking, StrafeType type, StrafeDir dir, double target_yaw, double vel_yaw, ProcessedFrame& out, bool reduceWishspeed, bool yawChanged)
 {
-	if (jumped && StrafeJump(player, vars, ducking, out)) {
+	double offset;
+	double increment;
+	if (tas_strafe_yaw_is_offset.GetBool())
+	{
+		if (jumpedLastTick)
+		{
+			vel_yaw = lastYaw;
+		}
+
+		offset = target_yaw;
+		target_yaw = NormalizeDeg(vel_yaw + target_yaw);
+		increment = 0;
+	}
+	else
+	{
+		offset = tas_strafe_vectorial_offset.GetFloat();
+		increment = tas_strafe_vectorial_increment.GetFloat();
+	}
+
+	if (jumped && StrafeJump(player, vars, ducking, out, target_yaw)) {
 		if (!yawChanged || tas_strafe_allow_jump_override.GetBool())
 		{
 			out.Processed = true;
 			MapSpeeds(out, vars);
 		}
 
+		jumpedLastTick = true;
 		return;
 	}
 
+	jumpedLastTick = false;
 	ProcessedFrame dummy;
 	Strafe(player, vars, onground, jumped, ducking, type, dir, target_yaw, vel_yaw, dummy, reduceWishspeed, StrafeButtons(), true); // Get the desired strafe direction by calling the Strafe function while using forward strafe buttons
 
 	// If forward is pressed, strafing should occur
 	if (dummy.Forward)
 	{
-		if (!yawChanged && tas_strafe_vectorial_increment.GetFloat() > 0)
+		if (!yawChanged && increment > 0)
 		{
 			// Calculate updated yaw
-			double adjustedTarget = NormalizeDeg(target_yaw + tas_strafe_vectorial_offset.GetFloat());
+			double adjustedTarget = NormalizeDeg(target_yaw + offset);
 			double normalizedDiff = NormalizeDeg(adjustedTarget - vel_yaw);
-			double additionAbs = std::min(static_cast<double>(tas_strafe_vectorial_increment.GetFloat()), std::abs(normalizedDiff));
+			double additionAbs = std::min(static_cast<double>(increment), std::abs(normalizedDiff));
 
 			// Snap to target if difference too large (likely due to an ABH)
 			if (std::abs(normalizedDiff) > tas_strafe_vectorial_snap.GetFloat())
@@ -322,11 +345,12 @@ void StrafeVectorial(PlayerData& player, const MovementVars& vars, bool onground
 			out.Yaw = vel_yaw;
 
 		// Set move speeds to match the current yaw to produce the acceleration in direction thetaDeg
-		double thetaDeg = dummy.Yaw;
+		double thetaDeg = dummy.Yaw;	
 		double diff = (out.Yaw - thetaDeg) * M_DEG2RAD;
 		out.ForwardSpeed = static_cast<float>(std::cos(diff) * vars.Maxspeed);
 		out.SideSpeed = static_cast<float>(std::sin(diff) * vars.Maxspeed);
 		out.Processed = true;
+		lastYaw = out.Yaw;
 	}
 }
 
@@ -334,7 +358,7 @@ void StrafeVectorial(PlayerData& player, const MovementVars& vars, bool onground
 bool Strafe(PlayerData& player, const MovementVars& vars, bool onground, bool jumped, bool ducking, StrafeType type, StrafeDir dir, double target_yaw, double vel_yaw, ProcessedFrame& out, bool reduceWishspeed, const StrafeButtons& strafeButtons, bool useGivenButtons)
 {
 	//DevMsg("[Strafing] ducking = %d\n", (int)ducking);
-	if (jumped && StrafeJump(player, vars, ducking, out)) {
+	if (jumped && StrafeJump(player, vars, ducking, out, target_yaw)) {
 		out.Processed = true;
 		MapSpeeds(out, vars);
 

@@ -24,18 +24,18 @@ namespace scripts
 	{
 		if (output.ticks >= 0)
 		{
-			AddAfterFramesEntry(afterFramesTick, output.initialCommand);
-			AddAfterFramesEntry(afterFramesTick, output.repeatingCommand);
+			AddAfterFramesEntry(afterFramesTick, output.getInitialCommand());
+			AddAfterFramesEntry(afterFramesTick, output.getRepeatingCommand());
 
 			for (int i = 1; i < output.ticks; ++i)
-				AddAfterFramesEntry(afterFramesTick + i, output.repeatingCommand);
+				AddAfterFramesEntry(afterFramesTick + i, output.getRepeatingCommand());
 
 			afterFramesTick += output.ticks;
 		}
 		else if (output.ticks == NO_AFTERFRAMES_BULK)
 		{
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.initialCommand);
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.repeatingCommand);
+			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getInitialCommand());
+			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getRepeatingCommand());
 		}
 		else
 		{

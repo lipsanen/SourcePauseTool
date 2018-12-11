@@ -261,6 +261,28 @@ namespace Patterns
 		}
 	};
 
+	const MemUtils::ptnvec ptnsHost_AccumulateTime =
+	{
+		{
+			"5135",
+			{
+				0x51, 0xF3, 0x0F, 0x10, '?', '?', '?', '?', '?', 0xF3, 0x0F, '?', '?', '?', '?', 0x8B, '?', '?', '?', '?', '?', 0xF3, 0x0F, 0x11, '?', '?', '?', '?', '?', 0x8B, 0x01, 0x8B, 0x50
+			},
+			"xxxx?????xx????x?????xxx?????xxxx"
+		}
+	};
+
+	const MemUtils::ptnvec ptnsMiddle_Of_Host_AccumulateTime =
+	{
+		{
+			"5135",
+			{
+				 0xA1, '?', '?', '?', '?', 0xF3, 0x0F, 0x11, '?', '?', '?', '?', '?', 0xF3, 0x0F, 0x10, '?', '?', 0x0F, '?', '?', '?', '?', '?', '?', 0x5B, 0x76, 0x5A, 0x8B, 0x0D, '?', '?', '?', '?', 0x83, 0x79, 0x30, 0x00, 0x75, 0x1A, 0xE8, '?', '?', '?', '?', 0x84, 0xC0, 0x75, 0x11
+			},
+			"x????xxx?????xxx??x??????xxxxx????xxxxxxx????xxxx"
+		}
+	};
+
 	// client.dll patterns
 	const MemUtils::ptnvec ptnsDoImageSpaceMotionBlur =
 	{
