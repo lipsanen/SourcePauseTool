@@ -11,6 +11,7 @@ namespace scripts
 	const std::string FIELD1_FILLED = "flrbud";
 	const std::string FIELD2_FILLED = "jdu12rws";
 	const std::string EMPTY_FIELD = "-";
+	const std::string NOOP_FIELD = ">";
 	const char WILDCARD = '*';
 	const char DELIMITER = '|';
 
@@ -131,8 +132,7 @@ namespace scripts
 	void Field7(FrameBulkInfo& frameBulkInfo)
 	{
 		if (!frameBulkInfo[COMMANDS].empty())
-			frameBulkInfo.data.repeatingCommand.push_back(';');
-			frameBulkInfo.data.repeatingCommand += frameBulkInfo[COMMANDS];
+			frameBulkInfo.data.AddRepeatingCommand(frameBulkInfo[COMMANDS]);
 	}
 
 	void ValidateFieldFlags(FrameBulkInfo& frameBulkInfo)
@@ -175,6 +175,12 @@ namespace scripts
 		initialCommand.push_back(';');
 		initialCommand.push_back(initChar);
 		initialCommand += newCmd;
+	}
+
+	void FrameBulkOutput::AddRepeatingCommand(const std::string & newCmd)
+	{
+		repeatingCommand.push_back(';');
+		repeatingCommand += newCmd;
 	}
 
 	FrameBulkInfo::FrameBulkInfo(std::istringstream& stream)
@@ -226,12 +232,38 @@ namespace scripts
 		return IsValue<float>(value);
 	}
 
+	void FrameBulkInfo::AddCommand(const std::string & cmd)
+	{
+		data.AddCommand(cmd);
+	}
+
+	void FrameBulkInfo::AddCommand(const std::string & cmd, const std::pair<int, int>& field)
+	{
+		if (NoopField(field))
+			return;
+
+		AddCommand(cmd);
+	}
+
 	void FrameBulkInfo::AddPlusMinusCmd(const std::string& command, bool set)
 	{
 		if (set)
 			data.AddCommand('+', command);
 		else
 			data.AddCommand('-', command);
+	}
+
+	void FrameBulkInfo::AddPlusMinusCmd(const std::string & command, bool set, const std::pair<int, int>& field)
+	{
+		if (NoopField(field))
+			return;
+
+		AddPlusMinusCmd(command, set);
+	}
+
+	bool FrameBulkInfo::NoopField(const std::pair<int, int>& field)
+	{
+		return dataMap.find(field) == dataMap.end() || this->operator[](field) == NOOP_FIELD;
 	}
 
 	void FrameBulkInfo::ValidateFieldFlags(FrameBulkInfo& frameBulkInfo, const std::string& fields, int index)
