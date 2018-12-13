@@ -28,7 +28,9 @@ namespace scripts
 		const std::string& operator[](std::pair<int, int> i);
 		bool IsInt(std::pair<int, int> i);
 		bool IsFloat(std::pair<int, int> i);
+		void AddCommand(const std::string& cmd);
 		void AddCommand(const std::string& cmd, const std::pair<int, int>& field);
+		void AddPlusMinusCmd(const std::string& command, bool set);
 		void AddPlusMinusCmd(const std::string& command, bool set, const std::pair<int, int>& field);
 		bool NoopField(const std::pair<int, int>& field);
 		void ValidateFieldFlags(FrameBulkInfo& frameBulkInfo, const std::string& fields, int index);
