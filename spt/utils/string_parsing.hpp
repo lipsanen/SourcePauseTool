@@ -88,10 +88,7 @@ inline bool IsValue(std::string s)
 {
 	std::stringstream ss(s);
 	T result = 0;
-	ss >> result;
+	bool success = bool(ss >> result);
 
-	if (ss.good() || s.empty() || (result == 0 && s[0] != '0'))
-		return false;
-	else
-		return true;
+	return result;
 }
