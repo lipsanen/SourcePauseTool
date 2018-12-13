@@ -387,6 +387,8 @@ namespace scripts
 		{
 			ParseFrameBulk();
 		}
+
+		currentScript.Finish();
 	}
 
 	void SourceTASReader::ParseFrameBulk()

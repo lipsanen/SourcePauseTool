@@ -44,6 +44,8 @@ ConVar tas_strafe_lgagst_fullmaxspeed("tas_strafe_lgagst_fullmaxspeed", "0", FCV
 ConVar tas_strafe_jumptype("tas_strafe_jumptype", "1", FCVAR_TAS_RESET, "TAS jump strafe types:\n\t0 - Does nothing,\n\t1 - Looks directly opposite to desired direction (for games with ABH),\n\t2 - Looks in desired direction (games with speed boost upon jumping but no ABH),\n\t3 - Looks in direction that results in greatest speed loss (for glitchless TASes on game with ABH).\n");
 ConVar tas_script_printvars("tas_script_printvars", "1", 0, "Prints variable information when running .srctas scripts.\n");
 ConVar tas_script_savestates("tas_script_savestates", "1", 0, "Enables/disables savestates in .srctas scripts.\n");
+ConVar tas_script_autoend("tas_script_autoend", "0", 0, "Automatically inserts an ending block into .srctas scripts that cancels all funcs and inserts a tas_pause.\n");
+
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_ARCHIVE);
 ConVar _y_spt_afterframes_reset_on_server_activate("_y_spt_afterframes_reset_on_server_activate", "1", FCVAR_ARCHIVE);
 ConVar _y_spt_anglesetspeed("_y_spt_anglesetspeed", "360", FCVAR_TAS_RESET, "Determines how fast the view angle can move per tick while doing _y_spt_setyaw/_y_spt_setpitch.\n");

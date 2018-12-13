@@ -48,6 +48,10 @@ namespace scripts
 		saveStates.push_back(GetSaveStateInfo());
 	}
 
+	ParsedScript::ParsedScript(int maxLength) : maxLength(maxLength)
+	{
+	}
+
 	void ParsedScript::Reset()
 	{
 		scriptName.clear();
@@ -108,9 +112,23 @@ namespace scripts
 			AddInitCommand("load " + saveName);
 	}
 
+	void ParsedScript::Finish()
+	{
+		if (tas_script_autoend.GetBool())
+		{
+			const std::string NOOP_BULK = "----------|------|------|-|-|0|tas_pause 1";
+			std::istringstream stream(NOOP_BULK);
+			FrameBulkInfo info(stream);
+			auto output1 = HandleFrameBulk(info);
+			afterFramesTick = maxLength;
+			AddFrameBulk(output1);
+		}
+	}
+
 	void ParsedScript::AddAfterFramesEntry(long long int tick, std::string command)
 	{
-		afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
+		if(tick <= maxLength  || maxLength == -1)
+			afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
 	}
 
 	Savestate ParsedScript::GetSaveStateInfo()

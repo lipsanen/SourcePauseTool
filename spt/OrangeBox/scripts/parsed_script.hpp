@@ -8,6 +8,8 @@ namespace scripts
 {
 	struct FrameBulkOutput;
 
+	constexpr int UNLIMITED_LENGTH = -1;
+
 	struct Savestate
 	{
 		Savestate() {}
@@ -24,6 +26,7 @@ namespace scripts
 	class ParsedScript
 	{
 	public:
+		ParsedScript(int maxLength = UNLIMITED_LENGTH);
 		std::string initCommand;
 		std::string duringLoad;
 		std::vector<afterframes_entry_t> afterFramesEntries;
@@ -31,6 +34,7 @@ namespace scripts
 		
 		void Reset();
 		void Init(std::string name);
+		void Finish();
 
 		void AddDuringLoadCmd(const std::string& cmd);
 		void AddInitCommand(const std::string& cmd);
@@ -41,6 +45,7 @@ namespace scripts
 		int GetScriptLength() { return afterFramesTick; }
 
 	private:
+		int maxLength;
 		std::string saveName;
 		std::string scriptName;
 		int afterFramesTick;
