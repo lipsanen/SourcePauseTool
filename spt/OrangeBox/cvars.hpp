@@ -16,6 +16,7 @@ extern ConVar tas_strafe;
 extern ConVar tas_strafe_type;
 extern ConVar tas_strafe_dir;
 extern ConVar tas_strafe_yaw;
+extern ConVar tas_strafe_yaw_is_offset;
 extern ConVar tas_strafe_buttons;
 
 extern ConVar tas_strafe_vectorial;
@@ -29,6 +30,7 @@ extern ConVar tas_force_wishspeed_cap;
 extern ConVar tas_reset_surface_friction;
 
 extern ConVar tas_force_onground;
+extern ConVar tas_pause;
 
 extern ConVar tas_log;
 extern ConVar tas_strafe_lgagst;
@@ -38,6 +40,7 @@ extern ConVar tas_strafe_jumptype;
 
 extern ConVar tas_script_printvars;
 extern ConVar tas_script_savestates;
+extern ConVar tas_script_autoend;
 
 extern ConVar _y_spt_autojump_ensure_legit;
 extern ConVar _y_spt_afterframes_reset_on_server_activate;

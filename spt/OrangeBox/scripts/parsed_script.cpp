@@ -24,18 +24,18 @@ namespace scripts
 	{
 		if (output.ticks >= 0)
 		{
-			AddAfterFramesEntry(afterFramesTick, output.initialCommand);
-			AddAfterFramesEntry(afterFramesTick, output.repeatingCommand);
+			AddAfterFramesEntry(afterFramesTick, output.getInitialCommand());
+			AddAfterFramesEntry(afterFramesTick, output.getRepeatingCommand());
 
 			for (int i = 1; i < output.ticks; ++i)
-				AddAfterFramesEntry(afterFramesTick + i, output.repeatingCommand);
+				AddAfterFramesEntry(afterFramesTick + i, output.getRepeatingCommand());
 
 			afterFramesTick += output.ticks;
 		}
 		else if (output.ticks == NO_AFTERFRAMES_BULK)
 		{
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.initialCommand);
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.repeatingCommand);
+			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getInitialCommand());
+			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getRepeatingCommand());
 		}
 		else
 		{
@@ -46,6 +46,10 @@ namespace scripts
 	void ParsedScript::AddSaveState()
 	{
 		saveStates.push_back(GetSaveStateInfo());
+	}
+
+	ParsedScript::ParsedScript(int maxLength) : maxLength(maxLength)
+	{
 	}
 
 	void ParsedScript::Reset()
@@ -108,9 +112,23 @@ namespace scripts
 			AddInitCommand("load " + saveName);
 	}
 
+	void ParsedScript::Finish()
+	{
+		if (tas_script_autoend.GetBool())
+		{
+			const std::string NOOP_BULK = "----------|------|------|-|-|0|tas_pause 1";
+			std::istringstream stream(NOOP_BULK);
+			FrameBulkInfo info(stream);
+			auto output1 = HandleFrameBulk(info);
+			afterFramesTick = maxLength;
+			AddFrameBulk(output1);
+		}
+	}
+
 	void ParsedScript::AddAfterFramesEntry(long long int tick, std::string command)
 	{
-		afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
+		if(tick <= maxLength  || maxLength == -1)
+			afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
 	}
 
 	Savestate ParsedScript::GetSaveStateInfo()

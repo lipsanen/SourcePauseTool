@@ -21,6 +21,7 @@ ConVar tas_strafe("tas_strafe", "0", FCVAR_TAS_RESET);
 ConVar tas_strafe_type("tas_strafe_type", "0", FCVAR_TAS_RESET, "TAS strafe types:\n\t0 - Max acceleration strafing,\n\t1 - Max angle strafing.\n");
 ConVar tas_strafe_dir("tas_strafe_dir", "3", FCVAR_TAS_RESET, "TAS strafe dirs:\n\t0 - to the left,\n\t1 - to the right,\n\t3 - to the yaw given in tas_strafe_yaw.");
 ConVar tas_strafe_yaw("tas_strafe_yaw", "", FCVAR_TAS_RESET, "Yaw to strafe to with tas_strafe_dir = 3.");
+ConVar tas_strafe_yaw_is_offset("tas_strafe_yaw_is_offset", "0", FCVAR_TAS_RESET, "Determines if the strafing yaw is an offset to the view angle. Only works with vectorial strafing.");
 ConVar tas_strafe_buttons("tas_strafe_buttons", "", FCVAR_TAS_RESET, "Sets the strafing buttons. The format is 4 digits: \"<AirLeft> <AirRight> <GroundLeft> <GroundRight>\". The default (auto-detect) is empty string: \"\".\n"
 															   "Table of buttons:\n\t0 - W\n\t1 - WA\n\t2 - A\n\t3 - SA\n\t4 - S\n\t5 - SD\n\t6 - D\n\t7 - WD\n");
 ConVar tas_strafe_vectorial("tas_strafe_vectorial", "0", FCVAR_TAS_RESET, "Determines if strafing uses vectorial strafing\n");
@@ -34,6 +35,7 @@ ConVar tas_force_wishspeed_cap("tas_force_wishspeed_cap", "", 0, "Sets the value
 ConVar tas_reset_surface_friction("tas_reset_surface_friction", "1", 0, "If enabled, the surface friction is assumed to be reset in the beginning of CategorizePosition().\n\nShould be set to 0 for Portal.\n");
 
 ConVar tas_force_onground("tas_force_onground", "0", FCVAR_TAS_RESET, "If enabled, strafing assumes the player is on ground regardless of what the prediction indicates. Useful for save glitch in Portal where the prediction always reports the player being in the air.\n");
+ConVar tas_pause("tas_pause", "0", 0, "Does a \"real\" pause that should not cause any desyncs and also allows you to look around while paused. Do not use this right after a load.");
 
 ConVar tas_log("tas_log", "0", 0, "If enabled, dumps a whole bunch of different stuff into the console.\n");
 ConVar tas_strafe_lgagst("tas_strafe_lgagst", "0", FCVAR_TAS_RESET, "If enabled, jumps automatically when it's faster to move in the air than on ground. Incomplete, intended use is for tas_strafe_glitchless only.\n");
@@ -42,6 +44,8 @@ ConVar tas_strafe_lgagst_fullmaxspeed("tas_strafe_lgagst_fullmaxspeed", "0", FCV
 ConVar tas_strafe_jumptype("tas_strafe_jumptype", "1", FCVAR_TAS_RESET, "TAS jump strafe types:\n\t0 - Does nothing,\n\t1 - Looks directly opposite to desired direction (for games with ABH),\n\t2 - Looks in desired direction (games with speed boost upon jumping but no ABH),\n\t3 - Looks in direction that results in greatest speed loss (for glitchless TASes on game with ABH).\n");
 ConVar tas_script_printvars("tas_script_printvars", "1", 0, "Prints variable information when running .srctas scripts.\n");
 ConVar tas_script_savestates("tas_script_savestates", "1", 0, "Enables/disables savestates in .srctas scripts.\n");
+ConVar tas_script_autoend("tas_script_autoend", "0", 0, "Automatically inserts an ending block into .srctas scripts that cancels all funcs and inserts a tas_pause.\n");
+
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_ARCHIVE);
 ConVar _y_spt_afterframes_reset_on_server_activate("_y_spt_afterframes_reset_on_server_activate", "1", FCVAR_ARCHIVE);
 ConVar _y_spt_anglesetspeed("_y_spt_anglesetspeed", "360", FCVAR_TAS_RESET, "Determines how fast the view angle can move per tick while doing _y_spt_setyaw/_y_spt_setpitch.\n");

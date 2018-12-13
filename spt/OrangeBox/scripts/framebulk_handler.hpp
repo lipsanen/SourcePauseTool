@@ -6,14 +6,19 @@ namespace scripts
 {
 	const int NO_AFTERFRAMES_BULK = -1;
 
-	struct FrameBulkOutput
+	class FrameBulkOutput
 	{
+	private:
 		std::string initialCommand;
 		std::string repeatingCommand;
-		int ticks;
 
+	public:
+		const std::string& getInitialCommand() { return initialCommand; }
+		const std::string& getRepeatingCommand() { return repeatingCommand; }
 		void AddCommand(const std::string& newCmd);
 		void AddCommand(char initChar, const std::string& newCmd);
+		void AddRepeatingCommand(const std::string& newCmd);
+		int ticks;
 	};
 
 	class FrameBulkInfo
@@ -23,8 +28,9 @@ namespace scripts
 		const std::string& operator[](std::pair<int, int> i);
 		bool IsInt(std::pair<int, int> i);
 		bool IsFloat(std::pair<int, int> i);
-		void AddCommand(const std::string& cmd) { data.AddCommand(cmd); }
-		void AddPlusMinusCmd(const std::string& command, bool set);
+		void AddCommand(const std::string& cmd, const std::pair<int, int>& field);
+		void AddPlusMinusCmd(const std::string& command, bool set, const std::pair<int, int>& field);
+		bool NoopField(const std::pair<int, int>& field);
 		void ValidateFieldFlags(FrameBulkInfo& frameBulkInfo, const std::string& fields, int index);
 		bool ContainsFlag(const std::pair<int, int>& key, const std::string& flag);
 		FrameBulkOutput data;
