@@ -8,6 +8,7 @@
 #include <SPTLib\detoursutils.hpp>
 #include <SPTLib\hooks.hpp>
 #include "ServerDLL.hpp"
+#include "..\scripts\srctas_reader.hpp"
 
 using std::uintptr_t;
 using std::size_t;
@@ -78,6 +79,11 @@ __declspec(naked) void ServerDLL::HOOKED_MiddleOfSlidingFunction()
 	}
 }
 
+void __cdecl ServerDLL::HOOKED_CGameMovement__FullWalkMove(void * thisptr, int edx)
+{
+	serverDLL.HOOKED_CGameMovement__FullWalkMove_Func(thisptr, edx);
+}
+
 void ServerDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t moduleStart, size_t moduleLength)
 {
 	Clear(); // Just in case.
@@ -93,12 +99,15 @@ void ServerDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		pFinishGravity = NULL,
 		pPlayerRunCommand = NULL,
 		pCheckStuck = NULL,
-		pMiddleOfSlidingFunction = NULL;
+		pMiddleOfSlidingFunction = NULL,
+		pClientCommand = NULL,
+		pCGameMovement__FullWalkMove = NULL;
 
 	auto fFinishGravity = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsFinishGravity, &pFinishGravity);
 	auto fPlayerRunCommand = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsPlayerRunCommand, &pPlayerRunCommand);
 	auto fCheckStuck = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsCheckStuck, &pCheckStuck);
 	auto fMiddleOfSlidingFunction = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsMiddleOfSlidingFunction, &pMiddleOfSlidingFunction);
+	auto fCGameMovement__FullWalkMove = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsCGameMovement__FullWalkMove, &pCGameMovement__FullWalkMove);
 
 	// Server-side CheckJumpButton
 	ptnNumber = MemUtils::FindUniqueSequence(moduleStart, moduleLength, Patterns::ptnsServerCheckJumpButton, &pCheckJumpButton);
@@ -354,6 +363,17 @@ void ServerDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		EngineWarning("y_spt_on_slide_pause_for has no effect.\n");
 	}
 
+	ptnNumber = fCGameMovement__FullWalkMove.get();
+	if (ptnNumber != MemUtils::INVALID_SEQUENCE_INDEX)
+	{
+		ORIG_CGameMovement__FullWalkMove = (_CGameMovement__FullWalkMove)(pCGameMovement__FullWalkMove);
+		EngineDevMsg("[server dll] Found the CGameMovement::ProcessMovement function at %p (using the build %s pattern).\n", ORIG_CGameMovement__FullWalkMove, Patterns::ptnsCGameMovement__FullWalkMove[ptnNumber].build.c_str());
+	}
+	else
+	{
+		EngineDevWarning("[server dll] Could not find CGameMovement::ProcessMovement!\n");
+	}
+
 	extern void* gm;
 	if (gm) {
 		auto vftable = *reinterpret_cast<uintptr_t**>(gm);
@@ -376,7 +396,8 @@ void ServerDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		{ (PVOID *)(&ORIG_CheckStuck), HOOKED_CheckStuck },
 		{ (PVOID *)(&ORIG_TraceFirePortal), HOOKED_TraceFirePortal },
 		{ (PVOID *)(&ORIG_SlidingAndOtherStuff), HOOKED_SlidingAndOtherStuff },
-		{ &ORIG_MiddleOfSlidingFunction, HOOKED_MiddleOfSlidingFunction }
+		{ &ORIG_MiddleOfSlidingFunction, HOOKED_MiddleOfSlidingFunction },
+		{ (PVOID *)(&ORIG_CGameMovement__FullWalkMove), HOOKED_CGameMovement__FullWalkMove }
 	});
 }
 
@@ -398,7 +419,8 @@ void ServerDLL::Unhook()
 		{ (PVOID *)(&ORIG_CheckStuck), HOOKED_CheckStuck },
 		{ (PVOID *)(&ORIG_TraceFirePortal), HOOKED_TraceFirePortal },
 		{ (PVOID *)(&ORIG_SlidingAndOtherStuff), HOOKED_SlidingAndOtherStuff },
-		{ &ORIG_MiddleOfSlidingFunction, HOOKED_MiddleOfSlidingFunction }
+		{ &ORIG_MiddleOfSlidingFunction, HOOKED_MiddleOfSlidingFunction },
+		{ (PVOID *)(&ORIG_CGameMovement__FullWalkMove), HOOKED_CGameMovement__FullWalkMove }
 	});
 
 	Clear();
@@ -414,6 +436,8 @@ void ServerDLL::Clear()
 	ORIG_AirAccelerate = nullptr;
 	ORIG_SlidingAndOtherStuff = nullptr;
 	ORIG_MiddleOfSlidingFunction = nullptr;
+	ORIG_ClientCommand = nullptr;
+	ORIG_CGameMovement__FullWalkMove = nullptr;
 	off1M_nOldButtons = 0;
 	off2M_nOldButtons = 0;
 	cantJumpNextTime = false;
@@ -632,4 +656,12 @@ void ServerDLL::HOOKED_MiddleOfSlidingFunction_Func()
 			clientDLL.AddIntoAfterframesQueue(entry);
 		}
 	}
+}
+
+void __cdecl ServerDLL::HOOKED_CGameMovement__FullWalkMove_Func(void* thisptr, int edx)
+{
+	ORIG_CGameMovement__FullWalkMove(thisptr, edx);
+	float va[3];
+	EngineGetViewAngles(va);
+	scripts::g_Capture.SendVA(va[YAW], va[PITCH]);
 }

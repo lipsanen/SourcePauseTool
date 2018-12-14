@@ -21,6 +21,8 @@ typedef float(__fastcall *_FirePortal) (void* thisptr, int edx, bool bPortal2, V
 typedef float(__fastcall *_TraceFirePortal) (void* thisptr, int edx, bool bPortal2, const Vector& vTraceStart, const Vector& vDirection, trace_t& tr, Vector& vFinalPosition, QAngle& qFinalAngles, int iPlacedBy, bool bTest);
 typedef void*(__fastcall *_GetActiveWeapon) (void* thisptr);
 typedef void(__fastcall *_SlidingAndOtherStuff) (void* thisptr, int edx, void* a, void* b);
+typedef void(__cdecl *_ClientCommand) (void* thisptr, CCommand& args);
+typedef void(__fastcall *_CGameMovement__FullWalkMove) (void* thisptr, int edx);
 
 class ServerDLL : public IHookableNameFilter
 {
@@ -39,6 +41,7 @@ public:
 	static float __fastcall HOOKED_TraceFirePortal(void* thisptr, int edx, bool bPortal2, const Vector& vTraceStart, const Vector& vDirection, trace_t& tr, Vector& vFinalPosition, QAngle& qFinalAngles, int iPlacedBy, bool bTest);
 	static void __fastcall HOOKED_SlidingAndOtherStuff(void* thisptr, int edx, void* a, void* b);
 	static void HOOKED_MiddleOfSlidingFunction();
+	static void __cdecl HOOKED_CGameMovement__FullWalkMove(void* thisptr, int edx);
 	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper);
@@ -48,6 +51,7 @@ public:
 	float __fastcall HOOKED_TraceFirePortal_Func(void* thisptr, int edx, bool bPortal2, const Vector& vTraceStart, const Vector& vDirection, trace_t& tr, Vector& vFinalPosition, QAngle& qFinalAngles, int iPlacedBy, bool bTest);
 	void __fastcall HOOKED_SlidingAndOtherStuff_Func(void* thisptr, int edx, void* a, void* b);
 	void HOOKED_MiddleOfSlidingFunction_Func();
+	void __cdecl HOOKED_CGameMovement__FullWalkMove_Func(void* thisptr, int edx);
 
 	const Vector& GetLastVelocity() const { return lastVelocity; }
 
@@ -72,6 +76,8 @@ protected:
 	_TraceFirePortal ORIG_TraceFirePortal;
 	_SlidingAndOtherStuff ORIG_SlidingAndOtherStuff;
 	void* ORIG_MiddleOfSlidingFunction;
+	_ClientCommand ORIG_ClientCommand;
+	_CGameMovement__FullWalkMove ORIG_CGameMovement__FullWalkMove;
 
 	ptrdiff_t off1M_nOldButtons;
 	ptrdiff_t off2M_nOldButtons;

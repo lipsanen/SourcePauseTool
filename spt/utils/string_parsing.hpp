@@ -88,7 +88,5 @@ inline bool IsValue(std::string s)
 {
 	std::stringstream ss(s);
 	T result = 0;
-	bool success = bool(ss >> result);
-
-	return result;
+	return bool(ss >> result);
 }

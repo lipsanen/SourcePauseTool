@@ -14,6 +14,7 @@
 namespace scripts
 {
 	SourceTASReader g_TASReader;
+	Capture g_Capture;
 	const std::string SCRIPT_EXT = ".srctas";
 
 	const char* RESET_VARS[] = {
@@ -147,6 +148,15 @@ namespace scripts
 			iterationFinished = true;
 			SearchResult(SearchResult::Success);
 		}	
+	}
+
+	void SourceTASReader::OnCommand(const CCommand & args)
+	{
+		Msg("got %s\n", args.GetCommandString());
+	}
+
+	void SourceTASReader::OnTick(float yaw, float pitch)
+	{
 	}
 
 	int SourceTASReader::GetCurrentScriptLength()
@@ -509,4 +519,56 @@ namespace scripts
 
 		return os.str();
 	}
+
+	Capture::Capture()
+	{
+		currentTick = 0;
+		capture = false;
+	}
+
+	void Capture::SendCommand(CCommand & args)
+	{
+		if(capture)
+			entries.push_back(afterframes_entry_t(currentTick, args.GetCommandString()));
+	}
+
+	template <typename T>
+	std::string to_string_with_precision(const T a_value, const int n = 16)
+	{
+		std::ostringstream out;
+		out.precision(n);
+		out << std::fixed << a_value;
+		return out.str();
+	}
+
+	void Capture::SendVA(float yaw, float pitch)
+	{
+		if (capture)
+		{
+			++currentTick;
+			entries.push_back(afterframes_entry_t(currentTick - 1, "_y_spt_setyaw " + to_string_with_precision(yaw)));
+			entries.push_back(afterframes_entry_t(currentTick - 1, "_y_spt_setpitch " + to_string_with_precision(pitch)));
+		}		
+	}
+
+	void Capture::StartCapture()
+	{
+		currentTick = 0;
+		entries.clear();
+		capture = true;
+	}
+
+	void Capture::StopCapture()
+	{
+		capture = false;
+		Msg("Capture lasted %d ticks.", currentTick);
+	}
+
+	void Capture::PlayCapture()
+	{
+		EngineConCmd("sv_cheats 1; host_framerate 0.015");
+		for (auto& entry : entries)
+			clientDLL.AddIntoAfterframesQueue(entry);
+	}
+
 }

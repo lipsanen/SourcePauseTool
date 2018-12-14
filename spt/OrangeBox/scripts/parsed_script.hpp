@@ -35,6 +35,7 @@ namespace scripts
 		void Reset();
 		void Init(std::string name);
 		void Finish();
+		bool IsUnlimited();
 
 		void AddDuringLoadCmd(const std::string& cmd);
 		void AddInitCommand(const std::string& cmd);

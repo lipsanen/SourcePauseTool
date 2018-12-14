@@ -8,6 +8,7 @@
 #include <SPTLib\detoursutils.hpp>
 #include <SPTLib\hooks.hpp>
 #include "EngineDLL.hpp"
+#include "..\scripts\srctas_reader.hpp"
 
 using std::uintptr_t;
 using std::size_t;
@@ -52,6 +53,11 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute()
 	return engineDLL.HOOKED_Cbuf_Execute_Func();
 }
 
+void * __cdecl EngineDLL::HOOKED_Cmd_ExecuteCommand(CCommand & command, int src, int nClientSlot)
+{
+	return engineDLL.HOOKED_Cmd_ExecuteCommand_Func(command, src, nClientSlot);
+}
+
 void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t moduleStart, size_t moduleLength)
 {
 	Clear(); // Just in case.
@@ -71,7 +77,8 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		pRecord = NULL,
 		pHost_AccumulateTime = NULL,
 		pMiddle_Of_Host_AccumulateTime = NULL,
-		p_Host_RunFrame = NULL;
+		p_Host_RunFrame = NULL,
+		pCmd_ExecuteCommand = NULL;
 
 	auto fActivateServer = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsSV_ActivateServer, &pSV_ActivateServer);
 	auto fFinishRestore = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsFinishRestore, &pFinishRestore);
@@ -80,7 +87,7 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 	auto fRecord = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsRecord, &pRecord);
 	auto fHost_AccumulateTime = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsHost_AccumulateTime, &pHost_AccumulateTime);
 	auto f_Host_RunFrame = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptns_Host_RunFrame, &p_Host_RunFrame);
-
+	auto fCmd_ExecuteCommand = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsCmd_ExecuteCommand, &pCmd_ExecuteCommand);
 
 	// m_bLoadgame and pGameServer (&sv)
 	ptnNumber = MemUtils::FindUniqueSequence(moduleStart, moduleLength, Patterns::ptnsSpawnPlayer, &pSpawnPlayer);
@@ -252,6 +259,18 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		EngineDevWarning("Could not find _Host_RunFrame!\n");
 	}
 
+	ptnNumber = fCmd_ExecuteCommand.get();
+	if (pCmd_ExecuteCommand)
+	{
+		ORIG_Cmd_ExecuteCommand = (_Cmd_ExecuteCommand)(pCmd_ExecuteCommand);
+
+		EngineDevMsg("Found Cmd_ExecuteCommand at %p (using the build %s pattern).\n", pCmd_ExecuteCommand, Patterns::ptnsCmd_ExecuteCommand[ptnNumber].build.c_str());
+	}
+	else
+	{
+		EngineDevWarning("Could not find Cmd_ExecuteCommand!\n");
+	}
+
 
 	DetoursUtils::AttachDetours(moduleName, {
 		{ (PVOID *)(&ORIG_SV_ActivateServer), HOOKED_SV_ActivateServer },
@@ -261,7 +280,8 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		{ (PVOID *)(&ORIG__Host_RunFrame_Input), HOOKED__Host_RunFrame_Input },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
 		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
-		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute }
+		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute },
+		{ (PVOID *)(&ORIG_Cmd_ExecuteCommand), HOOKED_Cmd_ExecuteCommand }
 	});
 }
 
@@ -275,7 +295,8 @@ void EngineDLL::Unhook()
 		{ (PVOID *)(&ORIG__Host_RunFrame_Input), HOOKED__Host_RunFrame_Input },
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
 		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
-		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute }
+		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute },
+		{ (PVOID *)(&ORIG_Cmd_ExecuteCommand), HOOKED_Cmd_ExecuteCommand }
 	});
 
 	Clear();
@@ -292,6 +313,7 @@ void EngineDLL::Clear()
 	ORIG__Host_RunFrame_Server = nullptr;
 	ORIG_Host_AccumulateTime = nullptr;
 	ORIG_Cbuf_Execute = nullptr;
+	ORIG_Cmd_ExecuteCommand = nullptr;
 	pGameServer = nullptr;
 	pM_bLoadgame = nullptr;
 	shouldPreventNextUnpause = false;
@@ -472,4 +494,10 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()
 	ORIG_Cbuf_Execute();
 
 	EngineDevMsg("Cbuf_Execute() end.\n");
+}
+
+void * __cdecl EngineDLL::HOOKED_Cmd_ExecuteCommand_Func(CCommand & command, int src, int nClientSlot)
+{
+	scripts::g_Capture.SendCommand(command);
+	return ORIG_Cmd_ExecuteCommand(command, src, nClientSlot);
 }

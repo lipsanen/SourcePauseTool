@@ -816,6 +816,21 @@ CON_COMMAND(tas_test_validate, "Validates a test.")
 	}
 }
 
+CON_COMMAND(tas_capture_record, "Capture test.")
+{
+	scripts::g_Capture.StartCapture();
+}
+
+CON_COMMAND(tas_capture_play, "Play capture test.")
+{
+	scripts::g_Capture.PlayCapture();
+}
+
+CON_COMMAND(tas_capture_stop, "Stop capture.")
+{
+	scripts::g_Capture.StopCapture();
+}
+
 #if SSDK2007
 // TODO: remove fixed offsets.
 

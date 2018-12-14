@@ -116,18 +116,26 @@ namespace scripts
 	{
 		if (tas_script_autoend.GetBool())
 		{
-			const std::string NOOP_BULK = "----------|------|------|-|-|0|tas_pause 1";
+			const std::string NOOP_BULK = "----------|------|--------|-|-|0|tas_pause 1";
 			std::istringstream stream(NOOP_BULK);
 			FrameBulkInfo info(stream);
 			auto output1 = HandleFrameBulk(info);
-			afterFramesTick = maxLength;
+
+			if(!IsUnlimited())
+				afterFramesTick = maxLength;
+
 			AddFrameBulk(output1);
 		}
 	}
 
+	bool ParsedScript::IsUnlimited()
+	{
+		return maxLength == UNLIMITED_LENGTH;
+	}
+
 	void ParsedScript::AddAfterFramesEntry(long long int tick, std::string command)
 	{
-		if(tick <= maxLength  || maxLength == -1)
+		if(tick <= maxLength  || IsUnlimited())
 			afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
 	}
 

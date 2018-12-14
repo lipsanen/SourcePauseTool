@@ -2,6 +2,7 @@
 #pragma once
 
 #include <SPTLib\IHookableNameFilter.hpp>
+#include "convar.h"
 
 using std::uintptr_t;
 using std::size_t;
@@ -14,6 +15,7 @@ typedef void(__cdecl *__Host_RunFrame_Input) (float accumulated_extra_samples, i
 typedef void(__cdecl *__Host_RunFrame_Server) (int bFinalTick);
 typedef void(__cdecl *_Host_AccumulateTime) (float dt);
 typedef void(__cdecl *_Cbuf_Execute) ();
+typedef void*(__cdecl *_Cmd_ExecuteCommand) (CCommand& command, int src, int nClientSlot);
 
 class EngineDLL : public IHookableNameFilter
 {
@@ -31,6 +33,7 @@ public:
 	static void __cdecl HOOKED__Host_RunFrame_Server(int bFinalTick);
 	static void __cdecl HOOKED_Host_AccumulateTime(float dt);
 	static void __cdecl HOOKED_Cbuf_Execute();
+	static void* __cdecl HOOKED_Cmd_ExecuteCommand(CCommand& command, int src, int nClientSlot);
 	bool __cdecl HOOKED_SV_ActivateServer_Func();
 	void __fastcall HOOKED_FinishRestore_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_SetPaused_Func(void* thisptr, int edx, bool paused);
@@ -39,6 +42,7 @@ public:
 	void __cdecl HOOKED__Host_RunFrame_Server_Func(int bFinalTick);
 	void __cdecl HOOKED_Host_AccumulateTime_Func(float dt);
 	void __cdecl HOOKED_Cbuf_Execute_Func();
+	void* __cdecl HOOKED_Cmd_ExecuteCommand_Func(CCommand& command, int src, int nClientSlot);
 
 	float GetTickrate() const;
 	void SetTickrate(float value);
@@ -57,6 +61,7 @@ protected:
 	__Host_RunFrame_Server ORIG__Host_RunFrame_Server;
 	_Host_AccumulateTime ORIG_Host_AccumulateTime;
 	_Cbuf_Execute ORIG_Cbuf_Execute;
+	_Cmd_ExecuteCommand ORIG_Cmd_ExecuteCommand;
 
 	void* pGameServer;
 	bool* pM_bLoadgame;

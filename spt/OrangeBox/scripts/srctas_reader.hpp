@@ -12,6 +12,21 @@ namespace scripts
 {
 	extern const std::string SCRIPT_EXT;
 
+	class Capture
+	{
+	public:
+		Capture();
+		void SendCommand(CCommand& args);
+		void SendVA(float yaw, float pitch);
+		void StartCapture();
+		void StopCapture();
+		void PlayCapture();
+	private:
+		std::vector<afterframes_entry_t> entries;
+		int currentTick;
+		bool capture;
+	};
+
 	class SourceTASReader
 	{
 	public:
@@ -20,6 +35,8 @@ namespace scripts
 		void StartSearch(const std::string& script);
 		void SearchResult(scripts::SearchResult result);
 		void OnAfterFrames();
+		void OnCommand(const CCommand& args);
+		void OnTick(float yaw, float pitch);
 		int GetCurrentScriptLength();
 	private:
 		bool iterationFinished;
@@ -89,4 +106,5 @@ namespace scripts
 
 	std::string GetVarIdentifier(std::string name);
 	extern SourceTASReader g_TASReader;
+	extern Capture g_Capture;
 }
