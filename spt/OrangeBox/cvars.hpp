@@ -40,7 +40,10 @@ extern ConVar tas_strafe_jumptype;
 
 extern ConVar tas_script_printvars;
 extern ConVar tas_script_savestates;
-extern ConVar tas_script_autoend;
+
+extern ConVar tas_record_speed;
+extern ConVar tas_record_fps;
+extern ConVar tas_recording;
 
 extern ConVar _y_spt_autojump_ensure_legit;
 extern ConVar _y_spt_afterframes_reset_on_server_activate;

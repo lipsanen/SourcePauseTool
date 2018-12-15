@@ -112,22 +112,6 @@ namespace scripts
 			AddInitCommand("load " + saveName);
 	}
 
-	void ParsedScript::Finish()
-	{
-		if (tas_script_autoend.GetBool())
-		{
-			const std::string NOOP_BULK = "----------|------|--------|-|-|0|tas_pause 1";
-			std::istringstream stream(NOOP_BULK);
-			FrameBulkInfo info(stream);
-			auto output1 = HandleFrameBulk(info);
-
-			if(!IsUnlimited())
-				afterFramesTick = maxLength;
-
-			AddFrameBulk(output1);
-		}
-	}
-
 	bool ParsedScript::IsUnlimited()
 	{
 		return maxLength == UNLIMITED_LENGTH;

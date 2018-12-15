@@ -44,7 +44,10 @@ ConVar tas_strafe_lgagst_fullmaxspeed("tas_strafe_lgagst_fullmaxspeed", "0", FCV
 ConVar tas_strafe_jumptype("tas_strafe_jumptype", "1", FCVAR_TAS_RESET, "TAS jump strafe types:\n\t0 - Does nothing,\n\t1 - Looks directly opposite to desired direction (for games with ABH),\n\t2 - Looks in desired direction (games with speed boost upon jumping but no ABH),\n\t3 - Looks in direction that results in greatest speed loss (for glitchless TASes on game with ABH).\n");
 ConVar tas_script_printvars("tas_script_printvars", "1", 0, "Prints variable information when running .srctas scripts.\n");
 ConVar tas_script_savestates("tas_script_savestates", "1", 0, "Enables/disables savestates in .srctas scripts.\n");
-ConVar tas_script_autoend("tas_script_autoend", "0", 0, "Automatically inserts an ending block into .srctas scripts that cancels all funcs and inserts a tas_pause.\n");
+
+ConVar tas_record_speed("tas_record_timescale", "1", 0, "Determines the timescale used while recording.\n");
+ConVar tas_record_fps("tas_record_fps", "66.67", 0, "Determines the fps used while recording.\n");
+ConVar tas_recording("tas_recording", "0", FCVAR_HIDDEN, "Is the game recording?\n");
 
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_ARCHIVE);
 ConVar _y_spt_afterframes_reset_on_server_activate("_y_spt_afterframes_reset_on_server_activate", "1", FCVAR_ARCHIVE);
@@ -52,12 +55,12 @@ ConVar _y_spt_anglesetspeed("_y_spt_anglesetspeed", "360", FCVAR_TAS_RESET, "Det
 ConVar _y_spt_pitchspeed("_y_spt_pitchspeed", "0", FCVAR_TAS_RESET);
 ConVar _y_spt_yawspeed("_y_spt_yawspeed", "0", FCVAR_TAS_RESET);
 ConVar _y_spt_force_90fov("_y_spt_force_90fov", "0");
-ConVar _y_spt_overlay("_y_spt_overlay", "0", FCVAR_CHEAT, "Enables the overlay camera in the top left of the screen.\n");
-ConVar _y_spt_overlay_type("_y_spt_overlay_type", "0", FCVAR_CHEAT, "Overlay type. 0 = save glitch body, 1 = angle glitch simulation, 2 = rear view mirror.\n");
-ConVar _y_spt_overlay_portal("_y_spt_overlay_portal", "blue", FCVAR_CHEAT, "Chooses the portal for the overlay camera. Valid options are blue/orange/portal index. For the SG camera this is the portal you save glitch on, for angle glitch simulation this is the portal you enter.\n");
-ConVar _y_spt_overlay_width("_y_spt_overlay_width", "480", FCVAR_CHEAT, "Determines the width of the overlay. Height is determined automatically from width.\n", true, 20.0f, true, 3840.0f);
-ConVar _y_spt_overlay_fov("_y_spt_overlay_fov", "90", FCVAR_CHEAT, "Determines the FOV of the overlay.\n", true, 5.0f, true, 140.0f);
-ConVar _y_spt_overlay_swap("_y_spt_overlay_swap", "0", FCVAR_CHEAT, "Swap alternate view and main screen?\n");
+ConVar _y_spt_overlay("_y_spt_overlay", "0", FCVAR_CHEAT | FCVAR_ARCHIVE, "Enables the overlay camera in the top left of the screen.\n");
+ConVar _y_spt_overlay_type("_y_spt_overlay_type", "0", FCVAR_CHEAT | FCVAR_ARCHIVE, "Overlay type. 0 = save glitch body, 1 = angle glitch simulation, 2 = rear view mirror.\n");
+ConVar _y_spt_overlay_portal("_y_spt_overlay_portal", "blue", FCVAR_CHEAT | FCVAR_ARCHIVE, "Chooses the portal for the overlay camera. Valid options are blue/orange/portal index. For the SG camera this is the portal you save glitch on, for angle glitch simulation this is the portal you enter.\n");
+ConVar _y_spt_overlay_width("_y_spt_overlay_width", "480", FCVAR_CHEAT | FCVAR_ARCHIVE, "Determines the width of the overlay. Height is determined automatically from width.\n", true, 20.0f, true, 3840.0f);
+ConVar _y_spt_overlay_fov("_y_spt_overlay_fov", "90", FCVAR_CHEAT | FCVAR_ARCHIVE, "Determines the FOV of the overlay.\n", true, 5.0f, true, 140.0f);
+ConVar _y_spt_overlay_swap("_y_spt_overlay_swap", "0", FCVAR_CHEAT | FCVAR_ARCHIVE, "Swap alternate view and main screen?\n");
 
 #ifdef OE
 ConVar y_spt_gamedir("y_spt_gamedir", "", 0, "Sets the game directory, that is used for loading tas scripts and tests. Use the full path for the folder e.g. C:\\Steam\\steamapps\\sourcemods\\hl2oe\\\n");

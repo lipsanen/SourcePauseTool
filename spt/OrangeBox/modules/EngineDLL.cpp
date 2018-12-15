@@ -28,6 +28,11 @@ void __fastcall EngineDLL::HOOKED_SetPaused(void* thisptr, int edx, bool paused)
 	return engineDLL.HOOKED_SetPaused_Func(thisptr, edx, paused);
 }
 
+bool __cdecl EngineDLL::HOOKED_HandleEngineKey(InputEvent_t * ievent)
+{
+	return engineDLL.HOOKED_HandleEngineKey_Func(ievent);
+}
+
 void __cdecl EngineDLL::HOOKED__Host_RunFrame(float time)
 {
 	return engineDLL.HOOKED__Host_RunFrame_Func(time);
@@ -53,9 +58,9 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute()
 	return engineDLL.HOOKED_Cbuf_Execute_Func();
 }
 
-void * __cdecl EngineDLL::HOOKED_Cmd_ExecuteCommand(CCommand & command, int src, int nClientSlot)
+void __cdecl EngineDLL::HOOKED_Cbuf_AddText(const char * pText)
 {
-	return engineDLL.HOOKED_Cmd_ExecuteCommand_Func(command, src, nClientSlot);
+	engineDLL.HOOKED_Cbuf_AddText_Func(pText);
 }
 
 void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t moduleStart, size_t moduleLength)
@@ -78,7 +83,9 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		pHost_AccumulateTime = NULL,
 		pMiddle_Of_Host_AccumulateTime = NULL,
 		p_Host_RunFrame = NULL,
-		pCmd_ExecuteCommand = NULL;
+		pCmd_ExecuteCommand = NULL,
+		pHandleEngineKey = NULL,
+		pCbuf_AddText = NULL;
 
 	auto fActivateServer = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsSV_ActivateServer, &pSV_ActivateServer);
 	auto fFinishRestore = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsFinishRestore, &pFinishRestore);
@@ -87,7 +94,8 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 	auto fRecord = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsRecord, &pRecord);
 	auto fHost_AccumulateTime = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsHost_AccumulateTime, &pHost_AccumulateTime);
 	auto f_Host_RunFrame = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptns_Host_RunFrame, &p_Host_RunFrame);
-	auto fCmd_ExecuteCommand = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsCmd_ExecuteCommand, &pCmd_ExecuteCommand);
+	auto fHandleEngineKey = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsHandleEngineKey, &pHandleEngineKey);
+	auto fCbuf_AddText = std::async(std::launch::async, MemUtils::FindUniqueSequence, moduleStart, moduleLength, Patterns::ptnsCbuf_AddText, &pCbuf_AddText);
 
 	// m_bLoadgame and pGameServer (&sv)
 	ptnNumber = MemUtils::FindUniqueSequence(moduleStart, moduleLength, Patterns::ptnsSpawnPlayer, &pSpawnPlayer);
@@ -259,16 +267,28 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		EngineDevWarning("Could not find _Host_RunFrame!\n");
 	}
 
-	ptnNumber = fCmd_ExecuteCommand.get();
-	if (pCmd_ExecuteCommand)
+	ptnNumber = fCbuf_AddText.get();
+	if (pCbuf_AddText)
 	{
-		ORIG_Cmd_ExecuteCommand = (_Cmd_ExecuteCommand)(pCmd_ExecuteCommand);
+		ORIG_Cbuf_AddText = (_Cbuf_AddText)(pCbuf_AddText);
 
-		EngineDevMsg("Found Cmd_ExecuteCommand at %p (using the build %s pattern).\n", pCmd_ExecuteCommand, Patterns::ptnsCmd_ExecuteCommand[ptnNumber].build.c_str());
+		EngineDevMsg("Found Cbuf_AddText at %p (using the build %s pattern).\n", pCbuf_AddText, Patterns::ptnsCbuf_AddText[ptnNumber].build.c_str());
 	}
 	else
 	{
-		EngineDevWarning("Could not find Cmd_ExecuteCommand!\n");
+		EngineDevWarning("Could not find Cbuf_AddText!\n");
+	}
+
+	ptnNumber = fHandleEngineKey.get();
+	if (pHandleEngineKey)
+	{
+		ORIG_HandleEngineKey = (_HandleEngineKey)(pHandleEngineKey);
+
+		EngineDevMsg("Found HandleEngineKey at %p (using the build %s pattern).\n", pHandleEngineKey, Patterns::ptnsHandleEngineKey[ptnNumber].build.c_str());
+	}
+	else
+	{
+		EngineDevWarning("Could not find HandleEngineKey!\n");
 	}
 
 
@@ -281,7 +301,8 @@ void EngineDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
 		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
 		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute },
-		{ (PVOID *)(&ORIG_Cmd_ExecuteCommand), HOOKED_Cmd_ExecuteCommand }
+		{ (PVOID *)(&ORIG_Cbuf_AddText), HOOKED_Cbuf_AddText },
+		{ (PVOID *)(&ORIG_HandleEngineKey), HOOKED_HandleEngineKey }
 	});
 }
 
@@ -296,7 +317,8 @@ void EngineDLL::Unhook()
 		{ (PVOID *)(&ORIG__Host_RunFrame_Server), HOOKED__Host_RunFrame_Server },
 		{ (PVOID *)(&ORIG_Host_AccumulateTime), HOOKED_Host_AccumulateTime },
 		{ (PVOID *)(&ORIG_Cbuf_Execute), HOOKED_Cbuf_Execute },
-		{ (PVOID *)(&ORIG_Cmd_ExecuteCommand), HOOKED_Cmd_ExecuteCommand }
+		{ (PVOID *)(&ORIG_Cbuf_AddText), HOOKED_Cbuf_AddText },
+		{ (PVOID *)(&ORIG_HandleEngineKey), HOOKED_HandleEngineKey }
 	});
 
 	Clear();
@@ -308,12 +330,13 @@ void EngineDLL::Clear()
 	ORIG_SV_ActivateServer = nullptr;
 	ORIG_FinishRestore = nullptr;
 	ORIG_SetPaused = nullptr;
+	ORIG_HandleEngineKey = nullptr;
 	ORIG__Host_RunFrame = nullptr;
 	ORIG__Host_RunFrame_Input = nullptr;
 	ORIG__Host_RunFrame_Server = nullptr;
 	ORIG_Host_AccumulateTime = nullptr;
 	ORIG_Cbuf_Execute = nullptr;
-	ORIG_Cmd_ExecuteCommand = nullptr;
+	ORIG_Cbuf_AddText = nullptr;
 	pGameServer = nullptr;
 	pM_bLoadgame = nullptr;
 	shouldPreventNextUnpause = false;
@@ -373,9 +396,8 @@ bool EngineDLL::Demo_IsPlaybackPaused() const
 bool __cdecl EngineDLL::HOOKED_SV_ActivateServer_Func()
 {
 	bool result = ORIG_SV_ActivateServer();
-	tas_pause.SetValue(0);
-
 	EngineDevMsg("Engine call: SV_ActivateServer() => %s;\n", (result ? "true" : "false"));
+	tas_pause.SetValue(0);
 
 	if (ORIG_SetPaused && pM_bLoadgame && pGameServer)
 	{
@@ -437,6 +459,14 @@ void __fastcall EngineDLL::HOOKED_SetPaused_Func(void* thisptr, int edx, bool pa
 	return ORIG_SetPaused(thisptr, edx, paused);
 }
 
+bool __cdecl EngineDLL::HOOKED_HandleEngineKey_Func(InputEvent_t * ievent)
+{
+	catchCommand = true;
+	bool result = ORIG_HandleEngineKey(ievent);
+	catchCommand = false;
+	return result;
+}
+
 void __cdecl EngineDLL::HOOKED__Host_RunFrame_Func(float time)
 {
 	EngineDevMsg("_Host_RunFrame( %.8f ); m_nSignonState = %d;", time, *pM_nSignonState);
@@ -496,8 +526,13 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()
 	EngineDevMsg("Cbuf_Execute() end.\n");
 }
 
-void * __cdecl EngineDLL::HOOKED_Cmd_ExecuteCommand_Func(CCommand & command, int src, int nClientSlot)
+void __cdecl EngineDLL::HOOKED_Cbuf_AddText_Func(const char* pText)
 {
-	scripts::g_Capture.SendCommand(command);
-	return ORIG_Cmd_ExecuteCommand(command, src, nClientSlot);
+	// A hack to make tas_pause unpause from keystrokes
+	if (tas_pause.GetBool() && strstr(pText, "tas_pause 0"))
+		tas_pause.SetValue(0);
+	else if(catchCommand) // Don't catch tas_pause 0
+		scripts::g_Capture.SendCommand(pText);
+
+	ORIG_Cbuf_AddText(pText);
 }

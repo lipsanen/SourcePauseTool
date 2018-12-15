@@ -34,7 +34,6 @@ namespace scripts
 		
 		void Reset();
 		void Init(std::string name);
-		void Finish();
 		bool IsUnlimited();
 
 		void AddDuringLoadCmd(const std::string& cmd);
@@ -44,6 +43,9 @@ namespace scripts
 		void AddAfterFramesEntry(long long int tick, std::string command);
 		void SetSave(std::string save) { saveName = save; };
 		int GetScriptLength() { return afterFramesTick; }
+		void SetScriptMaxLength(int length) { maxLength = length; }
+		bool ScriptRanOver() { return afterFramesTick > maxLength && maxLength != UNLIMITED_LENGTH; }
+		int RunOverAmount() { if (ScriptRanOver()) return afterFramesTick - maxLength; else return 0; }
 
 	private:
 		int maxLength;

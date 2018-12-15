@@ -32,19 +32,87 @@ namespace scripts
 		iterationFinished = true;
 	}
 
+	void SourceTASReader::ExecuteScriptAndPause(const std::string& script, int pauseTick)
+	{
+		freezeVariables = false;
+		fileName = script;
+		CommonExecuteScript(false, pauseTick);
+		
+
+		if (pauseTick == UNLIMITED_LENGTH)
+			pauseTick = currentScript.GetScriptLength();
+
+		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick, "tas_pause 1"));
+		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick, "tas_record_start"));		
+	}
+
 	void SourceTASReader::ExecuteScript(const std::string& script)
 	{
 		freezeVariables = false;
 		fileName = script;
-		CommonExecuteScript(false);
+		CommonExecuteScript(false, UNLIMITED_LENGTH);
 	}
 
 	void SourceTASReader::StartSearch(const std::string& script)
 	{
 		freezeVariables = false;
 		fileName = script;
-		CommonExecuteScript(true);
+		CommonExecuteScript(true, UNLIMITED_LENGTH);
 		freezeVariables = true;
+	}
+
+	void SourceTASReader::RewriteWithCapture(const std::vector<CaptureData>& capture)
+	{
+		try
+		{
+			freezeVariables = false;
+			Reset();
+
+			std::string gameDir = GetGameDir();
+			outputStream.open(gameDir + "\\" + fileName + "-temp" + SCRIPT_EXT);
+
+			shouldWrite = true;
+			ReadScript(false);
+
+			outputStream << GenerateBulkString('-', 0, "") << '\n';
+
+			for (auto& datum : capture)
+			{
+				outputStream << GenerateBulkString('>', datum.length, datum.cmd, datum.yaw, datum.pitch) << '\n';
+			}
+
+		}
+		catch (const std::exception& ex)
+		{
+			Msg("Failed to rewrite with capture, error in line %i: %s!\n", currentLine, ex.what());
+		}
+
+		outputStream.close();
+	}
+
+	void SourceTASReader::ReadScript(bool search)
+	{
+		std::string gameDir = GetGameDir();
+		scriptStream.open(gameDir + "\\" + fileName + SCRIPT_EXT);
+
+		if (!scriptStream.is_open())
+			throw std::exception("File does not exist");
+		ParseProps();
+
+		if (search && searchType == SearchType::None)
+			throw std::exception("In search mode but search property is not set");
+		else if (!search && searchType != SearchType::None)
+			throw std::exception("Not in search mode but search property is set");
+
+		while (!scriptStream.eof())
+		{
+			if (IsFramesLine())
+				ParseFrames();
+			else if (IsVarsLine())
+				ParseVariables();
+			else
+				throw std::exception("Unexpected section order in file. Expected order is props - variables - frames");
+		}
 	}
 
 	void SourceTASReader::SearchResult(scripts::SearchResult result)
@@ -52,7 +120,7 @@ namespace scripts
 		try
 		{
 			variables.SetResult(result);
-			CommonExecuteScript(true);
+			CommonExecuteScript(true, UNLIMITED_LENGTH);
 		}
 		catch (const std::exception& ex)
 		{
@@ -70,7 +138,7 @@ namespace scripts
 		}
 	}
 
-	void SourceTASReader::CommonExecuteScript(bool search)
+	void SourceTASReader::CommonExecuteScript(bool search, int maxLength)
 	{
 		try
 		{
@@ -80,29 +148,8 @@ namespace scripts
 			if (dir == NULL || dir[0] == '\0')
 				Msg("WARNING: Trying to load a script file without setting the game directory with y_spt_gamedir in old engine!\n");
 #endif
-
-			std::string gameDir = GetGameDir();
-			scriptStream.open(gameDir + "\\" + fileName + SCRIPT_EXT);
-
-			if (!scriptStream.is_open())
-				throw std::exception("File does not exist");
-			ParseProps();
-
-			if (search && searchType == SearchType::None)
-				throw std::exception("In search mode but search property is not set");
-			else if (!search && searchType != SearchType::None)
-				throw std::exception("Not in search mode but search property is set");
-
-			while (!scriptStream.eof())
-			{
-				if (IsFramesLine())
-					ParseFrames();
-				else if (IsVarsLine())
-					ParseVariables();
-				else
-					throw std::exception("Unexpected section order in file. Expected order is props - variables - frames");
-			}
-
+			currentScript.SetScriptMaxLength(maxLength);
+			ReadScript(search);
 			Execute();
 		}
 		catch (const std::exception& ex)
@@ -153,10 +200,6 @@ namespace scripts
 	void SourceTASReader::OnCommand(const CCommand & args)
 	{
 		Msg("got %s\n", args.GetCommandString());
-	}
-
-	void SourceTASReader::OnTick(float yaw, float pitch)
-	{
 	}
 
 	int SourceTASReader::GetCurrentScriptLength()
@@ -213,7 +256,9 @@ namespace scripts
 		}
 
 		std::getline(scriptStream, line);
+		origLine = line;
 		SetNewLine();
+		OnNewLineRead();
 
 		return true;
 	}
@@ -237,6 +282,48 @@ namespace scripts
 		{
 			ReplaceAll(line, GetVarIdentifier(variable.first), variable.second.GetValue());
 		}
+	}
+
+	void SourceTASReader::OnNewLineRead()
+	{
+		WriteOutputLine();
+
+		// eof, write the last line
+		if (!scriptStream.good())
+			WriteOutputLine();
+	}
+
+
+	void SourceTASReader::WriteOutputLine()
+	{
+		if (shouldWrite)
+		{
+			/*if (state == ParseState::Frames && currentScript.ScriptRanOver())
+			{
+				shouldWrite = false;
+				WriteLastLine();
+			}
+			else
+			{
+				if (firstOutputLine)
+					firstOutputLine = false;
+				else
+					outputStream << outputLineToWrite;
+				outputLineToWrite = origLine + "\n";
+			}*/
+
+			if (state == ParseState::Frames && currentScript.ScriptRanOver())
+				shouldWrite = false;
+			else
+				outputStream << origLine << '\n';
+		}
+	}
+
+	void SourceTASReader::WriteLastLine()
+	{
+		int runOver = currentScript.RunOverAmount();
+		ModifyLength(outputLineToWrite, -runOver);
+		outputStream << outputLineToWrite;
 	}
 
 	void SourceTASReader::ResetConvars()
@@ -313,6 +400,7 @@ namespace scripts
 
 	void SourceTASReader::ResetIterationState()
 	{
+		state = ParseState::Props;
 		ResetConvars();
 		conditions.clear();
 		scriptStream.clear();
@@ -324,10 +412,15 @@ namespace scripts
 		demoDelay = 0;
 		demoName.clear();
 		currentScript.Reset();
+		shouldWrite = false;
+		outputStream.close();
+		firstOutputLine = false;
 	}
 
 	void SourceTASReader::ParseProps()
 	{
+		state = ParseState::Props;
+
 		while (ParseLine())
 		{
 			if (IsFramesLine() || IsVarsLine())
@@ -364,6 +457,8 @@ namespace scripts
 
 	void SourceTASReader::ParseVariables()
 	{
+		state = ParseState::Vars;
+
 		while (ParseLine())
 		{
 			if (IsFramesLine())
@@ -393,12 +488,11 @@ namespace scripts
 
 	void SourceTASReader::ParseFrames()
 	{
+		state = ParseState::Frames;
 		while (ParseLine())
 		{
 			ParseFrameBulk();
 		}
-
-		currentScript.Finish();
 	}
 
 	void SourceTASReader::ParseFrameBulk()
@@ -523,52 +617,91 @@ namespace scripts
 	Capture::Capture()
 	{
 		currentTick = 0;
-		capture = false;
 	}
 
-	void Capture::SendCommand(CCommand & args)
+	void Capture::SendCommand(const char* pText)
 	{
-		if(capture)
-			entries.push_back(afterframes_entry_t(currentTick, args.GetCommandString()));
+		if (tas_recording.GetBool())
+			currentCmd += pText;
 	}
 
-	template <typename T>
-	std::string to_string_with_precision(const T a_value, const int n = 16)
+	void Capture::SendViewAngles(float yaw, float pitch)
 	{
-		std::ostringstream out;
-		out.precision(n);
-		out << std::fixed << a_value;
-		return out.str();
-	}
-
-	void Capture::SendVA(float yaw, float pitch)
-	{
-		if (capture)
+		if (tas_recording.GetBool())
 		{
+			std::replace(currentCmd.begin(), currentCmd.end(), '\n', ';');
+			CaptureData data;
+			data.cmd = currentCmd;
+			data.length = 1;
+			data.pitch = pitch;
+			data.yaw = yaw;
+
+			captureData.push_back(data);
+			currentCmd.clear();
 			++currentTick;
-			entries.push_back(afterframes_entry_t(currentTick - 1, "_y_spt_setyaw " + to_string_with_precision(yaw)));
-			entries.push_back(afterframes_entry_t(currentTick - 1, "_y_spt_setpitch " + to_string_with_precision(pitch)));
 		}		
 	}
 
 	void Capture::StartCapture()
 	{
+		float frameTime = (1 / tas_record_fps.GetFloat()) * tas_record_speed.GetFloat();
+		if (frameTime > engineDLL.GetTickrate())
+		{
+			Msg("Frametime cannot be longer than engine ticks! Lower the recording speed or make the fps higher.\n");
+			return;
+		}
+
 		currentTick = 0;
-		entries.clear();
-		capture = true;
+		captureData.clear();
+		char buffer[128];
+		sprintf_s(buffer, ARRAYSIZE(buffer), "sv_cheats 1; host_framerate %.8f; y_spt_cvar fps_max %.8f", frameTime, tas_record_fps.GetFloat());
+		EngineConCmd(buffer);
+
+		try
+		{
+			auto empty = GetEmptyBulk(0, "");
+			clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(0, empty.getInitialCommand() + ";_y_spt_resetpitchyaw; tas_recording 1"));
+		}
+		catch (const std::exception& ex)
+		{
+			Msg("%s\n", ex.what());
+		}
+		catch (...)
+		{
+			Msg("Starting the capture failed.\n");
+		}
 	}
 
-	void Capture::StopCapture()
+	void Capture::StopCapture(bool keep)
 	{
-		capture = false;
-		Msg("Capture lasted %d ticks.", currentTick);
+		if (keep)
+		{
+			Msg("Capture lasted %d ticks.\n", currentTick);
+			CollapseDuplicates();
+			g_TASReader.RewriteWithCapture(captureData);
+		}
 	}
 
-	void Capture::PlayCapture()
+	void Capture::CollapseDuplicates()
 	{
-		EngineConCmd("sv_cheats 1; host_framerate 0.015");
-		for (auto& entry : entries)
-			clientDLL.AddIntoAfterframesQueue(entry);
+		for (int i = captureData.size() - 2; i >= 0; --i)
+		{
+			if (captureData[i].CanCollapse(captureData[i + 1]))
+			{
+				Collapse(i);
+			}
+		}
+	}
+
+	void Capture::Collapse(int index)
+	{
+		captureData[index].length += captureData[index + 1].length;
+		captureData.erase(captureData.begin() + index + 1);
+	}
+
+	bool CaptureData::CanCollapse(const CaptureData & rhs) const
+	{
+		return yaw == rhs.yaw && pitch == rhs.pitch && rhs.cmd == cmd;
 	}
 
 }

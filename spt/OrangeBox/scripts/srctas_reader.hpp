@@ -11,32 +11,48 @@
 namespace scripts
 {
 	extern const std::string SCRIPT_EXT;
+	enum class ParseState { Props, Vars, Frames };
+
+	struct CaptureData
+	{
+		float yaw;
+		float pitch;
+		std::string cmd;
+		int length;
+
+		bool CanCollapse(const CaptureData& rhs) const;
+	};
 
 	class Capture
 	{
 	public:
 		Capture();
-		void SendCommand(CCommand& args);
-		void SendVA(float yaw, float pitch);
+		void SendCommand(const char* pText);
+		void SendViewAngles(float yaw, float pitch);
 		void StartCapture();
-		void StopCapture();
-		void PlayCapture();
+		void StopCapture(bool keep);
+		void CollapseDuplicates();
+		void Collapse(int index);
 	private:
-		std::vector<afterframes_entry_t> entries;
+		std::vector<CaptureData> captureData;
 		int currentTick;
-		bool capture;
+		std::string currentCmd;
 	};
 
 	class SourceTASReader
 	{
 	public:
 		SourceTASReader();
+		void ExecuteScriptAndPause(const std::string& script, int pauseTick);
 		void ExecuteScript(const std::string& script);
 		void StartSearch(const std::string& script);
+		void RewriteWithCapture(const std::vector<CaptureData>& capture);
+		void ReadScript(bool search);
 		void SearchResult(scripts::SearchResult result);
 		void OnAfterFrames();
 		void OnCommand(const CCommand& args);
-		void OnTick(float yaw, float pitch);
+		void WriteOutputLine();
+		void WriteLastLine();
 		int GetCurrentScriptLength();
 	private:
 		bool iterationFinished;
@@ -44,6 +60,7 @@ namespace scripts
 		std::string fileName;
 		std::ifstream scriptStream;
 		std::istringstream lineStream;
+		std::string origLine;
 		std::string line;
 		int currentLine;
 		long long int currentTick;
@@ -53,12 +70,18 @@ namespace scripts
 		std::string demoName;
 		int demoDelay;
 
+		bool firstOutputLine;
+		bool shouldWrite;
+		std::ofstream outputStream;
+		ParseState state;
+		std::string outputLineToWrite;
+
 		VariableContainer variables;
 		ParsedScript currentScript;
 		std::map<std::string, void(SourceTASReader::*)(const std::string&)> propertyHandlers;
 		std::vector<std::unique_ptr<Condition>> conditions;
 
-		void CommonExecuteScript(bool search);
+		void CommonExecuteScript(bool search, int maxLength);
 		void Reset();
 		void ResetIterationState();
 		void Execute();
@@ -68,6 +91,7 @@ namespace scripts
 		void SetNewLine();
 		void ReplaceVariables();
 		void ResetConvars();
+		void OnNewLineRead();
 
 		void InitPropertyHandlers();
 		void ParseProps();

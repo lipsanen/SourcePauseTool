@@ -808,7 +808,6 @@ CON_COMMAND(tas_test_validate, "Validates a test.")
 
 	ArgsWrapper args(engine.get());
 #endif
-	Vector target;
 
 	if (args.ArgC() > 1)
 	{
@@ -816,19 +815,34 @@ CON_COMMAND(tas_test_validate, "Validates a test.")
 	}
 }
 
-CON_COMMAND(tas_capture_record, "Capture test.")
+CON_COMMAND(tas_record_setup, "Record keyboard inputs into a .srctas file after a certain tick. Usage: tas_record [script] [tick]")
+{
+#if defined( OE )
+	if (!engine)
+		return;
+
+	ArgsWrapper args(engine.get());
+#endif
+
+	if (args.ArgC() > 2)
+	{
+		scripts::g_TASReader.ExecuteScriptAndPause(args.Arg(1), atof(args.Arg(2)));
+	}
+}
+
+CON_COMMAND(tas_record_start, "Start capture.", FCVAR_HIDDEN)
 {
 	scripts::g_Capture.StartCapture();
 }
 
-CON_COMMAND(tas_capture_play, "Play capture test.")
+CON_COMMAND(tas_record_save, "Saves the capture.")
 {
-	scripts::g_Capture.PlayCapture();
+	scripts::g_Capture.StopCapture(true);
 }
 
-CON_COMMAND(tas_capture_stop, "Stop capture.")
+CON_COMMAND(tas_record_discard, "Discards the capture.")
 {
-	scripts::g_Capture.StopCapture();
+	scripts::g_Capture.StopCapture(false);
 }
 
 #if SSDK2007

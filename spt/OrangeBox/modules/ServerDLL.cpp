@@ -663,5 +663,5 @@ void __cdecl ServerDLL::HOOKED_CGameMovement__FullWalkMove_Func(void* thisptr, i
 	ORIG_CGameMovement__FullWalkMove(thisptr, edx);
 	float va[3];
 	EngineGetViewAngles(va);
-	scripts::g_Capture.SendVA(va[YAW], va[PITCH]);
+	scripts::g_Capture.SendViewAngles(va[YAW], va[PITCH]);
 }

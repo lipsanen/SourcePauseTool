@@ -4,6 +4,8 @@
 
 namespace scripts
 {
+	const int FLOAT_PRECISION = 10;
+	const float INVALID_ANGLE = -360;
 	const int NO_AFTERFRAMES_BULK = -1;
 
 	class FrameBulkOutput
@@ -28,9 +30,9 @@ namespace scripts
 		const std::string& operator[](std::pair<int, int> i);
 		bool IsInt(std::pair<int, int> i);
 		bool IsFloat(std::pair<int, int> i);
-		void AddCommand(const std::string& cmd);
+		void AddForcedCommand(const std::string& cmd);
 		void AddCommand(const std::string& cmd, const std::pair<int, int>& field);
-		void AddPlusMinusCmd(const std::string& command, bool set);
+		void AddForcedPlusMinusCmd(const std::string& command, bool set);
 		void AddPlusMinusCmd(const std::string& command, bool set, const std::pair<int, int>& field);
 		bool NoopField(const std::pair<int, int>& field);
 		void ValidateFieldFlags(FrameBulkInfo& frameBulkInfo, const std::string& fields, int index);
@@ -40,5 +42,10 @@ namespace scripts
 		std::map<std::pair<int, int>, std::string> dataMap;
 	};
 
+	void ModifyLength(std::string& bulk, int addition);
+	bool AngleInvalid(float angle);
+	std::string GenerateBulkString(char fillChar, int ticks, const std::string& cmd, float yaw = INVALID_ANGLE, float pitch = INVALID_ANGLE);
+	FrameBulkOutput GetNoopBulk(int length, const std::string& cmd);
+	FrameBulkOutput GetEmptyBulk(int length, const std::string& cmd);
 	FrameBulkOutput HandleFrameBulk(FrameBulkInfo& frameBulkInfo);
 }

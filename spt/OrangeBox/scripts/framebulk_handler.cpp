@@ -51,23 +51,23 @@ namespace scripts
 	{
 		if (frameBulkInfo.ContainsFlag(STRAFE, "s"))
 		{
-			frameBulkInfo.AddCommand("tas_strafe 1");
+			frameBulkInfo.AddCommand("tas_strafe 1", STRAFE);
 
 			if (!frameBulkInfo.IsInt(JUMP_TYPE) || !frameBulkInfo.IsInt(STRAFE_TYPE))
 				throw std::exception("Jump type or strafe type was not an integer");
 
-			frameBulkInfo.AddCommand("tas_strafe_jumptype " + frameBulkInfo[JUMP_TYPE]);
-			frameBulkInfo.AddCommand("tas_strafe_type " + frameBulkInfo[STRAFE_TYPE]);
+			frameBulkInfo.AddCommand("tas_strafe_jumptype " + frameBulkInfo[JUMP_TYPE], STRAFE);
+			frameBulkInfo.AddCommand("tas_strafe_type " + frameBulkInfo[STRAFE_TYPE], STRAFE);
 		}
 		else
-			frameBulkInfo.AddCommand("tas_strafe 0");
+			frameBulkInfo.AddCommand("tas_strafe 0", STRAFE);
 
 		if (frameBulkInfo.ContainsFlag(AUTOJUMP, "j"))
-			frameBulkInfo.AddCommand("y_spt_autojump 1");
+			frameBulkInfo.AddCommand("y_spt_autojump 1", AUTOJUMP);
 		else
-			frameBulkInfo.AddCommand("y_spt_autojump 0");
+			frameBulkInfo.AddCommand("y_spt_autojump 0", AUTOJUMP);
 
-		frameBulkInfo.AddPlusMinusCmd("y_spt_duckspam", frameBulkInfo.ContainsFlag(DUCKSPAM, "d"));
+		frameBulkInfo.AddPlusMinusCmd("y_spt_duckspam", frameBulkInfo.ContainsFlag(DUCKSPAM, "d"), DUCKSPAM);
 
 		// todo
 #pragma warning(push)
@@ -82,24 +82,24 @@ namespace scripts
 
 	void Field2(FrameBulkInfo& frameBulkInfo)
 	{
-		frameBulkInfo.AddPlusMinusCmd("forward", frameBulkInfo.ContainsFlag(FORWARD,"f"));
-		frameBulkInfo.AddPlusMinusCmd("moveleft", frameBulkInfo.ContainsFlag(LEFT,"l"));
-		frameBulkInfo.AddPlusMinusCmd("moveright", frameBulkInfo.ContainsFlag(RIGHT, "r"));
-		frameBulkInfo.AddPlusMinusCmd("back", frameBulkInfo.ContainsFlag(BACK, "b"));
-		frameBulkInfo.AddPlusMinusCmd("moveup", frameBulkInfo.ContainsFlag(UP, "u"));
-		frameBulkInfo.AddPlusMinusCmd("movedown", frameBulkInfo.ContainsFlag(DOWN, "d"));
+		frameBulkInfo.AddPlusMinusCmd("forward", frameBulkInfo.ContainsFlag(FORWARD,"f"), FORWARD);
+		frameBulkInfo.AddPlusMinusCmd("moveleft", frameBulkInfo.ContainsFlag(LEFT,"l"), LEFT);
+		frameBulkInfo.AddPlusMinusCmd("moveright", frameBulkInfo.ContainsFlag(RIGHT, "r"), RIGHT);
+		frameBulkInfo.AddPlusMinusCmd("back", frameBulkInfo.ContainsFlag(BACK, "b"), BACK);
+		frameBulkInfo.AddPlusMinusCmd("moveup", frameBulkInfo.ContainsFlag(UP, "u"), UP);
+		frameBulkInfo.AddPlusMinusCmd("movedown", frameBulkInfo.ContainsFlag(DOWN, "d"), DOWN);
 	}
 
 	void Field3(FrameBulkInfo& frameBulkInfo)
 	{
-		frameBulkInfo.AddPlusMinusCmd("jump", frameBulkInfo.ContainsFlag(JUMP, "j") || frameBulkInfo.ContainsFlag(AUTOJUMP, "j"));
-		frameBulkInfo.AddPlusMinusCmd("duck", frameBulkInfo.ContainsFlag(DUCK, "d"));
-		frameBulkInfo.AddPlusMinusCmd("use", frameBulkInfo.ContainsFlag(USE, "u"));
-		frameBulkInfo.AddPlusMinusCmd("attack", frameBulkInfo.ContainsFlag(ATTACK1, "1"));
-		frameBulkInfo.AddPlusMinusCmd("attack2", frameBulkInfo.ContainsFlag(ATTACK2, "2"));
-		frameBulkInfo.AddPlusMinusCmd("reload", frameBulkInfo.ContainsFlag(RELOAD, "r"));
-		frameBulkInfo.AddPlusMinusCmd("walk", frameBulkInfo.ContainsFlag(WALK, "w"));
-		frameBulkInfo.AddPlusMinusCmd("speed", frameBulkInfo.ContainsFlag(SPEED, "s"));
+		frameBulkInfo.AddPlusMinusCmd("jump", frameBulkInfo.ContainsFlag(JUMP, "j") || frameBulkInfo.ContainsFlag(AUTOJUMP, "j"), JUMP);
+		frameBulkInfo.AddPlusMinusCmd("duck", frameBulkInfo.ContainsFlag(DUCK, "d"), DUCK);
+		frameBulkInfo.AddPlusMinusCmd("use", frameBulkInfo.ContainsFlag(USE, "u"), USE);
+		frameBulkInfo.AddPlusMinusCmd("attack", frameBulkInfo.ContainsFlag(ATTACK1, "1"), ATTACK1);
+		frameBulkInfo.AddPlusMinusCmd("attack2", frameBulkInfo.ContainsFlag(ATTACK2, "2"), ATTACK2);
+		frameBulkInfo.AddPlusMinusCmd("reload", frameBulkInfo.ContainsFlag(RELOAD, "r"), RELOAD);
+		frameBulkInfo.AddPlusMinusCmd("walk", frameBulkInfo.ContainsFlag(WALK, "w"), WALK);
+		frameBulkInfo.AddPlusMinusCmd("speed", frameBulkInfo.ContainsFlag(SPEED, "s"), SPEED);
 	}
 
 	void Field4_5(FrameBulkInfo& frameBulkInfo)
@@ -107,15 +107,15 @@ namespace scripts
 		if (frameBulkInfo.IsFloat(YAW_KEY))
 		{
 			if (frameBulkInfo.ContainsFlag(STRAFE, "s"))
-				frameBulkInfo.AddCommand("tas_strafe_yaw " + frameBulkInfo[YAW_KEY]);
+				frameBulkInfo.AddForcedCommand("tas_strafe_yaw " + frameBulkInfo[YAW_KEY]);
 			else
-				frameBulkInfo.AddCommand("_y_spt_setyaw " + frameBulkInfo[YAW_KEY]);
+				frameBulkInfo.AddForcedCommand("_y_spt_setyaw " + frameBulkInfo[YAW_KEY]);
 		}
 		else if (frameBulkInfo[YAW_KEY] != EMPTY_FIELD)
 			throw std::exception("Unable to parse the yaw angle");
 
 		if (frameBulkInfo.IsFloat(PITCH_KEY))
-			frameBulkInfo.AddCommand("_y_spt_setpitch " + frameBulkInfo[PITCH_KEY]);
+			frameBulkInfo.AddForcedCommand("_y_spt_setpitch " + frameBulkInfo[PITCH_KEY]);
 		else if (frameBulkInfo[PITCH_KEY] != EMPTY_FIELD)
 			throw std::exception("Unable to parse the pitch angle");
 	}
@@ -151,6 +151,74 @@ namespace scripts
 		frameBulkHandlers.push_back(Field4_5);
 		frameBulkHandlers.push_back(Field6);
 		frameBulkHandlers.push_back(Field7);
+	}
+
+	void ModifyLength(std::string& bulk, int addition)
+	{
+		char FIELD1[16];
+		char FIELD2[16];
+		char FIELD3[16];
+		char FIELD4[16];
+		char FIELD5[16];
+		int tick;
+		char FIELD6[16];
+		char OUTPUT[128];
+		Msg("%s comes in.\n", bulk.c_str());
+		sscanf_s(bulk.c_str(), "%s|%s|%s|%s|%s|%d|%s", FIELD1, FIELD2, FIELD3, FIELD4, FIELD5, &tick, FIELD6);
+		sprintf_s(OUTPUT, "%s|%s|%s|%s|%s|%d|%s\n", FIELD1, FIELD2, FIELD3, FIELD4, FIELD5, tick + addition, FIELD6);
+		bulk = OUTPUT;
+		Msg("%s comes out. You can't explain that.\n", bulk.c_str());
+	}
+
+	bool AngleInvalid(float angle)
+	{
+		return angle == INVALID_ANGLE;
+	}
+
+	std::string GenerateBulkString(char fillChar, int ticks, const std::string& cmd, float yaw, float pitch)
+	{
+		std::ostringstream oss;
+		
+		for (int i = 0; i < FIELD0_FILLED.size(); ++i)
+			oss << fillChar;
+		oss << '|';
+		for (int i = 0; i < FIELD1_FILLED.size(); ++i)
+			oss << fillChar;
+		oss << '|';
+		for (int i = 0; i < FIELD2_FILLED.size(); ++i)
+			oss << fillChar;
+		oss << '|';
+		
+		oss << std::setprecision(FLOAT_PRECISION);
+		if (!AngleInvalid(yaw))
+			oss << yaw << '|';
+		else
+			oss << "-|";
+
+		if (!AngleInvalid(pitch))
+			oss << pitch << '|';
+		else
+			oss << "-|";
+
+		oss << ticks << '|' << cmd;
+
+		return oss.str();
+	}
+
+	FrameBulkOutput GetNoopBulk(int length, const std::string& cmd)
+	{
+		std::istringstream istr(GenerateBulkString('>', length, cmd));
+		FrameBulkInfo info(istr);
+
+		return HandleFrameBulk(info);
+	}
+
+	FrameBulkOutput GetEmptyBulk(int length, const std::string& cmd)
+	{
+		std::istringstream istr(GenerateBulkString('-', length, cmd));
+		FrameBulkInfo info(istr);
+
+		return HandleFrameBulk(info);
 	}
 
 	FrameBulkOutput HandleFrameBulk(FrameBulkInfo& frameBulkInfo)
@@ -232,7 +300,7 @@ namespace scripts
 		return IsValue<float>(value);
 	}
 
-	void FrameBulkInfo::AddCommand(const std::string & cmd)
+	void FrameBulkInfo::AddForcedCommand(const std::string & cmd)
 	{
 		data.AddCommand(cmd);
 	}
@@ -242,10 +310,10 @@ namespace scripts
 		if (NoopField(field))
 			return;
 
-		AddCommand(cmd);
+		AddForcedCommand(cmd);
 	}
 
-	void FrameBulkInfo::AddPlusMinusCmd(const std::string& command, bool set)
+	void FrameBulkInfo::AddForcedPlusMinusCmd(const std::string& command, bool set)
 	{
 		if (set)
 			data.AddCommand('+', command);
@@ -258,7 +326,7 @@ namespace scripts
 		if (NoopField(field))
 			return;
 
-		AddPlusMinusCmd(command, set);
+		AddForcedPlusMinusCmd(command, set);
 	}
 
 	bool FrameBulkInfo::NoopField(const std::pair<int, int>& field)
@@ -274,7 +342,7 @@ namespace scripts
 			if (fields[i] != WILDCARD && frameBulkInfo.dataMap.find(key) != frameBulkInfo.dataMap.end())
 			{
 				auto& value = frameBulkInfo[key];
-				if (value[0] != fields[i] && value[0] != '-')
+				if (value[0] != fields[i] && value[0] != '-' && value[0] != '>')
 				{
 					std::ostringstream os;
 					os << "Expected " << fields[i] << ", got " << value << " in field: " << fields;
