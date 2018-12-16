@@ -83,6 +83,7 @@ namespace scripts
 		afterFramesEntries.clear();
 		completeInitCommand = "sv_cheats 1; y_spt_pause 0;_y_spt_afterframes_await_load; _y_spt_afterframes_reset_on_server_activate 0; _y_spt_resetpitchyaw";
 		completeDuringLoad.clear();
+		lines.clear();
 		saveStates.clear();
 	}
 
@@ -102,8 +103,6 @@ namespace scripts
 		for (std::size_t i = 0; i < lines.size(); ++i)
 		{
 			auto pointer = lines[i].get();
-
-			Msg("Iteration %d, line %s\n", i, lines[i]->GetLine().c_str());
 			auto load = pointer->DuringLoadCmd();
 			auto init = pointer->LoadSaveCmd();
 
@@ -112,14 +111,9 @@ namespace scripts
 			if (!init.empty())
 				AddInitCommand(init);
 
-
 			pointer->AddAfterFrames(afterFramesEntries, runningTick);
 			runningTick += pointer->TickCountAdvanced();
 			
-			FrameLine* fl = dynamic_cast<FrameLine*>(pointer);
-			if (fl)
-				Msg("is frameline\n");
-
 			SaveStateLine* sl = dynamic_cast<SaveStateLine*>(pointer);
 			if (sl)
 				AddSaveState(runningTick);
@@ -149,7 +143,6 @@ namespace scripts
 
 	void ParsedScript::AddScriptLine(ScriptLine* line)
 	{
-		Msg("pushing line\n");
 		lines.push_back(std::unique_ptr<ScriptLine>(line));
 	}
 
@@ -195,7 +188,6 @@ namespace scripts
 
 	void ScriptLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const
 	{
-		Msg("landed in default function\n");
 	}
 
 }

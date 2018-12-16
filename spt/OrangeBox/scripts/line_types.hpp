@@ -21,6 +21,7 @@ namespace scripts
 	public:
 		PropertyLine(const std::string& line, const std::string& duringLoadCmd = EMPTY, const std::string& afterLoadCmd = EMPTY, const std::string& loadSaveCmd = EMPTY);
 		const std::string& DuringLoadCmd() const override;
+		const std::string& LoadSaveCmd() const override;
 		void AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const override;
 	private:
 		std::string duringLoadCmd;

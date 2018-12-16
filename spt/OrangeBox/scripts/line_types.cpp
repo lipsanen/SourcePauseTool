@@ -17,7 +17,12 @@ namespace scripts
 
 	const std::string & PropertyLine::DuringLoadCmd() const
 	{
-		return afterLoadCmd;
+		return duringLoadCmd;
+	}
+
+	const std::string & PropertyLine::LoadSaveCmd() const
+	{
+		return loadSaveCmd;
 	}
 
 	void PropertyLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const
@@ -49,8 +54,6 @@ namespace scripts
 	{
 		if (data.outputData.ticks >= 0)
 		{
-			Msg("pushing afterframes %s\n", data.outputData.getInitialCommand().c_str());
-			Msg("pushing afterframes %s\n", data.outputData.getRepeatingCommand().c_str());
 			entries.push_back(afterframes_entry_t(runningTick, data.outputData.getInitialCommand()));
 			entries.push_back(afterframes_entry_t(runningTick, data.outputData.getRepeatingCommand()));
 

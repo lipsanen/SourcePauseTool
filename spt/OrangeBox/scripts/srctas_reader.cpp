@@ -12,6 +12,18 @@
 #include "..\..\utils\math.hpp"
 #include "line_types.hpp"
 
+
+// TODO
+// Things I don't like:
+// - Easy to forget to add the line to the parsed script for properties, Maybe add some default function that always adds 
+// the line and subsequent adds on the same line number just modify the existing value in ParsedScript. Also allows to check if every line was added properly on the ParsedScript side
+// and reduces the amount of code.
+//
+// - Returning a reference to an empty const string feels awkward, maybe use a pointer instead and check for nullptr
+// - DemoDelay is an atrocity of a property - remove that shit
+// - Save being handled separately is inelegant but probably necessary because of savestates
+// - Move the recording thing into a propertyline
+
 namespace scripts
 {
 	SourceTASReader g_TASReader;
@@ -187,7 +199,6 @@ namespace scripts
 
 		std::string startCmd(currentScript.GetInitCommand() + ";" + currentScript.GetDuringLoadCmd());
 		EngineConCmd(startCmd.c_str());
-		DevMsg("Executing start command: %s\n", startCmd.c_str());	
 
 		if(!demoName.empty())
 			clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(demoDelay, "record " + demoName));
