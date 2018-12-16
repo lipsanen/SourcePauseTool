@@ -9,6 +9,7 @@
 #include <SPTLib\hooks.hpp>
 #include "EngineDLL.hpp"
 #include "..\scripts\srctas_reader.hpp"
+#include "..\scripts\capture.hpp"
 
 using std::uintptr_t;
 using std::size_t;
@@ -531,7 +532,7 @@ void __cdecl EngineDLL::HOOKED_Cbuf_AddText_Func(const char* pText)
 	// A hack to make tas_pause unpause from keystrokes
 	if (tas_pause.GetBool() && strstr(pText, "tas_pause 0"))
 		tas_pause.SetValue(0);
-	else if(catchCommand) // Don't catch tas_pause 0
+	else if (catchCommand) // Don't catch tas_pause 0
 		scripts::g_Capture.SendCommand(pText);
 
 	ORIG_Cbuf_AddText(pText);

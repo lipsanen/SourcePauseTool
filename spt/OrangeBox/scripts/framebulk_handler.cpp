@@ -1,10 +1,14 @@
 #include "stdafx.h"
+#include <vector>
+#include <iostream>
+#include "tier0\commonmacros.h"
 #include "framebulk_handler.hpp"
 #include "..\..\utils\string_parsing.hpp"
+#include "dbg.h"
 
 namespace scripts
 {
-	typedef void(*CommandCallback) (FrameBulkInfo& frameBulkInfo);
+	typedef void(*CommandCallback) (FrameBulkData& frameBulkInfo);
 	std::vector<CommandCallback> frameBulkHandlers;
 
 	const std::string FIELD0_FILLED = "s**ljdbcgu";
@@ -47,7 +51,7 @@ namespace scripts
 	const auto TICKS = std::pair<int, int>(5, 0);
 	const auto COMMANDS = std::pair<int, int>(6, 0);
 
-	void Field1(FrameBulkInfo& frameBulkInfo)
+	void Field1(FrameBulkData& frameBulkInfo)
 	{
 		if (frameBulkInfo.ContainsFlag(STRAFE, "s"))
 		{
@@ -80,7 +84,7 @@ namespace scripts
 #pragma warning(pop)
 	}
 
-	void Field2(FrameBulkInfo& frameBulkInfo)
+	void Field2(FrameBulkData& frameBulkInfo)
 	{
 		frameBulkInfo.AddPlusMinusCmd("forward", frameBulkInfo.ContainsFlag(FORWARD,"f"), FORWARD);
 		frameBulkInfo.AddPlusMinusCmd("moveleft", frameBulkInfo.ContainsFlag(LEFT,"l"), LEFT);
@@ -90,7 +94,7 @@ namespace scripts
 		frameBulkInfo.AddPlusMinusCmd("movedown", frameBulkInfo.ContainsFlag(DOWN, "d"), DOWN);
 	}
 
-	void Field3(FrameBulkInfo& frameBulkInfo)
+	void Field3(FrameBulkData& frameBulkInfo)
 	{
 		frameBulkInfo.AddPlusMinusCmd("jump", frameBulkInfo.ContainsFlag(JUMP, "j") || frameBulkInfo.ContainsFlag(AUTOJUMP, "j"), JUMP);
 		frameBulkInfo.AddPlusMinusCmd("duck", frameBulkInfo.ContainsFlag(DUCK, "d"), DUCK);
@@ -102,7 +106,7 @@ namespace scripts
 		frameBulkInfo.AddPlusMinusCmd("speed", frameBulkInfo.ContainsFlag(SPEED, "s"), SPEED);
 	}
 
-	void Field4_5(FrameBulkInfo& frameBulkInfo)
+	void Field4_5(FrameBulkData& frameBulkInfo)
 	{
 		if (frameBulkInfo.IsFloat(YAW_KEY))
 		{
@@ -120,22 +124,22 @@ namespace scripts
 			throw std::exception("Unable to parse the pitch angle");
 	}
 
-	void Field6(FrameBulkInfo& frameBulkInfo)
+	void Field6(FrameBulkData& frameBulkInfo)
 	{
 		if (!frameBulkInfo.IsInt(TICKS))
 			throw std::exception("Tick value was not an integer");
 
 		int ticks = std::atoi(frameBulkInfo[TICKS].c_str());
-		frameBulkInfo.data.ticks = ticks;
+		frameBulkInfo.outputData.ticks = ticks;
 	}
 
-	void Field7(FrameBulkInfo& frameBulkInfo)
+	void Field7(FrameBulkData& frameBulkInfo)
 	{
 		if (!frameBulkInfo[COMMANDS].empty())
-			frameBulkInfo.data.AddRepeatingCommand(frameBulkInfo[COMMANDS]);
+			frameBulkInfo.outputData.AddRepeatingCommand(frameBulkInfo[COMMANDS]);
 	}
 
-	void ValidateFieldFlags(FrameBulkInfo& frameBulkInfo)
+	void ValidateFieldFlags(FrameBulkData& frameBulkInfo)
 	{
 		frameBulkInfo.ValidateFieldFlags(frameBulkInfo, FIELD0_FILLED, 0);
 		frameBulkInfo.ValidateFieldFlags(frameBulkInfo, FIELD1_FILLED, 1);
@@ -205,23 +209,21 @@ namespace scripts
 		return oss.str();
 	}
 
-	FrameBulkOutput GetNoopBulk(int length, const std::string& cmd)
+	FrameBulkData GetNoopBulk(int length, const std::string& cmd)
 	{
-		std::istringstream istr(GenerateBulkString('>', length, cmd));
-		FrameBulkInfo info(istr);
+		FrameBulkData info(GenerateBulkString('>', length, cmd));
 
 		return HandleFrameBulk(info);
 	}
 
-	FrameBulkOutput GetEmptyBulk(int length, const std::string& cmd)
+	FrameBulkData GetEmptyBulk(int length, const std::string& cmd)
 	{
-		std::istringstream istr(GenerateBulkString('-', length, cmd));
-		FrameBulkInfo info(istr);
+		FrameBulkData info(GenerateBulkString('-', length, cmd));
 
 		return HandleFrameBulk(info);
 	}
 
-	FrameBulkOutput HandleFrameBulk(FrameBulkInfo& frameBulkInfo)
+	FrameBulkData HandleFrameBulk(FrameBulkData& frameBulkInfo)
 	{
 		if (frameBulkHandlers.empty())
 			InitHandlers();
@@ -229,7 +231,7 @@ namespace scripts
 		for (auto handler : frameBulkHandlers)
 			handler(frameBulkInfo);
 
-		return frameBulkInfo.data;
+		return frameBulkInfo;
 	}
 
 	void FrameBulkOutput::AddCommand(const std::string& newCmd)
@@ -251,8 +253,9 @@ namespace scripts
 		repeatingCommand += newCmd;
 	}
 
-	FrameBulkInfo::FrameBulkInfo(std::istringstream& stream)
+	FrameBulkData::FrameBulkData(const std::string& input) : input(input)
 	{
+		std::istringstream stream(input);
 		int section = 0;
 		std::string line;
 
@@ -275,7 +278,7 @@ namespace scripts
 		} while (stream.good());
 	}
 
-	const std::string& FrameBulkInfo::operator[](std::pair<int, int> i)
+	const std::string& FrameBulkData::operator[](std::pair<int, int> i)
 	{
 		if (dataMap.find(i) == dataMap.end())
 		{
@@ -288,24 +291,24 @@ namespace scripts
 		return dataMap[i];
 	}
 
-	bool FrameBulkInfo::IsInt(std::pair<int, int> i)
+	bool FrameBulkData::IsInt(std::pair<int, int> i)
 	{
 		std::string value = this->operator[](i);
 		return IsValue<int>(value);
 	}
 
-	bool FrameBulkInfo::IsFloat(std::pair<int, int> i)
+	bool FrameBulkData::IsFloat(std::pair<int, int> i)
 	{
 		std::string value = this->operator[](i);
 		return IsValue<float>(value);
 	}
 
-	void FrameBulkInfo::AddForcedCommand(const std::string & cmd)
+	void FrameBulkData::AddForcedCommand(const std::string & cmd)
 	{
-		data.AddCommand(cmd);
+		outputData.AddCommand(cmd);
 	}
 
-	void FrameBulkInfo::AddCommand(const std::string & cmd, const std::pair<int, int>& field)
+	void FrameBulkData::AddCommand(const std::string & cmd, const std::pair<int, int>& field)
 	{
 		if (NoopField(field))
 			return;
@@ -313,15 +316,15 @@ namespace scripts
 		AddForcedCommand(cmd);
 	}
 
-	void FrameBulkInfo::AddForcedPlusMinusCmd(const std::string& command, bool set)
+	void FrameBulkData::AddForcedPlusMinusCmd(const std::string& command, bool set)
 	{
 		if (set)
-			data.AddCommand('+', command);
+			outputData.AddCommand('+', command);
 		else
-			data.AddCommand('-', command);
+			outputData.AddCommand('-', command);
 	}
 
-	void FrameBulkInfo::AddPlusMinusCmd(const std::string & command, bool set, const std::pair<int, int>& field)
+	void FrameBulkData::AddPlusMinusCmd(const std::string & command, bool set, const std::pair<int, int>& field)
 	{
 		if (NoopField(field))
 			return;
@@ -329,12 +332,12 @@ namespace scripts
 		AddForcedPlusMinusCmd(command, set);
 	}
 
-	bool FrameBulkInfo::NoopField(const std::pair<int, int>& field)
+	bool FrameBulkData::NoopField(const std::pair<int, int>& field)
 	{
 		return dataMap.find(field) == dataMap.end() || this->operator[](field) == NOOP_FIELD;
 	}
 
-	void FrameBulkInfo::ValidateFieldFlags(FrameBulkInfo& frameBulkInfo, const std::string& fields, int index)
+	void FrameBulkData::ValidateFieldFlags(FrameBulkData& frameBulkInfo, const std::string& fields, int index)
 	{
 		for (size_t i = 0; i < fields.length(); ++i)
 		{
@@ -351,7 +354,7 @@ namespace scripts
 			}
 		}
 	}
-	bool FrameBulkInfo::ContainsFlag(const std::pair<int, int>& key, const std::string & flag)
+	bool FrameBulkData::ContainsFlag(const std::pair<int, int>& key, const std::string & flag)
 	{
 		return dataMap.find(key) != dataMap.end() && this->operator[](key) == flag;
 	}

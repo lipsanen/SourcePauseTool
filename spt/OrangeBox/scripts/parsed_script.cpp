@@ -5,125 +5,155 @@
 #include "framebulk_handler.hpp"
 #include "..\cvars.hpp"
 #include "..\..\utils\file.hpp"
+#include "line_types.hpp"
 
 namespace scripts
 {
+	void ParsedScript::SetSave(const std::string& saveName)
+	{
+		this->saveName = saveName;
+	}
 	void ParsedScript::AddDuringLoadCmd(const std::string& cmd)
 	{
-		duringLoad.push_back(';');
-		duringLoad += cmd;
+		completeDuringLoad.push_back(';');
+		completeDuringLoad += cmd;
 	}
 
 	void ParsedScript::AddInitCommand(const std::string& cmd)
 	{
-		initCommand.push_back(';');
-		initCommand += cmd;
+		completeInitCommand.push_back(';');
+		completeInitCommand += cmd;
 	}
 
-	void ParsedScript::AddFrameBulk(FrameBulkOutput& output)
+	void ParsedScript::AddSaveState(int currentTick)
 	{
-		if (output.ticks >= 0)
-		{
-			AddAfterFramesEntry(afterFramesTick, output.getInitialCommand());
-			AddAfterFramesEntry(afterFramesTick, output.getRepeatingCommand());
-
-			for (int i = 1; i < output.ticks; ++i)
-				AddAfterFramesEntry(afterFramesTick + i, output.getRepeatingCommand());
-
-			afterFramesTick += output.ticks;
-		}
-		else if (output.ticks == NO_AFTERFRAMES_BULK)
-		{
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getInitialCommand());
-			AddAfterFramesEntry(NO_AFTERFRAMES_BULK, output.getRepeatingCommand());
-		}
-		else
-		{
-			throw std::exception("Frame bulk length was negative");
-		}
+		saveStates.push_back(GetSaveStateInfo(currentTick));
 	}
 
-	void ParsedScript::AddSaveState()
+	int ParsedScript::ChooseSave(int maxLength)
 	{
-		saveStates.push_back(GetSaveStateInfo());
+		int saveStateIndex = -1;
+		int startTick = 0;
+
+		for (size_t i = 0; i < saveStates.size(); ++i)
+		{
+			if (saveStates[i].tick >= maxLength)
+				break;
+
+			if (saveStates[i].exists && tas_script_savestates.GetBool())
+				saveStateIndex = i;
+			else
+			{
+				afterFramesEntries.push_back(afterframes_entry_t(saveStates[i].tick, "save " + saveStates[i].key));
+			}
+		}
+		
+		if (saveStateIndex != -1)
+		{
+			startTick = saveStates[saveStateIndex].tick;
+			saveName = saveStates[saveStateIndex].key;
+		}
+
+		return startTick;
 	}
 
-	ParsedScript::ParsedScript(int maxLength) : maxLength(maxLength)
+	ParsedScript::ParsedScript()
 	{
+	}
+
+	const std::vector<afterframes_entry_t>& ParsedScript::GetAfterFramesEntries() const
+	{
+		return afterFramesEntries;
+	}
+
+	const std::string & ParsedScript::GetInitCommand() const
+	{
+		return completeInitCommand;
+	}
+
+	const std::string & ParsedScript::GetDuringLoadCmd() const
+	{
+		return completeDuringLoad;
 	}
 
 	void ParsedScript::Reset()
 	{
 		scriptName.clear();
-		afterFramesTick = 0;
+		scriptLength = 0;
 		afterFramesEntries.clear();
-		saveStateIndexes.clear();
-		initCommand = "sv_cheats 1; y_spt_pause 0;_y_spt_afterframes_await_load; _y_spt_afterframes_reset_on_server_activate 0; _y_spt_resetpitchyaw";
-		duringLoad.clear();
-		saveName.clear();
+		completeInitCommand = "sv_cheats 1; y_spt_pause 0;_y_spt_afterframes_await_load; _y_spt_afterframes_reset_on_server_activate 0; _y_spt_resetpitchyaw";
+		completeDuringLoad.clear();
 		saveStates.clear();
 	}
 
-	void ParsedScript::Init(std::string name)
+	void ParsedScript::Init(int maxLength)
 	{
-		this->scriptName = std::move(name);
-		int saveStateIndex = -1;
-
-		for (size_t i = 0; i < saveStates.size(); ++i)
-		{
-			if (saveStates[i].exists && tas_script_savestates.GetBool())
-				saveStateIndex = i;
-			else
-			{
-				AddAfterFramesEntry(saveStates[i].tick, "save " + saveStates[i].key);
-			}
-		}
-
-		if (saveStateIndex != -1)
-		{
-			int tick = saveStates[saveStateIndex].tick;
-			saveName = saveStates[saveStateIndex].key;
-
-			for (size_t i = 0; i < afterFramesEntries.size(); ++i)
-			{
-				if (afterFramesEntries[i].framesLeft >= tick)
-				{
-					// If the entry is on the same tick as the save, add a new during load entry
-					if (afterFramesEntries[i].framesLeft == tick)
-					{
-						afterframes_entry_t copy = afterFramesEntries[i];
-						copy.framesLeft = NO_AFTERFRAMES_BULK;
-						afterFramesEntries.push_back(copy);
-						
-					}
-					
-					afterFramesEntries[i].framesLeft -= tick;
-				}
-				else
-				{
-					afterFramesEntries.erase(afterFramesEntries.begin() + i);
-					--i;
-				}
-					
-			}
-		}
+		ParseLines();
+		int start = ChooseSave(maxLength);
+		//ChopCommands(start, maxLength);
 
 		if (!saveName.empty())
 			AddInitCommand("load " + saveName);
 	}
 
-	bool ParsedScript::IsUnlimited()
+	void ParsedScript::ParseLines()
 	{
-		return maxLength == UNLIMITED_LENGTH;
+		int runningTick = 0;
+		for (std::size_t i = 0; i < lines.size(); ++i)
+		{
+			auto pointer = lines[i].get();
+
+			Msg("Iteration %d, line %s\n", i, lines[i]->GetLine().c_str());
+			auto load = pointer->DuringLoadCmd();
+			auto init = pointer->LoadSaveCmd();
+
+			if (!load.empty())
+				AddDuringLoadCmd(load);
+			if (!init.empty())
+				AddInitCommand(init);
+
+
+			pointer->AddAfterFrames(afterFramesEntries, runningTick);
+			runningTick += pointer->TickCountAdvanced();
+			
+			FrameLine* fl = dynamic_cast<FrameLine*>(pointer);
+			if (fl)
+				Msg("is frameline\n");
+
+			SaveStateLine* sl = dynamic_cast<SaveStateLine*>(pointer);
+			if (sl)
+				AddSaveState(runningTick);
+		}
+		scriptLength = runningTick;
 	}
 
-	void ParsedScript::AddAfterFramesEntry(long long int tick, std::string command)
+	void ParsedScript::ChopCommands(int start, int end)
 	{
-		if(tick <= maxLength  || IsUnlimited())
-			afterFramesEntries.push_back(afterframes_entry_t(tick, std::move(command)));
+		if (end == UNLIMITED_LENGTH)
+			end = GetScriptLength();
+
+		for (size_t i = 0; i < afterFramesEntries.size(); ++i)
+		{
+			if (afterFramesEntries[i].framesLeft >= start && afterFramesEntries[i].framesLeft <= end)
+			{
+				afterFramesEntries[i].framesLeft -= start;
+			}
+			else
+			{
+				afterFramesEntries.erase(afterFramesEntries.begin() + i);
+				--i;
+			}
+
+		}
 	}
 
-	Savestate ParsedScript::GetSaveStateInfo()
+	void ParsedScript::AddScriptLine(ScriptLine* line)
+	{
+		Msg("pushing line\n");
+		lines.push_back(std::unique_ptr<ScriptLine>(line));
+	}
+
+	Savestate ParsedScript::GetSaveStateInfo(int currentTick)
 	{
 		std::string data = saveName;
 
@@ -136,7 +166,7 @@ namespace scripts
 		MD5 hash(data);
 		std::string digest = hash.hexdigest();
 
-		return Savestate(afterFramesTick, afterFramesEntries.size(), "ss-" + digest + "-" + std::to_string(afterFramesTick));
+		return Savestate(currentTick, afterFramesEntries.size(), "ss-" + digest + "-" + std::to_string(currentTick));
 	}
 
 	Savestate::Savestate(int tick, int index, std::string key) : tick(tick), index(index), key(std::move(key))
@@ -148,4 +178,24 @@ namespace scripts
 	{
 		exists = FileExists(GetGameDir() + "\\SAVE\\" + key + ".sav");
 	}
+
+	ScriptLine::ScriptLine(const std::string & line) : line(line)
+	{
+	}
+
+	const std::string & ScriptLine::LoadSaveCmd() const
+	{
+		return EMPTY;
+	}
+
+	const std::string & ScriptLine::DuringLoadCmd() const
+	{
+		return EMPTY;
+	}
+
+	void ScriptLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const
+	{
+		Msg("landed in default function\n");
+	}
+
 }

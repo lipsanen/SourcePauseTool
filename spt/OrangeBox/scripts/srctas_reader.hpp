@@ -11,33 +11,6 @@
 namespace scripts
 {
 	extern const std::string SCRIPT_EXT;
-	enum class ParseState { Props, Vars, Frames };
-
-	struct CaptureData
-	{
-		float yaw;
-		float pitch;
-		std::string cmd;
-		int length;
-
-		bool CanCollapse(const CaptureData& rhs) const;
-	};
-
-	class Capture
-	{
-	public:
-		Capture();
-		void SendCommand(const char* pText);
-		void SendViewAngles(float yaw, float pitch);
-		void StartCapture();
-		void StopCapture(bool keep);
-		void CollapseDuplicates();
-		void Collapse(int index);
-	private:
-		std::vector<CaptureData> captureData;
-		int currentTick;
-		std::string currentCmd;
-	};
 
 	class SourceTASReader
 	{
@@ -46,14 +19,11 @@ namespace scripts
 		void ExecuteScriptAndPause(const std::string& script, int pauseTick);
 		void ExecuteScript(const std::string& script);
 		void StartSearch(const std::string& script);
-		void RewriteWithCapture(const std::vector<CaptureData>& capture);
 		void ReadScript(bool search);
 		void SearchResult(scripts::SearchResult result);
 		void OnAfterFrames();
-		void OnCommand(const CCommand& args);
-		void WriteOutputLine();
-		void WriteLastLine();
 		int GetCurrentScriptLength();
+		const ParsedScript& GetCurrentScript();
 	private:
 		bool iterationFinished;
 		bool freezeVariables;
@@ -61,7 +31,7 @@ namespace scripts
 		std::ifstream scriptStream;
 		std::istringstream lineStream;
 		std::string origLine;
-		std::string line;
+		std::string editedLine;
 		int currentLine;
 		long long int currentTick;
 		SearchType searchType;
@@ -69,12 +39,6 @@ namespace scripts
 		float playbackSpeed;
 		std::string demoName;
 		int demoDelay;
-
-		bool firstOutputLine;
-		bool shouldWrite;
-		std::ofstream outputStream;
-		ParseState state;
-		std::string outputLineToWrite;
 
 		VariableContainer variables;
 		ParsedScript currentScript;
@@ -84,14 +48,13 @@ namespace scripts
 		void CommonExecuteScript(bool search, int maxLength);
 		void Reset();
 		void ResetIterationState();
-		void Execute();
+		void Execute(int maxLength);
 		void SetFpsAndPlayspeed();
 
 		bool ParseLine();
 		void SetNewLine();
 		void ReplaceVariables();
 		void ResetConvars();
-		void OnNewLineRead();
 
 		void InitPropertyHandlers();
 		void ParseProps();
@@ -114,7 +77,6 @@ namespace scripts
 		void HandleZVel(const std::string& value) { HandlePosVel(value, Axis::AxisZ, false); }
 		void HandleAbsVel(const std::string& value) { HandlePosVel(value, Axis::Abs, false); }
 		void Handle2DVel(const std::string& value) { HandlePosVel(value, Axis::TwoD, false); }
-
 		void HandlePosVel(const std::string& value, Axis axis, bool isPos);
 
 		void ParseVariables();
@@ -130,5 +92,4 @@ namespace scripts
 
 	std::string GetVarIdentifier(std::string name);
 	extern SourceTASReader g_TASReader;
-	extern Capture g_Capture;
 }

@@ -739,8 +739,10 @@
     <ClCompile Include="spt\OrangeBox\overlay\overlay-renderer.cpp" />
     <ClCompile Include="spt\OrangeBox\overlay\overlays.cpp" />
     <ClCompile Include="spt\OrangeBox\overlay\portal_camera.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\capture.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\condition.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\framebulk_handler.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\line_types.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\parsed_script.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\srctas_reader.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\tests\test.cpp" />
@@ -838,8 +840,10 @@
     <ClInclude Include="spt\OrangeBox\overlay\overlays.hpp" />
     <ClInclude Include="spt\OrangeBox\overlay\portal_camera.hpp" />
     <ClInclude Include="spt\OrangeBox\patterns.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\capture.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\condition.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\framebulk_handler.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\line_types.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\parsed_script.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\range_variable.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\srctas_reader.hpp" />

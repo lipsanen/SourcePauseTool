@@ -11,6 +11,7 @@
 #include "vstdlib\random.h"
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
+#include "scripts\capture.hpp"
 
 #include "cdll_int.h"
 #include "engine\iserverplugin.h"
@@ -830,7 +831,7 @@ CON_COMMAND(tas_record_setup, "Record keyboard inputs into a .srctas file after 
 	}
 }
 
-CON_COMMAND(tas_record_start, "Start capture.", FCVAR_HIDDEN)
+CON_COMMAND(tas_record_start, "Start capture.")
 {
 	scripts::g_Capture.StartCapture();
 }

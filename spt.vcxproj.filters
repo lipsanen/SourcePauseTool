@@ -73,6 +73,8 @@
     <ClCompile Include="spt\OrangeBox\scripts\tests\tracker.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\tests\test.cpp" />
     <ClCompile Include="spt\utils\file.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\line_types.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\capture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -220,6 +222,8 @@
     <ClInclude Include="spt\OrangeBox\scripts\tests\tracker.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\tests\test_item.hpp" />
     <ClInclude Include="spt\utils\file.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\line_types.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\capture.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">

@@ -9,6 +9,7 @@
 #include <SPTLib\hooks.hpp>
 #include "ServerDLL.hpp"
 #include "..\scripts\srctas_reader.hpp"
+#include "..\scripts\capture.hpp"
 
 using std::uintptr_t;
 using std::size_t;
