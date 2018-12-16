@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 
 namespace scripts
 {
@@ -38,9 +39,9 @@ namespace scripts
 		bool ContainsFlag(const std::pair<int, int>& key, const std::string& flag);
 
 		FrameBulkOutput outputData;
+		std::string input;
 	private:	
 		std::map<std::pair<int, int>, std::string> dataMap;
-		std::string input;
 	};
 
 	void ModifyLength(std::string& bulk, int addition);

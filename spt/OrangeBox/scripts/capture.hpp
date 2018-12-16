@@ -11,6 +11,7 @@ namespace scripts
 		int length;
 
 		bool CanCollapse(const CaptureData& rhs) const;
+		std::string ToString();
 	};
 
 	class Capture
@@ -23,10 +24,16 @@ namespace scripts
 		void StopCapture(bool keep);
 		void CollapseDuplicates();
 		void Collapse(int index);
+		void WriteToFile();
+		void SetupCapture(int tick, const std::string& fileName);
+		void Reset();
 	private:
 		std::vector<CaptureData> captureData;
 		int currentTick;
 		std::string currentCmd;
+
+		int startTick;
+		std::string fileName;
 	};
 
 	extern Capture g_Capture;

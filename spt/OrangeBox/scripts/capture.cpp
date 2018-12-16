@@ -49,6 +49,12 @@ namespace scripts
 			return;
 		}
 
+		if (fileName.empty())
+		{
+			Msg("Capture not properly set up!\n");
+			return;
+		}
+
 		currentTick = 0;
 		captureData.clear();
 		char buffer[128];
@@ -68,12 +74,19 @@ namespace scripts
 
 	void Capture::StopCapture(bool keep)
 	{
-		if (keep)
+		if (fileName.empty())
 		{
-			Msg("Capture lasted %d ticks.\n", currentTick);
-			CollapseDuplicates();
-			// Write capture
+			Msg("No capture to save.");
+			return;
 		}
+
+		if (keep)
+		{		
+			WriteToFile();
+		}
+
+		Msg("Capture lasted %d ticks.\n", currentTick);
+		Reset();
 	}
 
 	void Capture::CollapseDuplicates()
@@ -93,10 +106,49 @@ namespace scripts
 		captureData.erase(captureData.begin() + index + 1);
 	}
 
+	void Capture::WriteToFile()
+	{
+		try
+		{
+			std::ofstream stream(fileName);
+			CollapseDuplicates();
+			auto& script = g_TASReader.GetCurrentScript();
+			script.WriteScriptToStream(stream, startTick, "tas_cvars_reset");
+
+			for (auto capture : captureData)
+				stream << capture.ToString() << '\n';
+		}
+		catch(const std::exception& ex)
+		{
+			Msg("Unable to write capture to file, error: %s\n", ex.what());
+		}
+	}
+
+	void Capture::SetupCapture(int tick, const std::string& fileName)
+	{
+		startTick = tick;
+		this->fileName = fileName;
+	}
+
+	void Capture::Reset()
+	{
+		captureData.clear();
+		currentTick = -1;
+		currentCmd = "";
+		startTick = 0;
+		fileName.clear();
+		tas_recording.SetValue(0);
+	}
+
 
 	bool CaptureData::CanCollapse(const CaptureData & rhs) const
 	{
 		return yaw == rhs.yaw && pitch == rhs.pitch && rhs.cmd == cmd;
+	}
+
+	std::string CaptureData::ToString()
+	{
+		return GenerateBulkString('>', length, cmd, yaw, pitch);
 	}
 
 }

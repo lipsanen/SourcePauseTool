@@ -846,6 +846,11 @@ CON_COMMAND(tas_record_discard, "Discards the capture.")
 	scripts::g_Capture.StopCapture(false);
 }
 
+CON_COMMAND(tas_cvars_reset, "Resets TAS cvars.")
+{
+	scripts::g_TASReader.ResetConvars();
+}
+
 #if SSDK2007
 // TODO: remove fixed offsets.
 

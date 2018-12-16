@@ -91,7 +91,7 @@ namespace scripts
 	{
 		ParseLines();
 		int start = ChooseSave(maxLength);
-		//ChopCommands(start, maxLength);
+		ChopCommands(start, maxLength);
 
 		if (!saveName.empty())
 			AddInitCommand("load " + saveName);
@@ -108,7 +108,7 @@ namespace scripts
 
 			if (!load.empty())
 				AddDuringLoadCmd(load);
-			if (!init.empty())
+			if (init.empty())
 				AddInitCommand(init);
 
 			pointer->AddAfterFrames(afterFramesEntries, runningTick);
@@ -143,7 +143,54 @@ namespace scripts
 
 	void ParsedScript::AddScriptLine(ScriptLine* line)
 	{
+		int prevLineNumber = 0;
+		int currentLineNumber = line->LineNumber();
+
+		if (!lines.empty())
+			prevLineNumber = lines[lines.size()-1]->LineNumber();
+
+		if (prevLineNumber == currentLineNumber)
+			lines.pop_back();
+		else if (prevLineNumber != currentLineNumber - 1)
+		{
+			try { delete line; } catch(...) { }
+			throw std::exception("A line was not passed to ParsedScript.");
+		}
+			
+
 		lines.push_back(std::unique_ptr<ScriptLine>(line));
+	}
+
+	void ParsedScript::WriteScriptToStream(std::ostream& stream, int length, std::string lastCmd) const
+	{
+		if (length == UNLIMITED_LENGTH)
+			length = scriptLength;
+		int currentTick = 0;
+		for (int i = 0; i < lines.size(); ++i)
+		{
+			currentTick += lines[i]->TickCountAdvanced();
+			FrameLine* fl = dynamic_cast<FrameLine*>(lines[i].get());
+			if (fl)
+			{
+				auto& data = fl->GetData();
+				std::string bulkString = data.input;
+				if (currentTick >= length)
+				{
+					ModifyLength(bulkString, length - currentTick);
+					stream << bulkString << '\n';
+					break;
+				}
+				else
+					stream << lines[i]->GetLine() << '\n';
+			}
+			else
+				stream << lines[i]->GetLine() << '\n';
+		}
+
+		if (currentTick < length)
+			stream << GenerateBulkString('-', length - currentTick, "") << '\n';
+
+		stream << GenerateBulkString('-', 0, lastCmd) << '\n';
 	}
 
 	Savestate ParsedScript::GetSaveStateInfo(int currentTick)
@@ -172,18 +219,18 @@ namespace scripts
 		exists = FileExists(GetGameDir() + "\\SAVE\\" + key + ".sav");
 	}
 
-	ScriptLine::ScriptLine(const std::string & line) : line(line)
+	ScriptLine::ScriptLine(const std::string & line, int lineNo) : line(line), lineNo(lineNo)
 	{
 	}
 
-	const std::string & ScriptLine::LoadSaveCmd() const
+	std::string ScriptLine::LoadSaveCmd() const
 	{
-		return EMPTY;
+		return std::string();
 	}
 
-	const std::string & ScriptLine::DuringLoadCmd() const
+	std::string ScriptLine::DuringLoadCmd() const
 	{
-		return EMPTY;
+		return std::string();
 	}
 
 	void ScriptLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const

@@ -24,6 +24,7 @@ namespace scripts
 		void OnAfterFrames();
 		int GetCurrentScriptLength();
 		const ParsedScript& GetCurrentScript();
+		void ResetConvars();
 	private:
 		bool iterationFinished;
 		bool freezeVariables;
@@ -32,13 +33,9 @@ namespace scripts
 		std::istringstream lineStream;
 		std::string origLine;
 		std::string editedLine;
-		int currentLine;
+		int currentLineNumber;
 		long long int currentTick;
 		SearchType searchType;
-		float tickTime;
-		float playbackSpeed;
-		std::string demoName;
-		int demoDelay;
 
 		VariableContainer variables;
 		ParsedScript currentScript;
@@ -49,12 +46,10 @@ namespace scripts
 		void Reset();
 		void ResetIterationState();
 		void Execute(int maxLength);
-		void SetFpsAndPlayspeed();
 
 		bool ParseLine();
 		void SetNewLine();
 		void ReplaceVariables();
-		void ResetConvars();
 
 		void InitPropertyHandlers();
 		void ParseProps();
@@ -62,7 +57,6 @@ namespace scripts
 		void HandleSettings(const std::string& value);
 		void HandleSave(const std::string& value);
 		void HandleDemo(const std::string& value);
-		void HandleDemoDelay(const std::string& value);
 		void HandleSearch(const std::string& value);
 		void HandlePlaybackSpeed(const std::string& value);
 		void HandleTickRange(const std::string& value);

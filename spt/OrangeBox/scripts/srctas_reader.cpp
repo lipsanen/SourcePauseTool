@@ -11,18 +11,7 @@
 #include "framebulk_handler.hpp"
 #include "..\..\utils\math.hpp"
 #include "line_types.hpp"
-
-
-// TODO
-// Things I don't like:
-// - Easy to forget to add the line to the parsed script for properties, Maybe add some default function that always adds 
-// the line and subsequent adds on the same line number just modify the existing value in ParsedScript. Also allows to check if every line was added properly on the ParsedScript side
-// and reduces the amount of code.
-//
-// - Returning a reference to an empty const string feels awkward, maybe use a pointer instead and check for nullptr
-// - DemoDelay is an atrocity of a property - remove that shit
-// - Save being handled separately is inelegant but probably necessary because of savestates
-// - Move the recording thing into a propertyline
+#include "capture.hpp"
 
 namespace scripts
 {
@@ -48,14 +37,18 @@ namespace scripts
 	{
 		freezeVariables = false;
 		fileName = script;
-		CommonExecuteScript(false, pauseTick);
-		
-
-		if (pauseTick == UNLIMITED_LENGTH)
+		if(pauseTick != UNLIMITED_LENGTH)
+			CommonExecuteScript(false, pauseTick);
+		else
+		{
+			CommonExecuteScript(false, UNLIMITED_LENGTH);
 			pauseTick = currentScript.GetScriptLength();
-
-		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick, "tas_pause 1"));
-		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick, "tas_record_start"));		
+		}
+		
+		std::string gameDir = GetGameDir();
+		g_Capture.SetupCapture(pauseTick, gameDir + "\\" + fileName + "-temp" + SCRIPT_EXT);
+		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick-1, "tas_pause 1"));
+		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(pauseTick, "tas_record_start; tas_cvars_reset; _y_spt_resetpitchyaw"));
 	}
 
 	void SourceTASReader::ExecuteScript(const std::string& script)
@@ -117,7 +110,7 @@ namespace scripts
 		}
 		catch (...)
 		{
-			Msg("Unexpected exception on line %i\n", currentLine);
+			Msg("Unexpected exception on line %i\n", currentLineNumber);
 		}
 	}
 
@@ -136,7 +129,7 @@ namespace scripts
 		}
 		catch (const std::exception& ex)
 		{
-			Msg("Error in line %i: %s!\n", currentLine, ex.what());
+			Msg("Error in line %i: %s!\n", currentLineNumber, ex.what());
 		}
 		catch (const SearchDoneException&)
 		{
@@ -145,7 +138,7 @@ namespace scripts
 		}
 		catch (...)
 		{
-			Msg("Unexpected exception on line %i\n", currentLine);
+			Msg("Unexpected exception on line %i\n", currentLineNumber);
 		}
 
 		scriptStream.close();
@@ -184,7 +177,7 @@ namespace scripts
 		return currentScript.GetScriptLength();
 	}
 
-	const ParsedScript & SourceTASReader::GetCurrentScript()
+	const ParsedScript& SourceTASReader::GetCurrentScript()
 	{
 		return currentScript;
 	}
@@ -193,30 +186,16 @@ namespace scripts
 	{
 		currentTick = 0;
 		iterationFinished = false;
-		SetFpsAndPlayspeed();
 		clientDLL.ResetAfterframesQueue();
 		currentScript.Init(maxLength);
 
 		std::string startCmd(currentScript.GetInitCommand() + ";" + currentScript.GetDuringLoadCmd());
 		EngineConCmd(startCmd.c_str());
 
-		if(!demoName.empty())
-			clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(demoDelay, "record " + demoName));
-
 		for (auto& entry : currentScript.GetAfterFramesEntries())
 		{
 			clientDLL.AddIntoAfterframesQueue(entry);
 		}
-	}
-
-	void SourceTASReader::SetFpsAndPlayspeed()
-	{
-		std::ostringstream os;
-		tickTime = engineDLL.GetTickrate();
-		float fps = 1.0f / tickTime * playbackSpeed;
-		os << "host_framerate " << tickTime << "; fps_max " << fps;
-
-		currentScript.AddScriptLine(new PropertyLine(origLine, os.str()));
 	}
 
 	bool SourceTASReader::ParseLine()
@@ -229,6 +208,7 @@ namespace scripts
 		std::getline(scriptStream, editedLine);
 		origLine = editedLine;
 		SetNewLine();
+		currentScript.AddScriptLine(new ScriptLine(origLine, currentLineNumber));
 
 		return true;
 	}
@@ -243,7 +223,7 @@ namespace scripts
 		ReplaceVariables();
 		lineStream.str(editedLine);
 		lineStream.clear();
-		++currentLine;
+		++currentLineNumber;
 	}
 
 	void SourceTASReader::ReplaceVariables()
@@ -333,11 +313,8 @@ namespace scripts
 		scriptStream.clear();
 		lineStream.clear();
 		editedLine.clear();
-		currentLine = 0;
+		currentLineNumber = 0;
 		searchType = SearchType::None;
-		playbackSpeed = 1.0f;
-		demoDelay = 0;
-		demoName.clear();
 		currentScript.Reset();
 	}
 
@@ -370,11 +347,6 @@ namespace scripts
 		}
 		else
 			throw std::exception("Unknown property name");
-	}
-
-	void SourceTASReader::HandleSettings(const std::string & value)
-	{
-		currentScript.AddScriptLine(new PropertyLine(origLine, value));
 	}
 
 	void SourceTASReader::ParseVariables()
@@ -418,18 +390,17 @@ namespace scripts
 	{
 		if (isLineEmpty())
 		{
-			currentScript.AddScriptLine(new ScriptLine(origLine));
 			return;
 		}	
 		else if (editedLine.find("ss") == 0)
 		{
-			currentScript.AddScriptLine(new SaveStateLine(origLine));
+			currentScript.AddScriptLine(new SaveStateLine(origLine, currentLineNumber));
 		}
 		else
 		{
 			FrameBulkData info(editedLine);
 			auto output = HandleFrameBulk(info);
-			currentScript.AddScriptLine(new FrameLine(origLine, output));
+			currentScript.AddScriptLine(new FrameLine(origLine, currentLineNumber, output));
 		}
 	}
 
@@ -437,7 +408,6 @@ namespace scripts
 	{
 		propertyHandlers["save"] = &SourceTASReader::HandleSave;
 		propertyHandlers["demo"] = &SourceTASReader::HandleDemo;
-		propertyHandlers["demodelay"] = &SourceTASReader::HandleDemoDelay;
 		propertyHandlers["search"] = &SourceTASReader::HandleSearch;
 		propertyHandlers["playspeed"] = &SourceTASReader::HandlePlaybackSpeed;
 		propertyHandlers["settings"] = &SourceTASReader::HandleSettings;
@@ -457,20 +427,13 @@ namespace scripts
 
 	void SourceTASReader::HandleSave(const std::string& value)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
 		currentScript.SetSave(value);
 	}
 
 	void SourceTASReader::HandleDemo(const std::string& value)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
-		demoName = value;
-	}
-
-	void SourceTASReader::HandleDemoDelay(const std::string& value)
-	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
-		demoDelay = ParseValue<int>(value);
+		std::string cmd = "record " + value;
+		currentScript.AddScriptLine(new PropertyLine(origLine, currentLineNumber, std::string(), cmd));
 	}
 
 	void SourceTASReader::HandleSearch(const std::string& value)
@@ -487,15 +450,22 @@ namespace scripts
 
 	void SourceTASReader::HandlePlaybackSpeed(const std::string & value)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
-		playbackSpeed = ParseValue<float>(value);
-		if (playbackSpeed <= 0.0f)
-			throw std::exception("Playback speed has to be positive");
+		std::ostringstream os;
+		float tickTime = engineDLL.GetTickrate();
+		float playbackSpeed = ParseValue<float>(value);
+		float fps = (1.0f / tickTime) * playbackSpeed;
+		os << "host_framerate " << tickTime << "; fps_max " << fps;
+
+		currentScript.AddScriptLine(new PropertyLine(origLine, currentLineNumber, os.str()));
+	}
+
+	void SourceTASReader::HandleSettings(const std::string & value)
+	{
+		currentScript.AddScriptLine(new PropertyLine(origLine, currentLineNumber, value));
 	}
 
 	void SourceTASReader::HandleTickRange(const std::string & value)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
 		int min, max;
 		GetDoublet(value, min, max, '|');
 		conditions.push_back(std::unique_ptr<Condition>(new TickRangeCondition(min, max, false)));
@@ -503,7 +473,6 @@ namespace scripts
 
 	void SourceTASReader::HandleTicksFromEndRange(const std::string & value)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
 		int min, max;
 		GetDoublet(value, min, max, '|');
 		conditions.push_back(std::unique_ptr<Condition>(new TickRangeCondition(min, max, true)));
@@ -511,7 +480,6 @@ namespace scripts
 
 	void SourceTASReader::HandlePosVel(const std::string & value, Axis axis, bool isPos)
 	{
-		currentScript.AddScriptLine(new ScriptLine(origLine));
 		float min, max;
 		GetDoublet(value, min, max, '|');
 		conditions.push_back(std::unique_ptr<Condition>(new PosSpeedCondition(min, max, axis, isPos)));

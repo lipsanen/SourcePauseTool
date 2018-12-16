@@ -3,14 +3,13 @@
 
 namespace scripts
 {
-	extern std::string EMPTY;
-
 	class FrameLine : public ScriptLine
 	{
 	public:
-		FrameLine(const std::string& line, FrameBulkData data);
+		FrameLine(const std::string& line, int lineNo, FrameBulkData data);
 		int TickCountAdvanced() const override;
-		const std::string& DuringLoadCmd() const override;
+		std::string DuringLoadCmd() const override;
+		const FrameBulkData& GetData() const;
 		void AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const override;
 	private:
 		FrameBulkData data;
@@ -19,9 +18,9 @@ namespace scripts
 	class PropertyLine : public ScriptLine
 	{
 	public:
-		PropertyLine(const std::string& line, const std::string& duringLoadCmd = EMPTY, const std::string& afterLoadCmd = EMPTY, const std::string& loadSaveCmd = EMPTY);
-		const std::string& DuringLoadCmd() const override;
-		const std::string& LoadSaveCmd() const override;
+		PropertyLine(const std::string& line, int lineNo, const std::string& duringLoadCmd = std::string(), const std::string& afterLoadCmd = std::string(), const std::string& loadSaveCmd = std::string());
+		std::string DuringLoadCmd() const override;
+		std::string LoadSaveCmd() const override;
 		void AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const override;
 	private:
 		std::string duringLoadCmd;
@@ -32,6 +31,6 @@ namespace scripts
 	class SaveStateLine : public ScriptLine
 	{
 	public:
-		SaveStateLine(const std::string& line);
+		SaveStateLine(const std::string& line, int lineNo);
 	};
 }

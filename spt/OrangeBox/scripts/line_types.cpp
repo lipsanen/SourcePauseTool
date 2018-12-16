@@ -4,33 +4,32 @@
 
 namespace scripts
 {
-	std::string EMPTY;
-
-	SaveStateLine::SaveStateLine(const std::string & line) : ScriptLine(line)
+	SaveStateLine::SaveStateLine(const std::string & line, int lineNo) : ScriptLine(line, lineNo)
 	{
 	}
 
-	PropertyLine::PropertyLine(const std::string & line, const std::string & duringLoadCmd, const std::string & afterLoadCmd, const std::string & loadSaveCmd) :
-		ScriptLine(line), duringLoadCmd(duringLoadCmd), afterLoadCmd(afterLoadCmd), loadSaveCmd(loadSaveCmd)
+	PropertyLine::PropertyLine(const std::string & line, int lineNo, const std::string & duringLoadCmd, const std::string & afterLoadCmd, const std::string & loadSaveCmd) :
+		ScriptLine(line, lineNo), duringLoadCmd(duringLoadCmd), afterLoadCmd(afterLoadCmd), loadSaveCmd(loadSaveCmd)
 	{
 	}
 
-	const std::string & PropertyLine::DuringLoadCmd() const
+	std::string PropertyLine::DuringLoadCmd() const
 	{
 		return duringLoadCmd;
 	}
 
-	const std::string & PropertyLine::LoadSaveCmd() const
+	std::string PropertyLine::LoadSaveCmd() const
 	{
 		return loadSaveCmd;
 	}
 
 	void PropertyLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const
 	{
-		entries.push_back(afterframes_entry_t(0, afterLoadCmd));
+		if(!afterLoadCmd.empty())
+			entries.push_back(afterframes_entry_t(0, afterLoadCmd));
 	}
 
-	FrameLine::FrameLine(const std::string & line, FrameBulkData data) : ScriptLine(line), data(data)
+	FrameLine::FrameLine(const std::string & line, int lineNo, FrameBulkData data) : ScriptLine(line, lineNo), data(data)
 	{
 	}
 
@@ -42,12 +41,17 @@ namespace scripts
 			return 0;
 	}
 
-	const std::string & FrameLine::DuringLoadCmd() const
+	std::string FrameLine::DuringLoadCmd() const
 	{
 		if (data.outputData.ticks == NO_AFTERFRAMES_BULK)
 			return data.outputData.getInitialCommand() + ";" + data.outputData.getRepeatingCommand();
 		else
-			return EMPTY;
+			return std::string();
+	}
+
+	const FrameBulkData& FrameLine::GetData() const
+	{
+		return data;
 	}
 
 	void FrameLine::AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const

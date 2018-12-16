@@ -12,14 +12,16 @@ namespace scripts
 	class ScriptLine
 	{
 	public:
-		ScriptLine(const std::string& line);
+		ScriptLine(const std::string& line, int lineNo);
 		const std::string& GetLine() const { return line; }
 		virtual int TickCountAdvanced() const { return 0; }
-		virtual const std::string& LoadSaveCmd() const;
-		virtual const std::string& DuringLoadCmd() const;
+		virtual std::string LoadSaveCmd() const;
+		virtual std::string DuringLoadCmd() const;
 		virtual void AddAfterFrames(std::vector<afterframes_entry_t>& entries, int runningTick) const;
+		int LineNumber() const { return lineNo; }
 	protected:
 		std::string line;
+		int lineNo;
 	};
 
 	struct Savestate
@@ -47,7 +49,7 @@ namespace scripts
 		void Reset();
 		void Init(int maxTick);
 		void AddScriptLine(ScriptLine* line);
-		void WriteScriptToStream(std::ostream& stream, int maxTick);
+		void WriteScriptToStream(std::ostream& stream, int length, std::string lastCmd = std::string()) const;
 		int GetScriptLength() { return scriptLength; }
 		void SetSave(const std::string& saveName);
 	private:

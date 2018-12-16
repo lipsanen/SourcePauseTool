@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include <vector>
-#include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "tier0\commonmacros.h"
 #include "framebulk_handler.hpp"
 #include "..\..\utils\string_parsing.hpp"
 #include "dbg.h"
+#include <regex>
 
 namespace scripts
 {
@@ -159,19 +161,25 @@ namespace scripts
 
 	void ModifyLength(std::string& bulk, int addition)
 	{
-		char FIELD1[16];
-		char FIELD2[16];
-		char FIELD3[16];
-		char FIELD4[16];
-		char FIELD5[16];
-		int tick;
-		char FIELD6[16];
-		char OUTPUT[128];
-		Msg("%s comes in.\n", bulk.c_str());
-		sscanf_s(bulk.c_str(), "%s|%s|%s|%s|%s|%d|%s", FIELD1, FIELD2, FIELD3, FIELD4, FIELD5, &tick, FIELD6);
-		sprintf_s(OUTPUT, "%s|%s|%s|%s|%s|%d|%s\n", FIELD1, FIELD2, FIELD3, FIELD4, FIELD5, tick + addition, FIELD6);
-		bulk = OUTPUT;
-		Msg("%s comes out. You can't explain that.\n", bulk.c_str());
+		std::istringstream stream(bulk);
+		std::string line;
+		bulk = "";
+
+		for (int i = 1; std::getline(stream, line, DELIMITER); ++i)
+		{
+			if (i == 6)
+			{
+				int length = ParseValue<int>(line);
+				bulk += std::to_string(addition + length);
+				bulk.push_back('|');
+			}
+			else
+			{
+				bulk += line;
+				if (i != 7)
+					bulk.push_back('|');
+			}
+		}
 	}
 
 	bool AngleInvalid(float angle)
