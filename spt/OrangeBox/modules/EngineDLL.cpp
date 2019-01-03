@@ -530,7 +530,8 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()
 void __cdecl EngineDLL::HOOKED_Cbuf_AddText_Func(const char* pText)
 {
 	// A hack to make tas_pause unpause from keystrokes
-	if (tas_pause.GetBool() && strstr(pText, "tas_pause 0"))
+	// Normally the input buffer doesn't get executed while TAS pausing, hence why this is necessary
+	if (tas_pause.GetBool() && strstr(pText, "tas_pause 0") == pText)
 		tas_pause.SetValue(0);
 	else if (catchCommand) // Don't catch tas_pause 0
 		scripts::g_Capture.SendCommand(pText);

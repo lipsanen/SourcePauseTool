@@ -54,6 +54,7 @@ public:
 	void __cdecl HOOKED_CGameMovement__FullWalkMove_Func(void* thisptr, int edx);
 
 	const Vector& GetLastVelocity() const { return lastVelocity; }
+	int GetEnviromentPortalHandle();
 
 	void StartTimer() { timerRunning = true; }
 	void StopTimer() { timerRunning = false; }
@@ -65,6 +66,7 @@ public:
 	double lastTraceFirePortalDistanceSq;
 	Vector lastTraceFirePortalNormal;
 	_GetActiveWeapon GetActiveWeapon;
+	int* m_hPortalEnvironmentOffsetPtr;
 
 protected:
 	_CheckJumpButton ORIG_CheckJumpButton;

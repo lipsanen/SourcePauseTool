@@ -387,6 +387,7 @@ void ServerDLL::Hook(const std::wstring& moduleName, HMODULE hModule, uintptr_t 
 	// TODO: remove fixed offsets.
 	SnapEyeAngles = reinterpret_cast<_SnapEyeAngles>(moduleStart + 0x1B92F0);
 	FirePortal = reinterpret_cast<_FirePortal>(moduleStart + 0x442090);
+	m_hPortalEnvironmentOffsetPtr = reinterpret_cast<int*>((unsigned int)FirePortal + 0xA3);
 	GetActiveWeapon = reinterpret_cast<_GetActiveWeapon>(moduleStart + 0xCCE90);
 	ORIG_TraceFirePortal = reinterpret_cast<_TraceFirePortal>(moduleStart + 0x441730);
 
@@ -665,4 +666,11 @@ void __cdecl ServerDLL::HOOKED_CGameMovement__FullWalkMove_Func(void* thisptr, i
 	float va[3];
 	EngineGetViewAngles(va);
 	scripts::g_Capture.SendViewAngles(va[YAW], va[PITCH]);
+}
+
+int ServerDLL::GetEnviromentPortalHandle()
+{
+	int offset = *m_hPortalEnvironmentOffsetPtr;
+	
+	return *reinterpret_cast<int*>(((int)GetServerPlayer() + offset));
 }

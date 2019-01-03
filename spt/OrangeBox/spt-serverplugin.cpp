@@ -12,6 +12,9 @@
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "scripts\capture.hpp"
+#include "scripts\vgui\tas_gui.hpp"
+#include "edict.h"
+#include "server_class.h"
 
 #include "cdll_int.h"
 #include "engine\iserverplugin.h"
@@ -850,6 +853,41 @@ CON_COMMAND(tas_cvars_reset, "Resets TAS cvars.")
 {
 	scripts::g_TASReader.ResetConvars();
 }
+
+CON_COMMAND(tas_gui, "Opens the TAS GUI.")
+{
+	scripts::OpenTASGUI();
+}
+
+CON_COMMAND(two_hundred_iq_command, "")
+{
+#if defined( OE )
+	if (!engine)
+		return;
+
+	ArgsWrapper args(engine.get());
+#endif
+
+	if (args.ArgC() > 1)
+	{
+		auto ent = engine_server->PEntityOfEntIndex(std::stoi(args.Arg(1)));
+
+		if (ent)
+		{
+			auto server_class = ent->GetNetworkable()->GetServerClass();
+			Msg("Server class is %s\n", server_class->m_pNetworkName);
+			auto table = server_class->m_pTable;
+
+			for (int i = 0; i < table->GetNumProps(); ++i)
+			{
+				auto prop = table->GetPropA(i);
+				Msg("table %d : %s\n", i, prop->GetName());
+			}
+		}
+	
+	}
+}
+
 
 #if SSDK2007
 // TODO: remove fixed offsets.

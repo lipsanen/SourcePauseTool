@@ -290,7 +290,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>.;Detours\include;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server;..\..\vgui2%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;Detours\include;..\..\common;..\..\public;..\..\public\tier0;..\..\public\tier1;..\..\game\server;..\..\game\shared;..\..\public\vgui_controls;..\..\game\client;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>SSDK2007;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -319,7 +319,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;odbc32.lib;odbccp32.lib;vgui_controls.lib;vmpi.lib;vstdlib.lib;tier0.lib;tier1.lib;tier2.lib;tier3.lib;bitmap.lib;choreoobjects.lib;dmxloader.lib;matsys_controls.lib;nvtristrip.lib;particles.lib;raytrace.lib;steam_api.lib;vtf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -578,6 +578,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\public\vgui_controls\vgui_controls.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="sptlib\detoursutils.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sptlib-stdafx.hpp</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug OE|Win32'">sptlib-stdafx.hpp</PrecompiledHeaderFile>
@@ -744,11 +747,13 @@
     <ClCompile Include="spt\OrangeBox\scripts\framebulk_handler.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\line_types.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\parsed_script.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\savestate.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\srctas_reader.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\tests\test.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\tests\test_item.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\tests\tracker.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\variable_container.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\vgui\tas_gui.cpp" />
     <ClCompile Include="spt\OrangeBox\spt-serverplugin.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug OE|Win32'">NotUsing</PrecompiledHeader>
@@ -851,6 +856,7 @@
     <ClInclude Include="spt\OrangeBox\scripts\tests\test_item.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\tests\tracker.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\variable_container.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\vgui\tas_gui.hpp" />
     <ClInclude Include="spt\OrangeBox\spt-serverplugin.hpp" />
     <ClInclude Include="spt\sptlib-wrapper.hpp" />
     <ClInclude Include="spt\stdafx.hpp" />
@@ -859,6 +865,9 @@
     <ClInclude Include="spt\utils\math.hpp" />
     <ClInclude Include="spt\utils\md5.hpp" />
     <ClInclude Include="spt\utils\string_parsing.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="spt\OrangeBox\scripts\savestate.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

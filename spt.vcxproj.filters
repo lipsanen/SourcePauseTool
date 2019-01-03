@@ -75,6 +75,9 @@
     <ClCompile Include="spt\utils\file.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\line_types.cpp" />
     <ClCompile Include="spt\OrangeBox\scripts\capture.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\vgui\tas_gui.cpp" />
+    <ClCompile Include="..\..\public\vgui_controls\vgui_controls.cpp" />
+    <ClCompile Include="spt\OrangeBox\scripts\savestate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -224,6 +227,7 @@
     <ClInclude Include="spt\utils\file.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\line_types.hpp" />
     <ClInclude Include="spt\OrangeBox\scripts\capture.hpp" />
+    <ClInclude Include="spt\OrangeBox\scripts\vgui\tas_gui.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">
@@ -264,5 +268,8 @@
     <Filter Include="spt\OrangeBox\overlay">
       <UniqueIdentifier>{7f1270e1-5f6d-4110-9d82-4b2bc2b7400b}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="spt\OrangeBox\scripts\savestate.hpp" />
   </ItemGroup>
 </Project>
