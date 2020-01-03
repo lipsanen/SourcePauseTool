@@ -128,7 +128,8 @@ namespace Strafe
 	{
 		GROUND = 0,
 		AIR,
-		WATER
+		WATER,
+		LADDER
 	};
 
 	enum class HullType : int
@@ -138,7 +139,7 @@ namespace Strafe
 		POINT = 2
 	};
 
-	void Trace(trace_t& trace, const Vector& start, const Vector& end, HullType hull);
+	void TracePlayer(trace_t& trace, const Vector& start, const Vector& end, HullType hull);
 
 	bool CanUnduck(const PlayerData& player);
 

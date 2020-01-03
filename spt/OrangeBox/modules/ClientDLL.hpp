@@ -44,9 +44,23 @@ typedef void(__fastcall* _UTIL_TracePlayerBBox)(void* thisptr,
                                                 trace_t& ptr);
 typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
                                       unsigned int mask,
-                                      const IHandleEntity* ignore,
+									  IHandleEntity* ignore,
                                       int collisionGroup,
                                       trace_t* ptr);
+typedef void(__cdecl* _UTIL_Portal_TraceRay)(void* pPlayerPortal, const Ray_t &ray, unsigned int fMask, IHandleEntity* pTraceFilter, trace_t *pTrace, bool bTraceHolyWall);
+typedef int(__cdecl* _UTIL_Portal_TraceRay_With)(const void* pPlayerPortal,
+									  const Ray_t& ray,
+									  unsigned int mask,
+									  ITraceFilter* ignore,
+									  trace_t* ptr, bool bTraceHolyWall);
+typedef void(__cdecl* _UTIL_Portal_TraceEntity)(void* pPortalPlayer,
+												const Vector& start,
+												const Vector& end,
+												  unsigned int mask,
+												  IHandleEntity* ignore,
+												  trace_t* ptr);
+typedef bool(__cdecl* _UTIL_DidTraceTouchPortals)(const Ray_t& ray,
+												  trace_t& ptr, void** pOutLocal, void** pOutRemote);
 typedef bool(__fastcall* _CGameMovement__CanUnDuckJump)(void* thisptr, int edx, trace_t& ptr);
 
 struct afterframes_entry_t
@@ -158,6 +172,7 @@ public:
 	bool GetFlagsDucking();
 	double GetDuckJumpTime();
 	bool CanUnDuckJump(trace_t& ptr);
+	bool IsGroundEntitySet();
 
 	Gallant::Signal0<void> AfterFramesSignal;
 	Gallant::Signal0<void> TickSignal;
@@ -167,6 +182,11 @@ public:
 	void* cinput_thisptr;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	_UTIL_TraceRay ORIG_UTIL_TraceRay;
+	_UTIL_Portal_TraceRay ORIG_UTIL_Portal_TraceRay;
+	_UTIL_Portal_TraceRay_With ORIG_UTIL_Portal_TraceRay_With;
+	_UTIL_Portal_TraceEntity ORIG_UTIL_Portal_TraceEntity;
+	_UTIL_DidTraceTouchPortals ORIG_UTIL_DidTraceTouchPortals;
+	void* CTraceFilterSimple_vptr;
 
 protected:
 	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur;
@@ -215,7 +235,6 @@ protected:
 	bool cantJumpNextTime;
 
 	void OnFrame();
-	bool IsOnGround();
 
 	int afterframesDelay;
 	PatternContainer patternContainer;

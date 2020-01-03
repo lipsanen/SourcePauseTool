@@ -164,6 +164,10 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CViewRender__Render);
 	DEF_FUTURE(UTIL_TraceRay);
 	DEF_FUTURE(CGameMovement__CanUnDuckJump);
+	DEF_FUTURE(UTIL_Portal_TraceRay);
+	DEF_FUTURE(UTIL_Portal_TraceRay_With);
+	DEF_FUTURE(UTIL_Portal_TraceEntity);
+	DEF_FUTURE(UTIL_DidTraceTouchPortals);
 
 	GET_HOOKEDFUTURE(HudUpdate);
 	GET_HOOKEDFUTURE(GetButtonBits);
@@ -180,6 +184,10 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(CViewRender__Render);
 	GET_FUTURE(UTIL_TraceRay);
 	GET_FUTURE(CGameMovement__CanUnDuckJump);
+	GET_FUTURE(UTIL_Portal_TraceRay);
+	GET_FUTURE(UTIL_Portal_TraceRay_With);
+	GET_FUTURE(UTIL_Portal_TraceEntity);
+	GET_FUTURE(UTIL_DidTraceTouchPortals);
 
 	if (ORIG_DoImageSpaceMotionBlur)
 	{
@@ -449,6 +457,17 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	if (ORIG_CViewRender__RenderView == nullptr || ORIG_CViewRender__Render == nullptr)
 		Warning("Overlay cameras have no effect.\n");
 
+	if(DoesGameLookLikePortal())
+	{
+		if(!ORIG_UTIL_DidTraceTouchPortals || !ORIG_UTIL_Portal_TraceEntity || !ORIG_UTIL_Portal_TraceRay || !ORIG_UTIL_Portal_TraceRay_With)
+			Warning("Tracing not available for TASing\n");
+	}
+	else if(!ORIG_UTIL_TraceRay)
+		Warning("Tracing not available for TASing\n");
+
+	CTraceFilterSimple_vptr = (void*) ((unsigned int)moduleBase + 0x33d7c8); // Remove fixed offset
+	unsigned int* pointer = (unsigned int*)((unsigned int)moduleBase + 0x33d7c8);
+	Msg("at vptr %p => %d\n", pointer, (*pointer - (unsigned int)moduleBase));
 	patternContainer.Hook();
 }
 
@@ -473,6 +492,7 @@ void ClientDLL::Clear()
 	ORIG_CViewRender__RenderView = nullptr;
 	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
+	CTraceFilterSimple_vptr = nullptr;
 
 	pgpGlobals = nullptr;
 	off1M_nOldButtons = 0;
@@ -530,21 +550,17 @@ Strafe::MovementVars ClientDLL::GetMovementVars()
 	}
 
 	auto player = ORIG_GetLocalPlayer();
-	auto onground = IsOnGround(); // TODO: This should really be a proper check.
 	auto maxspeed = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offMaxspeed);
 
-	if (tas_force_onground.GetBool())
-		onground = true;
-
 	auto pl = GetPlayerData();
-	vars.OnGround = onground;
+	vars.OnGround =
+		Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
+		== Strafe::PositionType::GROUND;
 
-	if (!vars.OnGround && ORIG_UTIL_TraceRay && tas_strafe_use_tracing.GetBool())
-		vars.OnGround =
-		    Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
-		    == Strafe::PositionType::GROUND;
+	if (tas_force_onground.GetBool())
+		vars.OnGround = true;
 
-	vars.ReduceWishspeed = onground && GetFlagsDucking();
+	vars.ReduceWishspeed = vars.OnGround && GetFlagsDucking();
 	vars.Accelerate = _sv_accelerate->GetFloat();
 
 	if (tas_force_airaccelerate.GetString()[0] != '\0')
@@ -583,7 +599,7 @@ Strafe::MovementVars ClientDLL::GetMovementVars()
 
 		if (pl.Velocity.z <= 140.f)
 		{
-			if (onground)
+			if (vars.OnGround)
 			{
 				// TODO: This should check the real surface friction.
 				vars.EntFriction = 1.0f;
@@ -722,7 +738,7 @@ void ClientDLL::OnFrame()
 	AfterFramesSignal();
 }
 
-bool ClientDLL::IsOnGround()
+bool ClientDLL::IsGroundEntitySet()
 {
 	if (ORIG_GetGroundEntity == nullptr || ORIG_GetLocalPlayer == nullptr)
 		return false;
@@ -1019,7 +1035,7 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 	}
 
 	EngineSetViewAngles(va);
-	OngroundSignal(IsOnGround());
+	OngroundSignal(IsGroundEntitySet());
 	TickSignal();
 }
 

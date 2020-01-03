@@ -467,7 +467,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		//ORIG_AirAccelerate = reinterpret_cast<_AirAccelerate>(MemUtils::HookVTable(vftable, 17, reinterpret_cast<uintptr_t>(HOOKED_AirAccelerate)));
 		ORIG_ProcessMovement = reinterpret_cast<_ProcessMovement>(
 		    MemUtils::HookVTable(vftable, 1, reinterpret_cast<void*>(HOOKED_ProcessMovement)));
-
 		DevMsg("[server dll] Hooked ProcessMovement through the vftable.\n");
 	}
 

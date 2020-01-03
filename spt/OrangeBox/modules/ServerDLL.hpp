@@ -40,6 +40,8 @@ typedef int(__fastcall* _CRestore__DoReadAll)(void* thisptr,
                                               datamap_t* pCurMap);
 typedef int(__cdecl* _DispatchSpawn)(void* pEntity);
 typedef string_t(__cdecl* _AllocPooledString)(const char* pszValue, int trash);
+typedef void(__fastcall* _CGameMovement__CategorizePosition)(void* thisptr, int edx);
+typedef void(__fastcall* _CGameMovement__SetGroundEntity)(void* thisptr, int edx, trace_t* pm);
 
 class ServerDLL : public IHookableNameFilter
 {
@@ -82,6 +84,8 @@ public:
 	                                                 datamap_t* pCurMap);
 	static int __cdecl HOOKED_DispatchSpawn(void* pEntity);
 	static void HOOKED_MiddleOfSlidingFunction();
+	static void __fastcall HOOKED_CGameMovement__CategorizePosition(void* thisptr, int edx);
+	static void __fastcall HOOKED_CGameMovement__SetGroundEntity(void* thisptr, int edx, trace_t* pm);
 	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper);
@@ -139,6 +143,8 @@ public:
 	_CRestore__DoReadAll ORIG_CRestore__DoReadAll;
 	_DispatchSpawn ORIG_DispatchSpawn;
 	_AllocPooledString ORIG_AllocPooledString;
+	_CGameMovement__CategorizePosition ORIG_CGameMovement__CategorizePosition;
+	_CGameMovement__SetGroundEntity ORIG_CGameMovement__SetGroundEntity;
 	Gallant::Signal0<void> JumpSignal;
 
 protected:

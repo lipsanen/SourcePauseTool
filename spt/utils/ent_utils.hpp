@@ -18,6 +18,14 @@ namespace utils
 		propValue(const char* name, const char* value, int offset) : name(name), value(value), offset(offset) {}
 	};
 
+	struct TraceFilter
+	{
+		void* vptr;
+		const IHandleEntity* ignore;
+		int collisionGroup;
+	};
+
+	TraceFilter GetTraceFilter(const IHandleEntity* ignore, int collisionGroup);
 	void GetAllProps(RecvTable* table, void* ptr, std::vector<propValue>& props);
 	void SetEntityList(IClientEntityList* list);
 	void SetModelInfo(IVModelInfo* modelInfo);

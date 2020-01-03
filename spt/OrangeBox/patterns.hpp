@@ -259,6 +259,21 @@ namespace patterns
 		    UTIL_Portal_TraceRay,
 		    "5135",
 		    "B8 A8 10 00 00 E8 ?? ?? ?? ?? 83 BC 24 B8 10 00 00 00 C7 44 24 24 ?? ?? ?? ?? 75 0B 8D 44 24 24 89 84 24 B8 10 00 00 D9 05 ?? ?? ?? ?? 53");
+		PATTERNS(
+			UTIL_Portal_TraceRay_With,
+			"5135",
+			"81 EC 14 01 00 00 57 8B BC 24 1C 01 00 00 85 FF 0F 84 ?? ?? ?? ?? 80 BF 2C 0A 00 00 00 0F 84 ?? ?? ?? ?? 8B 87 30 0A 00 00 85 C0"
+		);
+		PATTERNS(
+			UTIL_Portal_TraceEntity,
+			"5135",
+			"55 8B EC 83 E4 F0 81 EC 34 01 00 00 53 56 8B 75 08 8B 06 8B 90 F0 01 00 00 57 8B CE C7 44 24 0C 00 00 00 00 FF D2 84 C0 74 38 8B 86 84 15 00 00"
+		);
+		PATTERNS(
+			UTIL_DidTraceTouchPortals,
+			"5135",
+			"81 EC 14 01 00 00 57 8B BC 24 1C 01 00 00 85 FF 0F 84 ?? ?? ?? ?? 80 BF 2C 0A 00 00 00 0F 84 ?? ?? ?? ?? 8B 87 30 0A 00 00 85 C0 0F 84 ?? ?? ?? ??"
+		);
 	} // namespace client
 
 	namespace server
