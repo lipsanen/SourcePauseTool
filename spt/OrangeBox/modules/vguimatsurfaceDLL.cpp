@@ -96,6 +96,9 @@ void VGui_MatSurfaceDLL::Clear()
 
 void VGui_MatSurfaceDLL::Jump()
 {
+	if (!y_spt_hud_hops.GetBool())
+		return;
+
 	if (sinceLanded == 0)
 		CalculateAbhVel();
 
@@ -105,6 +108,9 @@ void VGui_MatSurfaceDLL::Jump()
 
 void VGui_MatSurfaceDLL::OnGround(bool onground)
 {
+	if (!y_spt_hud_hops.GetBool())
+		return;
+
 	if (!onground)
 	{
 		sinceLanded = 0;

@@ -36,144 +36,46 @@
 // go take a look at that instead:
 // https://github.com/HLTAS/hlstrafe
 
-ConVar tas_strafe_version(
-	"tas_strafe_version",
-	"2",
-	FCVAR_TAS_RESET,
-	"Strafe version. For backwards compatibility with old scripts.");
+ConVar tas_strafe_version("tas_strafe_version",
+                          "2",
+                          FCVAR_TAS_RESET,
+                          "Strafe version. For backwards compatibility with old scripts.");
+
+extern void* gm;
 
 namespace Strafe
 {
 	bool CanTrace()
 	{
-		if(!tas_strafe_use_tracing.GetBool())
+		if (!tas_strafe_use_tracing.GetBool())
 			return false;
 
 		if (tas_strafe_version.GetInt() == 1)
 		{
 			return clientDLL.ORIG_UTIL_TraceRay != nullptr;
 		}
-		else 
-		{
-			if (DoesGameLookLikePortal())
-			{
-				return clientDLL.ORIG_UTIL_DidTraceTouchPortals && clientDLL.ORIG_UTIL_Portal_TraceEntity && clientDLL.ORIG_UTIL_Portal_TraceRay_With
-						&& clientDLL.ORIG_UTIL_Portal_TraceRay;
-			}
-			else
-			{
-				return clientDLL.ORIG_UTIL_TraceRay;
-			}
-		}
-	}
-
-	void TracePlayerBBox(const Vector& start, const Vector& end, const Vector& minsSrc, const Vector& maxsSrc, unsigned int fMask, int collisionGroup, trace_t&pm)
-	{
-		if(!CanTrace())
-			return;
-
-		Ray_t ray;
-		ray.Init(start, end, minsSrc, maxsSrc);
-		bool portal = DoesGameLookLikePortal();
-		auto player = utils::GetClientEntity(0);
-
-		if (!portal)
-		{
-			clientDLL.ORIG_UTIL_TraceRay(ray,
-				fMask,
-				player,
-				collisionGroup,
-				&pm);
-		}
-#ifndef OE
 		else
 		{
-			void* pPlayerPortal = GetEnviromentPortal();
-			utils::TraceFilter filter = utils::GetTraceFilter(player, collisionGroup);
-
-			// Where everything goes to shit
-			clientDLL.ORIG_UTIL_Portal_TraceRay_With(NULL,
-			    ray,
-				fMask,
-				reinterpret_cast<ITraceFilter*>(&filter),
-				&pm,
-				true);
-
-			if (pm.fraction == 1.0f && clientDLL.ORIG_UTIL_DidTraceTouchPortals(ray, pm, NULL, NULL))
-			{
-				trace_t tempTrace;
-				clientDLL.ORIG_UTIL_Portal_TraceEntity(NULL, start, end, fMask, player, &tempTrace);
-
-				if(tempTrace.DidHit() && tempTrace.fraction < pm.fraction && !tempTrace.startsolid && !tempTrace.allsolid)
-					pm = tempTrace;
-			}
+			return serverDLL.CanTracePlayerBBox();
 		}
-#endif
 	}
 
-	void TracePlayerBBoxForGround(const Vector& start, const Vector& end, const Vector& minsSrc, const Vector& maxsSrc, IHandleEntity* player,
-								  unsigned int fMask, int collisionGroup, trace_t&pm)
+	static CMoveData* old;
+	static CMoveData data;
+
+	void SetMoveData()
 	{
-		if(!CanTrace())
-			return;
-
-		Vector mins = minsSrc;
-		Vector maxs = maxsSrc;
-		Ray_t ray;
-
-#ifndef  OE
-		bool portal = DoesGameLookLikePortal();
-		void* pPlayerPortal = GetEnviromentPortal();
-#endif // ! OE
-
-		float fraction = pm.fraction;
-		Vector endpos = pm.endpos;
-
-		for (int x = -1; x <= 1; x += 2)
-		{
-			for (int y = -1; y <= 1; y += 2)
-			{
-				if (x == -1)
-				{
-					mins.x = std::max(0.f, (float)minsSrc.x);
-					maxs.x = maxsSrc.x;
-				}
-				else
-				{
-					mins.x = minsSrc.x;
-					maxs.x = std::min(0.f, maxsSrc.x);
-				}
-
-				if (y == -1)
-				{
-					mins.y = std::max(0.f, (float)minsSrc.y);
-					maxs.y = maxsSrc.y;
-				}
-				else
-				{
-					mins.y = minsSrc.y;
-					maxs.y = std::min(0.f, maxsSrc.y);
-				}
-
-				ray.Init(start, end, mins, maxs);
-
-#ifndef OE
-#endif
-				clientDLL.ORIG_UTIL_TraceRay(ray, fMask, player, collisionGroup, &pm);
-
-				if (pm.m_pEnt && pm.plane.normal[2] >= 0.7)
-				{
-					pm.fraction = fraction;
-					pm.endpos = endpos;
-					return;
-				}
-			}
-		}
-
-		pm.fraction = fraction;
-		pm.endpos = endpos;
+		data.m_nPlayerHandle = GetServerPlayer()->GetRefEHandle();
+		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)gm + 0x8);
+		old = *mv;
+		*mv = &data;
 	}
 
+	void UnsetMoveData()
+	{
+		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)gm + 0x8);
+		*mv = old;
+	}
 
 	void TracePlayer(trace_t& trace, const Vector& start, const Vector& end, HullType hull)
 	{
@@ -211,10 +113,10 @@ namespace Strafe
 				ray.Init(start, end, mins, maxs);
 
 			clientDLL.ORIG_UTIL_TraceRay(ray,
-				MASK_PLAYERSOLID_BRUSHONLY,
-				utils::GetClientEntity(0),
-				COLLISION_GROUP_PLAYER_MOVEMENT,
-				&trace);
+			                             MASK_PLAYERSOLID_BRUSHONLY,
+			                             utils::GetClientEntity(0),
+			                             COLLISION_GROUP_PLAYER_MOVEMENT,
+			                             &trace);
 		}
 		else
 		{
@@ -226,7 +128,15 @@ namespace Strafe
 			if (hull == HullType::DUCKED)
 				mins.z = 36;
 
-			TracePlayerBBox(start, end, mins, maxs, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, trace);
+			SetMoveData();
+			serverDLL.TracePlayerBBox(start,
+			                          end,
+			                          mins,
+			                          maxs,
+			                          MASK_PLAYERSOLID,
+			                          COLLISION_GROUP_PLAYER_MOVEMENT,
+			                          trace);
+			UnsetMoveData();
 		}
 
 #endif
@@ -255,15 +165,16 @@ namespace Strafe
 	{
 		// TODO: Check water. If we're under water, return here.
 		// Check ground.
+		int strafe_version = tas_strafe_version.GetInt();
 
-		if (!tas_strafe_use_tracing.GetBool() || tas_strafe_version.GetInt() == 0)
+		if (!tas_strafe_use_tracing.GetBool() || strafe_version == 0 || !CanTrace())
 		{
-			if(clientDLL.IsGroundEntitySet())
+			if (clientDLL.IsGroundEntitySet())
 				return PositionType::GROUND;
 			else
 				return PositionType::AIR;
 		}
-		else if (tas_strafe_version.GetInt() == 1)
+		else if (strafe_version == 1)
 		{
 			if (clientDLL.IsGroundEntitySet())
 				return PositionType::GROUND;
@@ -286,8 +197,12 @@ namespace Strafe
 		}
 		else
 		{
+			SetMoveData();
 			if (player.Velocity[2] > 140.f)
+			{
+				UnsetMoveData();
 				return PositionType::AIR;
+			}
 
 			Vector bumpOrigin = player.UnduckedOrigin;
 			Vector point = bumpOrigin;
@@ -303,20 +218,46 @@ namespace Strafe
 
 			trace_t pm;
 
-			TracePlayerBBox(bumpOrigin, point, mins, maxs, MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm);
+			serverDLL.TracePlayerBBox(bumpOrigin,
+			                          point,
+			                          mins,
+			                          maxs,
+			                          MASK_PLAYERSOLID,
+			                          COLLISION_GROUP_PLAYER_MOVEMENT,
+			                          pm);
 
 			if (pm.m_pEnt && pm.plane.normal[2] >= 0.7)
+			{
+				UnsetMoveData();
 				return PositionType::GROUND;
+			}
 
-			TracePlayerBBoxForGround(bumpOrigin, point, mins, maxs, utils::GetClientEntity(0), MASK_PLAYERSOLID, COLLISION_GROUP_PLAYER_MOVEMENT, pm);
+			if (DoesGameLookLikePortal())
+				serverDLL.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
+				                                         point,
+				                                         mins,
+				                                         maxs,
+				                                         GetServerPlayer(),
+				                                         MASK_PLAYERSOLID,
+				                                         COLLISION_GROUP_PLAYER_MOVEMENT,
+				                                         pm);
+			else
+				serverDLL.ORIG_TracePlayerBBoxForGround(bumpOrigin,
+				                                        point,
+				                                        mins,
+				                                        maxs,
+				                                        GetServerPlayer(),
+				                                        MASK_PLAYERSOLID,
+				                                        COLLISION_GROUP_PLAYER_MOVEMENT,
+				                                        pm);
+
+			UnsetMoveData();
 
 			if (pm.m_pEnt && pm.plane.normal[2] >= 0.7)
 				return PositionType::GROUND;
 			else
 				return PositionType::AIR;
 		}
-
-
 	}
 
 	void VectorFME(PlayerData& player,

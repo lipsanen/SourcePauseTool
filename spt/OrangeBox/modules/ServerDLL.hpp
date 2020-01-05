@@ -43,6 +43,32 @@ typedef string_t(__cdecl* _AllocPooledString)(const char* pszValue, int trash);
 typedef void(__fastcall* _CGameMovement__CategorizePosition)(void* thisptr, int edx);
 typedef void(__fastcall* _CGameMovement__SetGroundEntity)(void* thisptr, int edx, trace_t* pm);
 
+typedef void(__fastcall* _CGameMovement__TracePlayerBBox)(void* thisptr,
+                                                          int edx,
+                                                          const Vector& start,
+                                                          const Vector& end,
+                                                          unsigned int fMask,
+                                                          int collisionGroup,
+                                                          trace_t& pm);
+typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMaxs)(void* thisptr, int edx);
+typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMins)(void* thisptr, int edx);
+typedef void(__cdecl* _TracePlayerBBoxForGround)(const Vector& start,
+                                                 const Vector& end,
+                                                 const Vector& mins,
+                                                 const Vector& maxs,
+                                                 IHandleEntity* player,
+                                                 unsigned int fMask,
+                                                 int collisionGroup,
+                                                 trace_t& pm);
+typedef void(__cdecl* _TracePlayerBBoxForGround2)(const Vector& start,
+                                                  const Vector& end,
+                                                  const Vector& mins,
+                                                  const Vector& maxs,
+                                                  IHandleEntity* player,
+                                                  unsigned int fMask,
+                                                  int collisionGroup,
+                                                  trace_t& pm);
+
 class ServerDLL : public IHookableNameFilter
 {
 public:
@@ -86,6 +112,23 @@ public:
 	static void HOOKED_MiddleOfSlidingFunction();
 	static void __fastcall HOOKED_CGameMovement__CategorizePosition(void* thisptr, int edx);
 	static void __fastcall HOOKED_CGameMovement__SetGroundEntity(void* thisptr, int edx, trace_t* pm);
+	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx);
+	static void __fastcall HOOKED_CGameMovement__TracePlayerBBox(void* thisptr,
+	                                                             int edx,
+	                                                             const Vector& start,
+	                                                             const Vector& end,
+	                                                             unsigned int fMask,
+	                                                             int collisionGroup,
+	                                                             trace_t& pm);
+	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx);
+
+	void TracePlayerBBox(const Vector& start,
+	                     const Vector& end,
+	                     const Vector& mins,
+	                     const Vector& maxs,
+	                     unsigned int fMask,
+	                     int collisionGroup,
+	                     trace_t& pm);
 	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper);
@@ -108,6 +151,7 @@ public:
 	                                             bool bTest);
 	void __fastcall HOOKED_SlidingAndOtherStuff_Func(void* thisptr, int edx, void* a, void* b);
 	void HOOKED_MiddleOfSlidingFunction_Func();
+	bool CanTracePlayerBBox();
 
 	void StartTimer()
 	{
@@ -145,7 +189,15 @@ public:
 	_AllocPooledString ORIG_AllocPooledString;
 	_CGameMovement__CategorizePosition ORIG_CGameMovement__CategorizePosition;
 	_CGameMovement__SetGroundEntity ORIG_CGameMovement__SetGroundEntity;
+	_CGameMovement__GetPlayerMins ORIG_CGameMovement__GetPlayerMins;
+	_CGameMovement__GetPlayerMaxs ORIG_CGameMovement__GetPlayerMaxs;
+	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox;
+	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround;
+	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2;
 	Gallant::Signal0<void> JumpSignal;
+	bool overrideMinMax;
+	Vector _mins;
+	Vector _maxs;
 
 protected:
 	PatternContainer patternContainer;

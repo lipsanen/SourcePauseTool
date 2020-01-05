@@ -164,10 +164,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CViewRender__Render);
 	DEF_FUTURE(UTIL_TraceRay);
 	DEF_FUTURE(CGameMovement__CanUnDuckJump);
-	DEF_FUTURE(UTIL_Portal_TraceRay);
-	DEF_FUTURE(UTIL_Portal_TraceRay_With);
-	DEF_FUTURE(UTIL_Portal_TraceEntity);
-	DEF_FUTURE(UTIL_DidTraceTouchPortals);
 
 	GET_HOOKEDFUTURE(HudUpdate);
 	GET_HOOKEDFUTURE(GetButtonBits);
@@ -184,10 +180,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(CViewRender__Render);
 	GET_FUTURE(UTIL_TraceRay);
 	GET_FUTURE(CGameMovement__CanUnDuckJump);
-	GET_FUTURE(UTIL_Portal_TraceRay);
-	GET_FUTURE(UTIL_Portal_TraceRay_With);
-	GET_FUTURE(UTIL_Portal_TraceEntity);
-	GET_FUTURE(UTIL_DidTraceTouchPortals);
 
 	if (ORIG_DoImageSpaceMotionBlur)
 	{
@@ -457,17 +449,9 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	if (ORIG_CViewRender__RenderView == nullptr || ORIG_CViewRender__Render == nullptr)
 		Warning("Overlay cameras have no effect.\n");
 
-	if(DoesGameLookLikePortal())
-	{
-		if(!ORIG_UTIL_DidTraceTouchPortals || !ORIG_UTIL_Portal_TraceEntity || !ORIG_UTIL_Portal_TraceRay || !ORIG_UTIL_Portal_TraceRay_With)
-			Warning("Tracing not available for TASing\n");
-	}
-	else if(!ORIG_UTIL_TraceRay)
-		Warning("Tracing not available for TASing\n");
+	if (!ORIG_UTIL_TraceRay)
+		Warning("tas_strafe_version 1 not available\n");
 
-	CTraceFilterSimple_vptr = (void*) ((unsigned int)moduleBase + 0x33d7c8); // Remove fixed offset
-	unsigned int* pointer = (unsigned int*)((unsigned int)moduleBase + 0x33d7c8);
-	Msg("at vptr %p => %d\n", pointer, (*pointer - (unsigned int)moduleBase));
 	patternContainer.Hook();
 }
 
@@ -492,7 +476,6 @@ void ClientDLL::Clear()
 	ORIG_CViewRender__RenderView = nullptr;
 	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
-	CTraceFilterSimple_vptr = nullptr;
 
 	pgpGlobals = nullptr;
 	off1M_nOldButtons = 0;
@@ -553,9 +536,8 @@ Strafe::MovementVars ClientDLL::GetMovementVars()
 	auto maxspeed = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offMaxspeed);
 
 	auto pl = GetPlayerData();
-	vars.OnGround =
-		Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
-		== Strafe::PositionType::GROUND;
+	vars.OnGround = Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
+	                == Strafe::PositionType::GROUND;
 
 	if (tas_force_onground.GetBool())
 		vars.OnGround = true;

@@ -190,6 +190,8 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(GetStepSoundVelocities);
 	DEF_FUTURE(CBaseEntity__SetCollisionGroup);
 	DEF_FUTURE(AllocPooledString);
+	DEF_FUTURE(TracePlayerBBoxForGround);
+	DEF_FUTURE(TracePlayerBBoxForGround2);
 
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
@@ -201,6 +203,8 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_FUTURE(GetStepSoundVelocities);
 	GET_FUTURE(CBaseEntity__SetCollisionGroup);
 	GET_FUTURE(AllocPooledString);
+	GET_FUTURE(TracePlayerBBoxForGround);
+	GET_FUTURE(TracePlayerBBoxForGround2);
 
 	// Server-side CheckJumpButton
 	if (ORIG_CheckJumpButton)
@@ -463,11 +467,22 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	extern void* gm;
 	if (gm)
 	{
-		auto vftable = reinterpret_cast<void**>(gm);
+		auto vftable = *reinterpret_cast<void***>(gm);
 		//ORIG_AirAccelerate = reinterpret_cast<_AirAccelerate>(MemUtils::HookVTable(vftable, 17, reinterpret_cast<uintptr_t>(HOOKED_AirAccelerate)));
-		ORIG_ProcessMovement = reinterpret_cast<_ProcessMovement>(
-		    MemUtils::HookVTable(vftable, 1, reinterpret_cast<void*>(HOOKED_ProcessMovement)));
-		DevMsg("[server dll] Hooked ProcessMovement through the vftable.\n");
+		patternContainer.AddVFTableHook(
+		    VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement));
+		patternContainer.AddVFTableHook(VFTableHook(vftable,
+		                                            8,
+		                                            (PVOID)HOOKED_CGameMovement__GetPlayerMins,
+		                                            (PVOID*)&ORIG_CGameMovement__GetPlayerMins));
+		patternContainer.AddVFTableHook(VFTableHook(vftable,
+		                                            9,
+		                                            (PVOID)HOOKED_CGameMovement__GetPlayerMaxs,
+		                                            (PVOID*)&ORIG_CGameMovement__GetPlayerMaxs));
+		patternContainer.AddVFTableHook(VFTableHook(vftable,
+		                                            10,
+		                                            (PVOID)HOOKED_CGameMovement__TracePlayerBBox,
+		                                            (PVOID*)&ORIG_CGameMovement__TracePlayerBBox));
 	}
 
 	// TODO: remove fixed offsets.
@@ -484,20 +499,13 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	}
 #endif
 	patternContainer.Hook();
+
+	if (!CanTracePlayerBBox())
+		Warning("tas_strafe_version 2 not available\n");
 }
 
 void ServerDLL::Unhook()
 {
-	extern void* gm;
-	if (gm)
-	{
-		auto vftable = reinterpret_cast<void**>(gm);
-		//MemUtils::HookVTable(vftable, 17, reinterpret_cast<uintptr_t>(ORIG_AirAccelerate));
-		MemUtils::HookVTable(vftable, 1, reinterpret_cast<void*>(ORIG_ProcessMovement));
-
-		DevMsg("[server dll] Unhooked ProcessMovement through the vftable.\n");
-	}
-
 	patternContainer.Unhook();
 	Clear();
 }
@@ -523,6 +531,55 @@ void ServerDLL::Clear()
 	timerRunning = false;
 	sliding = false;
 	wasSliding = false;
+	overrideMinMax = false;
+}
+
+void ServerDLL::TracePlayerBBox(const Vector& start,
+                                const Vector& end,
+                                const Vector& mins,
+                                const Vector& maxs,
+                                unsigned int fMask,
+                                int collisionGroup,
+                                trace_t& pm)
+{
+	extern void* gm;
+	overrideMinMax = true;
+	serverDLL._mins = mins;
+	serverDLL._maxs = maxs;
+
+	ORIG_CGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
+	overrideMinMax = false;
+}
+
+const Vector& __fastcall ServerDLL::HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx)
+{
+	if (serverDLL.overrideMinMax)
+	{
+		return serverDLL._maxs;
+	}
+	else
+		return serverDLL.ORIG_CGameMovement__GetPlayerMaxs(thisptr, edx);
+}
+
+void __fastcall ServerDLL::HOOKED_CGameMovement__TracePlayerBBox(void* thisptr,
+                                                                 int edx,
+                                                                 const Vector& start,
+                                                                 const Vector& end,
+                                                                 unsigned int fMask,
+                                                                 int collisionGroup,
+                                                                 trace_t& pm)
+{
+	serverDLL.ORIG_CGameMovement__TracePlayerBBox(thisptr, edx, start, end, fMask, collisionGroup, pm);
+}
+
+const Vector& __fastcall ServerDLL::HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx)
+{
+	if (serverDLL.overrideMinMax)
+	{
+		return serverDLL._mins;
+	}
+	else
+		return serverDLL.ORIG_CGameMovement__GetPlayerMins(thisptr, edx);
 }
 
 bool __fastcall ServerDLL::HOOKED_CheckJumpButton_Func(void* thisptr, int edx)
@@ -764,6 +821,19 @@ void ServerDLL::HOOKED_MiddleOfSlidingFunction_Func()
 			entry.command = "unpause";
 			clientDLL.AddIntoAfterframesQueue(entry);
 		}
+	}
+}
+
+bool ServerDLL::CanTracePlayerBBox()
+{
+	extern void* gm;
+	if (DoesGameLookLikePortal())
+	{
+		return gm != nullptr && ORIG_TracePlayerBBoxForGround2 && ORIG_CGameMovement__TracePlayerBBox;
+	}
+	else
+	{
+		return gm != nullptr && ORIG_TracePlayerBBoxForGround && ORIG_CGameMovement__TracePlayerBBox;
 	}
 }
 

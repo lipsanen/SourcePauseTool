@@ -255,25 +255,6 @@ namespace patterns
 		    UTIL_TraceRay,
 		    "5135",
 		    "8B 44 24 10 8B 4C 24 0C 83 EC 10 56 6A 00 50 51 8D 4C 24 10 E8 ?? ?? ?? ?? 8B 74 24 28 8B 0D ?? ?? ?? ?? 8B 11 8B 52 10");
-		PATTERNS(
-		    UTIL_Portal_TraceRay,
-		    "5135",
-		    "B8 A8 10 00 00 E8 ?? ?? ?? ?? 83 BC 24 B8 10 00 00 00 C7 44 24 24 ?? ?? ?? ?? 75 0B 8D 44 24 24 89 84 24 B8 10 00 00 D9 05 ?? ?? ?? ?? 53");
-		PATTERNS(
-			UTIL_Portal_TraceRay_With,
-			"5135",
-			"81 EC 14 01 00 00 57 8B BC 24 1C 01 00 00 85 FF 0F 84 ?? ?? ?? ?? 80 BF 2C 0A 00 00 00 0F 84 ?? ?? ?? ?? 8B 87 30 0A 00 00 85 C0"
-		);
-		PATTERNS(
-			UTIL_Portal_TraceEntity,
-			"5135",
-			"55 8B EC 83 E4 F0 81 EC 34 01 00 00 53 56 8B 75 08 8B 06 8B 90 F0 01 00 00 57 8B CE C7 44 24 0C 00 00 00 00 FF D2 84 C0 74 38 8B 86 84 15 00 00"
-		);
-		PATTERNS(
-			UTIL_DidTraceTouchPortals,
-			"5135",
-			"81 EC 14 01 00 00 57 8B BC 24 1C 01 00 00 85 FF 0F 84 ?? ?? ?? ?? 80 BF 2C 0A 00 00 00 0F 84 ?? ?? ?? ?? 8B 87 30 0A 00 00 85 C0 0F 84 ?? ?? ?? ??"
-		);
 	} // namespace client
 
 	namespace server
@@ -430,6 +411,16 @@ namespace patterns
 		    FindPooledString,
 		    "5135",
 		    "8B 44 24 08 50 B9 ?? ?? ?? ?? E8 ?? ?? ?? ?? 85 C0 74 0E 80 38 00 74 09 8B 4C 24 04 89 01 8B C1 C3 8B 44 24 04 33 C9 89 08 C3");
+		PATTERNS(
+			TracePlayerBBoxForGround,
+			"5135",
+			"55 8B EC 83 E4 F0 81 EC 84 00 00 00 53 56 8B 75 24 8B 46 0C D9 46 2C 8B 4E 10"
+		);
+		PATTERNS(
+			TracePlayerBBoxForGround2,
+			"5135",
+			"55 8B EC 83 E4 F0 8B 4D 18 8B 01 8B 50 08 81 EC 84 00 00 00 53 56 57 FF D2"
+		);
 	} // namespace server
 
 	namespace vguimatsurface

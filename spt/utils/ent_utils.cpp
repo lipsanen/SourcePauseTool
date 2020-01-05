@@ -159,20 +159,6 @@ namespace utils
 		props.push_back(propValue(name, BUFFER, offset));
 	}
 
-
-	TraceFilter GetTraceFilter(const IHandleEntity * ignore, int collisionGroup)
-	{
-		TraceFilter filter;
-
-		filter.vptr = clientDLL.CTraceFilterSimple_vptr;
-		filter.ignore = ignore;
-		filter.collisionGroup = collisionGroup;
-
-		assert(sizeof(filter) == 12);
-
-		return filter;
-	}
-
 	void GetAllProps(RecvTable* table, void* ptr, std::vector<propValue>& props)
 	{
 		int numProps = table->m_nProps;
