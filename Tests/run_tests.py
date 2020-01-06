@@ -1,4 +1,4 @@
-import configargparse
+import argparse
 import os
 import re
 import shutil
@@ -92,45 +92,69 @@ def find_tests():
             game = get_game(dir_name)
             TEST_GAMEBUILDS.append(game)
 
-def add_build_path(build_number, build_path, build_executable, spt_path, spt_name):
+def add_build_path(build_number, args, build_arg, build_executable, spt_path, spt_name):
     """Add information about the build"""
+    if build_arg not in args:
+        return
     for build in TEST_GAMEBUILDS:
         if build.build == build_number:
-            build.set_path(build_path, build_executable, spt_path, spt_name)
+            build.set_path(args[build_arg], build_executable, spt_path, spt_name)
+
+def parse_args():
+    args = {}
+    with open(os.path.join(os.path.dirname(__file__), 'config.ini'), 'r') as fp:
+        for line in fp:
+            match = re.match('(\w+)=(.*)', line)
+            if match:
+                args[match.group(1)] = match.group(2)
+    return args
 
 def find_paths():
     """Look up paths for different game builds from the config file."""
-    args = configargparse.ArgParser(default_config_files=['config.ini'])
-    args.add_argument('--b5135', default="")
-    parsed_args = args.parse_args()
-    add_build_path("5135", parsed_args.b5135, "hl2.exe", get_2007_spt(), "spt")
+    parsed_args = parse_args()
+    add_build_path('5135', parsed_args, 'b5135', 'hl2.exe', get_2007_spt(), 'spt')
+    add_build_path('4104', parsed_args, 'b4104', 'hl2.exe', get_2007_spt(), 'spt')
+    add_build_path('steampipe', parsed_args, 'steampipe', 'hl2.exe', get_2013_spt(), 'spt-2013')
+    add_build_path('steampipeportal', parsed_args, 'steampipeportal', 'hl2.exe', get_2013_spt(), 'spt-2013')
 
     for build in TEST_GAMEBUILDS:
         if build.path:
-            print("Build %s for %s located in %s" % (build.build, build.game, build.path))
+            print('Build %s for %s located in %s' % (build.build, build.game, build.path))
         else:
-            print("Build %s for %s is not installed." % (build.build, build.game))
+            print('Build %s for %s is not installed.' % (build.build, build.game))
 
 def get_2007_spt():
-    releases = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Release\\spt.dll'))
+    releases = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Release', 'spt.dll'))
     return releases
 
-def run_tests():
+def get_2013_spt():
+    releases = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Release 2013', 'spt-2013.dll'))
+    return releases
+
+def run_tests(args):
     """Run all tests for games that are installed and configured."""
+
     for build in TEST_GAMEBUILDS:
-        if build.path:
-            print("Running test for game %s, build %s" % (build.game, build.build))
+        if build.path and not args.noop:
+            print('Running test for game %s, build %s' % (build.game, build.build))
             build.run_test()
         else:
-            print("Skipping test for game %s, build %s" % (build.game, build.build))
+            print('Skipping test for game %s, build %s' % (build.game, build.build))
    
-def collect_test_results():
+def collect_test_results(args):
     """Collects test results from all the output files and prints them."""
+    if args.noop:
+        return
+
     for build in TEST_GAMEBUILDS:
         if build.path:
             build.print_test_output()
 
+cmdline_parser = argparse.ArgumentParser()
+cmdline_parser.add_argument('--noop', action='store_true')
+args = cmdline_parser.parse_args()
+
 find_tests()
 find_paths()
-run_tests()
-collect_test_results()
+run_tests(args)
+collect_test_results(args)

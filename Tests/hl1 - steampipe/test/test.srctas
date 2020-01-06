@@ -1,0 +1,12 @@
+demo coast                               
+save test           
+settings tas_strafe_vectorial 1; cl_mouseenable 0; tas_strafe_version 2
+playspeed 16
+
+vars
+
+frames
+----------|f-----|--------|-|-|15|
+----j-----|f-----|--------|-|-|1|
+----j-----|------|--------|-|-|100|
+----------|------|--------|-|-|1|cl_mouseenable 1; disconnect

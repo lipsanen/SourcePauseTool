@@ -1,0 +1,14 @@
+save 10a_test
+demo 10a_test
+playspeed 16
+settings tas_strafe_vectorial 1; cl_mouseenable 0
+
+vars
+
+frames
+s01-------|------|-------s|-178|-|10|
+s01-------|------|-------s|-178|-|28|
+s01-j-----|------|-d------|-178|-|150|
+s01-j-----|------|--------|60|-|10|
+s01-j-----|------|-------s|60|-|400|
+----------|------|--------|-|-|1|cl_mouseenable 1; disconnect
