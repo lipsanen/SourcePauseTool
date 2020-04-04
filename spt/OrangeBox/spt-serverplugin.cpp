@@ -651,7 +651,13 @@ CON_COMMAND(y_spt_print_portals, "Prints all portal indexes, their position and 
 
 #ifndef OE
 
-CON_COMMAND(y_spt_print_ent_props, "Prints all props for a given entity index.")
+#define BACKCOMP_CON_COMMAND( name, old_name, description ) \
+   static void name( const CCommand &args ); \
+   static ConCommand name##_command( #name, name, description ); \
+   static ConCommand old_name##_command( #old_name, name, description ); \
+   static void name( const CCommand &args )
+
+BACKCOMP_CON_COMMAND(spt_print_ent_props, y_spt_print_ent_props, "Prints all props for a given entity index.")
 {
 #if defined(OE)
 	ArgsWrapper args(engine.get());

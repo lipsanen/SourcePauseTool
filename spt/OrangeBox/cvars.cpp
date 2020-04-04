@@ -35,6 +35,14 @@ ConVar tas_strafe_dir(
     "3",
     FCVAR_TAS_RESET,
     "TAS strafe dirs:\n\t0 - to the left,\n\t1 - to the right,\n\t3 - to the yaw given in tas_strafe_yaw.");
+
+ConVar tas_strafe_dir_XDDDDD(
+	"tas_strafe_dir_XDDDDD",
+	"3",
+	FCVAR_TAS_RESET,
+	"XDDDDDDDDDDDDDDDDDDDDDD",
+	[](IConVar *var, const char *pOldValue, float flOldValue) { tas_strafe_dir.SetValue(((ConVar*)var)->GetFloat()); }
+);
 ConVar tas_strafe_yaw("tas_strafe_yaw", "", FCVAR_TAS_RESET, "Yaw to strafe to with tas_strafe_dir = 3.");
 ConVar tas_strafe_buttons(
     "tas_strafe_buttons",
