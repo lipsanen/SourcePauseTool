@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "property_getter.hpp"
 #include <vector>
+#include <unordered_map>
 #include "ent_utils.hpp"
 
 namespace utils
 {
-	static std::map<std::string, OffsetMap> classToOffsetsMap;
+	static std::unordered_map<std::string, OffsetMap> classToOffsetsMap;
 #ifndef OE
 	OffsetMap FindOffsets(IClientEntity* ent)
 	{

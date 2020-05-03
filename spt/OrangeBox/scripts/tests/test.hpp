@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "test_item.hpp"
 #include "tracker.hpp"
 
@@ -58,7 +59,7 @@ namespace scripts
 		void CloseLogFile();
 		const std::string& GetCurrentTestName();
 
-		std::map<int, std::unique_ptr<Tracker>> trackers;
+		std::unordered_map<int, std::unique_ptr<Tracker>> trackers;
 		std::vector<TestItem> testItems;
 		std::vector<std::string> testNames;
 		std::vector<int> failedTests;

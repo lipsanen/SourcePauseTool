@@ -5,6 +5,7 @@
 #include <future>
 #include <iomanip>
 #include <locale>
+#include <unordered_map>
 #include <map>
 #include <sstream>
 #include <string>

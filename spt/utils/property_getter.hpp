@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include "cdll_int.h"
 #include "engine\ivmodelinfo.h"
@@ -13,7 +13,7 @@ namespace utils
 
 	struct OffsetMap
 	{
-		std::map<std::string, int> offsets;
+		std::unordered_map<std::string, int> offsets;
 		bool foundOffsets;
 	};
 

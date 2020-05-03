@@ -1,8 +1,8 @@
 #pragma once
 #include <fstream>
-#include <map>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include "condition.hpp"
 #include "parsed_script.hpp"
 #include "range_variable.hpp"
@@ -40,7 +40,7 @@ namespace scripts
 
 		VariableContainer variables;
 		ParsedScript currentScript;
-		std::map<std::string, void (SourceTASReader::*)(const std::string&)> propertyHandlers;
+		std::unordered_map<std::string, void (SourceTASReader::*)(const std::string&)> propertyHandlers;
 		std::vector<std::unique_ptr<Condition>> conditions;
 
 		void CommonExecuteScript(bool search);

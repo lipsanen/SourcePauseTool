@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "srctas_reader.hpp"
 
 namespace scripts

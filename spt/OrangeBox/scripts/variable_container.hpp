@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <random>
 #include <string>
 #include "range_variable.hpp"
@@ -52,7 +52,7 @@ namespace scripts
 		int lastSuccessTick;
 		std::string iterationPrint;
 		SearchType searchType;
-		std::map<std::string, ScriptVariable> variableMap;
+		std::unordered_map<std::string, ScriptVariable> variableMap;
 
 		void PrintBest();
 		void Clear();

@@ -1,7 +1,8 @@
 #pragma once
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "SPTLib\memutils.hpp"
 
 using PVOID = void*;
@@ -30,8 +31,8 @@ public:
 	void Unhook();
 
 private:
-	std::map<int, int> patterns;
-	std::map<int, std::string> patternNames;
+	std::unordered_map<int, int> patterns;
+	std::unordered_map<int, std::string> patternNames;
 	std::vector<VFTableHook> vftable_hooks;
 	std::vector<std::pair<PVOID*, PVOID>> entries;
 	std::vector<PVOID*> functions;
