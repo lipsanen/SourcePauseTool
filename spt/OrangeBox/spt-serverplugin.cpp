@@ -368,6 +368,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 #endif
 	Hooks::Init(true);
 	ModuleHooks::ConnectSignals();
+	scripts::InitConditions();
 
 	auto loadTime =
 	    std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTime)

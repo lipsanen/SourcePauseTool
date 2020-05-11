@@ -105,6 +105,8 @@ namespace scripts
 			HandlePosVel(value, Axis::TwoD, false);
 		}
 
+		void HandleIf(const std::string& value);
+
 		void HandlePosVel(const std::string& value, Axis axis, bool isPos);
 
 		void ParseVariables();

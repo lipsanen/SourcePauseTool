@@ -1,3 +1,6 @@
 [submodule "SPTLib"]
 	path = SPTLib
 	url = https://github.com/YaLTeR/SPTLib.git
+[submodule "cparse"]
+	path = cparse
+	url = https://github.com/Jukspa/cparse

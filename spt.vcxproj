@@ -1790,6 +1790,9 @@
     <Text Include="..\..\..\SourcePauseTool\Signals\example.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="cparse\cparse.vcxproj">
+      <Project>{76a802b2-f85e-466b-83ef-2e0232cf5b79}</Project>
+    </ProjectReference>
     <ProjectReference Include="SPTLib\Windows\minhook\build\VC15\libMinHook.vcxproj">
       <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
     </ProjectReference>

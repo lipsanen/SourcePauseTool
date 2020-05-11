@@ -151,4 +151,86 @@ namespace scripts
 	{
 		return false;
 	}
+
+	template<typename T>
+	static TokenList GetListFromVector(int count)
+	{
+		TokenList out;
+		for (int i = 0; i < count; ++i)
+			out.push(0.0);
+		return out;
+	}
+
+	TokenMap SYMBOLS;
+
+	IfCondition::IfCondition(const std::string& expressionString)
+	{
+		try
+		{
+			this->expression = calculator(expressionString.c_str());
+			this->expression.eval(SYMBOLS)
+			    .asBool(); // Test run to detect any errors with mistyped variable names
+		}
+		catch (std::exception& what)
+		{
+			static std::string error;
+			std::ostringstream oss;
+			oss << "error parsing if condition, " << what.what();
+			error = oss.str();
+			throw std::exception(error.c_str());
+		}
+	}
+
+	packToken canjb(TokenMap scope)
+	{
+		// Get the argument list:
+		TokenList list = scope["args"].asList();
+		auto height = list.operator[](0).asDouble();
+		return utils::CanJB(height).canJB;
+	}
+
+	bool IfCondition::IsTrue(int tick, int totalTicks) const
+	{
+		return expression.eval(SYMBOLS).asBool();
+	}
+
+	bool IfCondition::ShouldTerminate(int tick, int totalTicks) const
+	{
+		return false;
+	}
+
+	template<typename T>
+	static void CopyVectorIntoList(const char* identifier, T* vec, int count)
+	{
+		auto list = SYMBOLS[identifier].asList();
+		for (int i = 0; i < count; ++i)
+			list.operator[](i) = vec[i];
+	}
+
+	void UpdateSymbolTable()
+	{
+		auto vel = clientDLL.GetPlayerVelocity();
+		auto pos = clientDLL.GetPlayerEyePos();
+		QAngle angles;
+		VectorAngles(vel, Vector(0, 0, 1), angles);
+
+		CopyVectorIntoList("vel", reinterpret_cast<float*>(&vel), 3);
+		CopyVectorIntoList("velang", reinterpret_cast<float*>(&angles), 3);
+		CopyVectorIntoList("pos", reinterpret_cast<float*>(&pos), 3);
+		SYMBOLS["hp"] = utils::GetProperty<int>(0, "m_iHealth");
+		SYMBOLS["vel2d"] = vel.Length2D();
+		SYMBOLS["loading"] = !utils::playerEntityAvailable();
+	}
+
+	void InitConditions()
+	{
+		cparse_startup();
+		SYMBOLS["vel"] = GetListFromVector<double>(3);
+		SYMBOLS["velang"] = GetListFromVector<double>(3);
+		SYMBOLS["pos"] = GetListFromVector<double>(3);
+		SYMBOLS["hp"] = 0;
+		SYMBOLS["vel2d"] = 0;
+		SYMBOLS["canjb"] = CppFunction(&canjb);
+		SYMBOLS["loading"] = true;
+	}
 } // namespace scripts

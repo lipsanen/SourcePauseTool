@@ -142,6 +142,7 @@ namespace scripts
 			return;
 
 		bool allTrue = true;
+		UpdateSymbolTable();
 
 		for (auto& pointer : conditions)
 		{
@@ -459,6 +460,7 @@ namespace scripts
 		propertyHandlers["changelevel"] = &SourceTASReader::HandleCLCondition;
 		propertyHandlers["velyaw"] = &SourceTASReader::HandleVelYaw;
 		propertyHandlers["velpitch"] = &SourceTASReader::HandleVelPitch;
+		propertyHandlers["if"] = &SourceTASReader::HandleIf;
 	}
 
 	void SourceTASReader::HandleSave(const std::string& value)
@@ -541,6 +543,11 @@ namespace scripts
 		float low, high;
 		GetDoublet(value, low, high, '|');
 		conditions.push_back(std::unique_ptr<Condition>(new VelAngleCondition(low, high, AngleAxis::Yaw)));
+	}
+
+	void SourceTASReader::HandleIf(const std::string& value)
+	{
+		conditions.push_back(std::unique_ptr<Condition>(new IfCondition(value)));
 	}
 
 	void SourceTASReader::HandlePosVel(const std::string& value, Axis axis, bool isPos)

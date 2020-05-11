@@ -1,7 +1,12 @@
 #pragma once
 
+#include "cparse\shunting-yard.h"
+
 namespace scripts
 {
+	void UpdateSymbolTable();
+	void InitConditions();
+
 	class Condition
 	{
 	public:
@@ -90,4 +95,15 @@ namespace scripts
 		bool IsTrue(int tick, int totalTicks) const override;
 		bool ShouldTerminate(int tick, int totalTicks) const override;
 	};
+
+	class IfCondition : public Condition
+	{
+		calculator expression;
+
+	public:
+		IfCondition(const std::string& expressionString);
+		bool IsTrue(int tick, int totalTicks) const override;
+		bool ShouldTerminate(int tick, int totalTicks) const override;
+	};
+
 } // namespace scripts
