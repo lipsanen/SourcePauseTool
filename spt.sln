@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SPT", "spt.vcxproj", "{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -66,6 +66,26 @@ Global
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release P2|Win32.Build.0 = Release|Win32
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|Win32.ActiveCfg = Release|Win32
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Release|Win32.Build.0 = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug 2013|Win32.ActiveCfg = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug 2013|Win32.Build.0 = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug BMS|Win32.ActiveCfg = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug BMS|Win32.Build.0 = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug OE|Win32.ActiveCfg = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug OE|Win32.Build.0 = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug P2|Win32.ActiveCfg = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug P2|Win32.Build.0 = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug|Win32.ActiveCfg = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Debug|Win32.Build.0 = Debug|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release 2013|Win32.ActiveCfg = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release 2013|Win32.Build.0 = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release BMS|Win32.ActiveCfg = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release BMS|Win32.Build.0 = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release OE|Win32.ActiveCfg = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release OE|Win32.Build.0 = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release P2|Win32.ActiveCfg = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release P2|Win32.Build.0 = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release|Win32.ActiveCfg = Release|Win32
+		{76A802B2-F85E-466B-83EF-2E0232CF5B79}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
