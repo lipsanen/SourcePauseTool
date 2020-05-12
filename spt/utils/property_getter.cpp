@@ -1,7 +1,10 @@
 #include "stdafx.h"
+
 #include "property_getter.hpp"
-#include <vector>
+
 #include <unordered_map>
+#include <vector>
+
 #include "ent_utils.hpp"
 
 namespace utils
