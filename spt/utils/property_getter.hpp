@@ -1,7 +1,8 @@
 #pragma once
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+
 #include "cdll_int.h"
 #include "engine\ivmodelinfo.h"
 #include "icliententity.h"
