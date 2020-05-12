@@ -662,7 +662,7 @@ Vector ClientDLL::GetPlayerVelocity()
 		return Vector();
 	auto player = ORIG_GetLocalPlayer();
 
-	if(!player)
+	if (!player)
 		return Vector();
 	ORIG_CalcAbsoluteVelocity(player, 0);
 	float* vel = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offAbsVelocity);
@@ -673,7 +673,7 @@ Vector ClientDLL::GetPlayerVelocity()
 Vector ClientDLL::GetPlayerEyePos()
 {
 	auto player = GetServerPlayer();
-	if(!player)
+	if (!player)
 		return Vector();
 	Vector rval = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(player) + offServerAbsOrigin);
 	constexpr float duckOffset = 28;
