@@ -590,5 +590,12 @@ namespace utils
 			}
 		}
 	}
+
+	void GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel)
+	{
+		auto ply = GetServerEntity(1);
+		punchAngle = *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + 0x890);
+		punchAngleVel = *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + 0x89c);
+	}
 #endif
 } // namespace utils

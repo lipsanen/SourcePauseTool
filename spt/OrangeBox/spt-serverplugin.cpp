@@ -1226,3 +1226,10 @@ CON_COMMAND(
 }
 
 #endif
+
+#ifdef OE
+ArgsWrapper::ArgsWrapper()
+{
+	this->engine = ::engine.get();
+}
+#endif

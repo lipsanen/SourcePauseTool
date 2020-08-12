@@ -48,6 +48,7 @@ namespace utils
 	JBData CanJB(float height);
 	bool playerEntityAvailable();
 #if !defined(OE) && !defined(P2)
+	void GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel);
 	void CheckPiwSave();
 #endif
 } // namespace utils

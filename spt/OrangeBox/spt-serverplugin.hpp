@@ -103,6 +103,8 @@ struct ArgsWrapper
 {
 	EngineClientWrapper* engine_pointer;
 
+	ArgsWrapper();
+
 	ArgsWrapper(EngineClientWrapper* engine)
 	{
 		this->engine_pointer = engine;
