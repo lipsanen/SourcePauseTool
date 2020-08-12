@@ -103,6 +103,8 @@ struct ArgsWrapper
 {
 	EngineClientWrapper* engine;
 
+	ArgsWrapper();
+
 	ArgsWrapper(EngineClientWrapper* engine)
 	{
 		this->engine = engine;

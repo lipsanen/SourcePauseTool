@@ -9,6 +9,9 @@
 #include "..\overlay\overlays.hpp"
 #include "..\patterns.hpp"
 #include "ServerDLL.hpp"
+#if !defined(OE) && !defined(P2)
+#include "..\game\shared\usercmd.h"
+#endif
 
 using std::size_t;
 using std::uintptr_t;
@@ -211,6 +214,9 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CPortalGameMovement__TracePlayerBBox);
 	DEF_FUTURE(CGameMovement__GetPlayerMaxs);
 	DEF_FUTURE(CGameMovement__GetPlayerMins);
+#if !defined(OE) && !defined(P2)
+	DEF_FUTURE(SetPredictionRandomSeed);
+#endif
 
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
@@ -228,6 +234,9 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_FUTURE(CPortalGameMovement__TracePlayerBBox);
 	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMaxs);
 	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMins);
+#if !defined(OE) && !defined(P2)
+	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
+#endif
 
 	// Server-side CheckJumpButton
 	if (ORIG_CheckJumpButton)
@@ -543,6 +552,12 @@ void ServerDLL::Clear()
 	sliding = false;
 	wasSliding = false;
 	overrideMinMax = false;
+	commandNumber = 0;
+}
+
+int ServerDLL::GetCommandNumber()
+{
+	return commandNumber;
 }
 
 void ServerDLL::TracePlayerBBox(const Vector& start,
@@ -584,6 +599,19 @@ const Vector& __fastcall ServerDLL::HOOKED_CGameMovement__GetPlayerMins(void* th
 	else
 		return serverDLL.ORIG_CGameMovement__GetPlayerMins(thisptr, edx);
 }
+
+#if !defined(OE) && !defined(P2)
+void __cdecl ServerDLL::HOOKED_SetPredictionRandomSeed(void* usercmd)
+{
+	CUserCmd* ptr = reinterpret_cast<CUserCmd*>(usercmd);
+	if (ptr)
+	{
+		serverDLL.commandNumber = ptr->command_number;
+	}
+
+	serverDLL.ORIG_SetPredictionRandomSeed(usercmd);
+}
+#endif
 
 bool __fastcall ServerDLL::HOOKED_CheckJumpButton_Func(void* thisptr, int edx)
 {
