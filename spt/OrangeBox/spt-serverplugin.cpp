@@ -24,6 +24,7 @@
 #include "tier2\tier2.h"
 #include "tier3\tier3.h"
 #include "vgui\iinput.h"
+#include "iprediction.h"
 #include "vgui\isystem.h"
 #include "vgui\ivgui.h"
 
@@ -48,6 +49,7 @@ inline bool FStrEq(const char* sz1, const char* sz2)
 // Interfaces from the engine
 std::unique_ptr<EngineClientWrapper> engine;
 IVEngineServer* engine_server = nullptr;
+IPrediction* prediction = nullptr;
 IMatSystemSurface* surface = nullptr;
 vgui::ISchemeManager* scheme = nullptr;
 void* gm = nullptr;
@@ -93,11 +95,18 @@ void CallServerCommand(const char* cmd)
 
 void GetViewAngles(float viewangles[3])
 {
-	if (engine)
+	QAngle va;
+	QAngle punchangle, punchAngleVel;
+	if (prediction)
 	{
-		QAngle va;
+		prediction->GetViewAngles(va);
+		viewangles[0] = va.x;
+		viewangles[1] = va.y;
+		viewangles[2] = va.z;
+	}
+	else if (engine)
+	{
 		engine->GetViewAngles(va);
-
 		viewangles[0] = va.x;
 		viewangles[1] = va.y;
 		viewangles[2] = va.z;
@@ -106,9 +115,9 @@ void GetViewAngles(float viewangles[3])
 
 void SetViewAngles(const float viewangles[3])
 {
+	QAngle va(viewangles[0], viewangles[1], viewangles[2]);
 	if (engine)
 	{
-		QAngle va(viewangles[0], viewangles[1], viewangles[2]);
 		engine->SetViewAngles(va);
 	}
 }
@@ -340,6 +349,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	IClientEntityList* entList = (IClientEntityList*)clientFactory(VCLIENTENTITYLIST_INTERFACE_VERSION, NULL);
 	IVModelInfo* modelInfo = (IVModelInfo*)interfaceFactory(VMODELINFO_SERVER_INTERFACE_VERSION, NULL);
 	IBaseClientDLL* clientInterface = (IBaseClientDLL*)clientFactory(CLIENT_DLL_INTERFACE_VERSION, NULL);
+	prediction = (IPrediction*)clientFactory(VCLIENT_PREDICTION_INTERFACE_VERSION, NULL);
 
 	if (entList)
 	{
@@ -361,6 +371,16 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	}
 	else
 		DevWarning("Unable to retrieve the client DLL interface.\n");
+
+	if(prediction)
+	{
+		Msg("GOT PREDICTION\n");
+	}
+	else
+	{
+		DevWarning("Unable to retrieve the IPrediction interface.\n");
+	}
+	
 
 #endif
 

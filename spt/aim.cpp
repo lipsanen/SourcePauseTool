@@ -308,18 +308,16 @@ CON_COMMAND(tas_aim, "boom, headshot *music*")
 	utils::GetPunchAngleInformation(punchAngle, punchAnglevel);
 
 	QAngle futurePunchAngle = DecayPunchAngle(punchAngle, punchAnglevel, frames);
-	QAngle diff = futurePunchAngle - punchAngle;
 
 	QAngle va;
 	EngineGetViewAngles(reinterpret_cast<float*>(&va));
-	va += diff;
+	va -= punchAngle;
+	aimAngle -= futurePunchAngle;
 
-	float pitchSpeed = utils::NormalizeDeg(aimAngle[PITCH] - va[PITCH]) / frames;
-	float yawSpeed = utils::NormalizeDeg(aimAngle[YAW] - va[YAW]) / frames;
-	_y_spt_pitchspeed.SetValue(pitchSpeed);
-	_y_spt_yawspeed.SetValue(yawSpeed);
-
-	clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(frames, "_y_spt_pitchspeed 0; _y_spt_yawspeed 0"));
+	//float pitchSpeed = utils::NormalizeDeg(aimAngle[PITCH] - va[PITCH]) / frames;
+	//float yawSpeed = utils::NormalizeDeg(aimAngle[YAW] - va[YAW]) / frames;
+	clientDLL.SetYaw(aimAngle[YAW]);
+	clientDLL.SetPitch(aimAngle[PITCH]);
 }
 
 #endif
