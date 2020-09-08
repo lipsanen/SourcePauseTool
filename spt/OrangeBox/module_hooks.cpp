@@ -7,6 +7,7 @@
 #include "modules\EngineDLL.hpp"
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
+#include "..\ipc\ipc-spt.hpp"
 
 namespace ModuleHooks
 {
@@ -30,11 +31,13 @@ namespace ModuleHooks
 
 	void ConnectSignals()
 	{
-		clientDLL.AfterFramesSignal.Connect(&scripts::g_TASReader, &scripts::SourceTASReader::OnAfterFrames);
-		clientDLL.AfterFramesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
-		clientDLL.AfterFramesSignal.Connect(&PauseOnDemoTick);
+		clientDLL.FrameSignal.Connect(ipc::Loop);
+
+		clientDLL.AfterframesSignal.Connect(&scripts::g_TASReader, &scripts::SourceTASReader::OnAfterFrames);
+		clientDLL.AfterframesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
+		clientDLL.AfterframesSignal.Connect(&PauseOnDemoTick);
 #if !defined(OE) && !defined(P2)
-		clientDLL.AfterFramesSignal.Connect(&utils::CheckPiwSave);
+		clientDLL.AfterframesSignal.Connect(&utils::CheckPiwSave);
 #endif
 
 		clientDLL.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);

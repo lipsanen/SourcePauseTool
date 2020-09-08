@@ -124,6 +124,12 @@
     <ClCompile Include="spt\utils\property_getter.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
+    <ClCompile Include="spt\ipc\ipc.cpp">
+      <Filter>spt\ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\ipc\ipc-spt.cpp">
+      <Filter>spt\ipc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -333,6 +339,15 @@
     <ClInclude Include="spt\strafe_utils.hpp">
       <Filter>spt</Filter>
     </ClInclude>
+    <ClInclude Include="spt\ipc\ipc.hpp">
+      <Filter>spt\ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\ipc\ipc-spt.hpp">
+      <Filter>spt\ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\ipc\json.hpp">
+      <Filter>spt\ipc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">
@@ -390,6 +405,9 @@
     </Filter>
     <Filter Include="Signals">
       <UniqueIdentifier>{680a4130-6128-4d4a-b6a7-4abfb255dea6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\ipc">
+      <UniqueIdentifier>{42f93376-be0b-4934-9764-994217a9d65a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
