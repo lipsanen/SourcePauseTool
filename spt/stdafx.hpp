@@ -19,6 +19,6 @@
 #undef null
 #endif
 
-#include "ipc\json.hpp"
+#include "thirdparty\json.hpp"
 #undef and
 #undef or
