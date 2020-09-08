@@ -1,16 +1,17 @@
 #include "..\..\stdafx.hpp"
 #pragma once
 
+#include <SPTLib\IHookableNameFilter.hpp>
 #include <vector>
 
-#include <SPTLib\IHookableNameFilter.hpp>
 #include "..\spt-serverplugin.hpp"
+
 #include "..\..\..\SDK\igamemovement.h"
 #include "..\..\strafestuff.hpp"
 #include "..\..\utils\patterncontainer.hpp"
 #include "..\public\cdll_int.h"
-#include "Signals/Signal.h"
 #include "cmodel.h"
+#include "thirdparty\Signal.h"
 
 using std::size_t;
 using std::uintptr_t;
@@ -163,6 +164,7 @@ public:
 	double GetDuckJumpTime();
 	bool CanUnDuckJump(trace_t& ptr);
 
+	Gallant::Signal0<void> FrameSignal;
 	Gallant::Signal0<void> AfterFramesSignal;
 	Gallant::Signal0<void> TickSignal;
 	Gallant::Signal1<bool> OngroundSignal;
