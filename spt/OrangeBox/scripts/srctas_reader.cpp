@@ -176,6 +176,11 @@ namespace scripts
 		return currentScript.GetScriptLength();
 	}
 
+	void SourceTASReader::ReadIPCVariables(const nlohmann::json& msg)
+	{
+		variables.ReadIPCVariables(msg);
+	}
+
 	void SourceTASReader::Execute()
 	{
 		iterationFinished = false;
@@ -494,6 +499,8 @@ namespace scripts
 			searchType = SearchType::RandomLowest;
 		else if (value == "randomhigh")
 			searchType = SearchType::RandomHighest;
+		else if (value == "ipc")
+			searchType = SearchType::IPC;
 		else
 			throw std::exception("Search type was invalid");
 	}

@@ -24,6 +24,7 @@ namespace scripts
 		void OnAfterFrames();
 		int GetCurrentTick();
 		int GetCurrentScriptLength();
+		void ReadIPCVariables(const nlohmann::json& msg);
 
 	private:
 		bool iterationFinished;

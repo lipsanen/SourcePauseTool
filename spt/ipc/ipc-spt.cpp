@@ -2,6 +2,7 @@
 
 #include "ipc-spt.hpp"
 
+#include "spt\OrangeBox\scripts\srctas_reader.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "convar.h"
 #include "ipc.hpp"
@@ -16,6 +17,15 @@ namespace ipc
 #endif
 	ConVar y_spt_ipc("y_spt_ipc", "0", 0, "Enables IPC.", IPC_Changed);
 	ConVar y_spt_ipc_port("y_spt_ipc_port", "27182", 0, "Port used for IPC.");
+	ConVar y_spt_ipc_timeout("y_spt_ipc_timeout",
+	                         "50",
+	                         0,
+	                         "Timeout in msec for blocking IPC reads.",
+	                         true,
+	                         1,
+	                         true,
+	                         1000,
+	                         nullptr);
 
 	void StartIPC()
 	{
@@ -53,6 +63,11 @@ namespace ipc
 		Msg(msg);
 	}
 
+	void ReadVariables(const nlohmann::json& msg)
+	{
+		scripts::g_TASReader.ReadIPCVariables(msg);
+	}
+
 	void Init()
 	{
 		ipc::AddPrintFunc(MsgWrapper);
@@ -61,6 +76,7 @@ namespace ipc
 			StartIPC();
 		}
 		server.AddCallback("cmd", CmdCallback, false);
+		server.AddCallback("variables", ReadVariables, true);
 	}
 
 	bool IsActive()
@@ -82,6 +98,11 @@ namespace ipc
 		{
 			server.SendMsg(msg);
 		}
+	}
+
+	bool BlockFor(std::string msg)
+	{
+		return server.BlockForMessages(msg, y_spt_ipc_timeout.GetInt());
 	}
 
 #ifdef OE

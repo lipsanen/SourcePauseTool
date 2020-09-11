@@ -24,7 +24,8 @@ namespace scripts
 		Highest,
 		Random,
 		RandomLowest,
-		RandomHighest
+		RandomHighest,
+		IPC
 	};
 
 	template<typename T>
@@ -37,14 +38,20 @@ namespace scripts
 		std::string GetRangeString();
 		void ParseInput(const std::string& value, bool angle);
 		void ParseValues(const std::string& value);
+		void SetIndex(int index);
+		T GetHigh() const;
+		T GetLow() const;
+		int GetHighIndex() const;
+		T GetIncrement() const;
+		T GetValue() const;
 
 	private:
 		void SelectLow(SearchResult lastResult);
 		void SelectHigh(SearchResult lastResult);
 		void SelectRandom();
 		void SelectMiddle();
-		T Normalize(T value);
-		T GetValueForIndex(int index);
+		T Normalize(T value) const;
+		T GetValueForIndex(int index) const;
 
 		bool isAngle;
 		T initialLow;
@@ -60,10 +67,40 @@ namespace scripts
 	};
 
 	template<typename T>
-	inline T RangeVariable<T>::GetValueForIndex(int index)
+	inline T RangeVariable<T>::GetValueForIndex(int index) const
 	{
 		auto value = initialLow + index * increment;
 		return Normalize(value);
+	}
+
+	template<typename T>
+	inline T RangeVariable<T>::GetHigh() const
+	{
+		return initialHigh;
+	}
+
+	template<typename T>
+	inline T RangeVariable<T>::GetLow() const
+	{
+		return initialLow;
+	}
+
+	template<typename T>
+	inline int RangeVariable<T>::GetHighIndex() const
+	{
+		return static_cast<int>((initialHigh - initialLow) / increment);
+	}
+
+	template<typename T>
+	inline T RangeVariable<T>::GetIncrement() const
+	{
+		return increment;
+	}
+
+	template<typename T>
+	inline T RangeVariable<T>::GetValue() const
+	{
+		return GetValueForIndex(valueIndex);
 	}
 
 	template<typename T>
@@ -103,7 +140,24 @@ namespace scripts
 			throw std::exception("Low was higher than high");
 
 		lowIndex = 0;
-		highIndex = static_cast<int>((initialHigh - initialLow) / increment);
+		highIndex = GetHighIndex();
+	}
+
+	template<typename T>
+	inline void RangeVariable<T>::SetIndex(int index)
+	{
+		if (index >= lowIndex && index <= highIndex)
+		{
+			valueIndex = index;
+		}
+		else
+		{
+			const char* string = FormatTempString("Tried to set value %d outside of its boundary [%d, %d]",
+			                                      index,
+			                                      lowIndex,
+			                                      highIndex);
+			throw std::exception(string);
+		}
 	}
 
 	template<typename T>
@@ -132,13 +186,15 @@ namespace scripts
 		case SearchType::RandomLowest:
 			SelectRandom();
 			break;
+		case SearchType::IPC:
+			break;
 		default:
 			throw std::exception("Search type is not implemented or not in search mode");
 			break;
 		}
 
 		// Search stuck in place, stop searching
-		if (type != SearchType::Random && lastIndex == valueIndex)
+		if ((type == SearchType::Lowest || type == SearchType::Highest) && lastIndex == valueIndex)
 		{
 			throw SearchDoneException();
 		}
@@ -185,22 +241,22 @@ namespace scripts
 	template<typename T>
 	inline void RangeVariable<T>::SelectRandom()
 	{
-		valueIndex = uniformRandom(rng);
+		SetIndex(uniformRandom(rng));
 	}
 
 	template<typename T>
 	inline void RangeVariable<T>::SelectMiddle()
 	{
-		valueIndex = (lowIndex + highIndex) / 2;
+		SetIndex((lowIndex + highIndex) / 2);
 	}
 
 	template<typename T>
-	inline T RangeVariable<T>::Normalize(T value)
+	inline T RangeVariable<T>::Normalize(T value) const
 	{
 		return value;
 	}
 
-	inline float RangeVariable<float>::Normalize(float value)
+	inline float RangeVariable<float>::Normalize(float value) const
 	{
 		if (isAngle)
 			value = static_cast<float>(utils::NormalizeDeg(static_cast<double>(value)));

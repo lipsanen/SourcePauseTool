@@ -6,5 +6,6 @@ namespace ipc
 	bool IsActive();
 	void Loop();
 	void Send(const nlohmann::json& msg);
+	bool BlockFor(std::string msg);
 	void ShutdownIPC();
 } // namespace ipc
