@@ -16,6 +16,17 @@ namespace ipc
 #endif
 	ConVar y_spt_ipc("y_spt_ipc", "0", 0, "Enables IPC.", IPC_Changed);
 	ConVar y_spt_ipc_port("y_spt_ipc_port", "27182", 0, "Port used for IPC.");
+	ConVar y_spt_ipc_ack("y_spt_ipc_ack", "1", 0, "SPT sends acknowledgements to successful IPC commands\n");
+
+	static void SendAck()
+	{
+		if (y_spt_ipc_ack.GetBool())
+		{
+			nlohmann::json ackMsg;
+			ackMsg["type"] = "ack";
+			ipc::Send(ackMsg);
+		}
+	}
 
 	void StartIPC()
 	{
@@ -37,10 +48,7 @@ namespace ipc
 
 	void CmdCallback(const nlohmann::json& msg)
 	{
-		nlohmann::json ackMsg;
-		ackMsg["type"] = "ack";
-		ipc::Send(ackMsg);
-
+		SendAck();
 		if (msg.find("cmd") != msg.end())
 		{
 			std::string cmd = msg["cmd"];
