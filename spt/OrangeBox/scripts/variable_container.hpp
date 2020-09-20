@@ -4,6 +4,7 @@
 #include <random>
 #include <string>
 #include "range_variable.hpp"
+#include "thirdparty\json.hpp"
 
 namespace scripts
 {
@@ -38,6 +39,9 @@ namespace scripts
 		std::string GetPrint(); // For printing the variable state
 		std::string GetValue(); // Returns the actual value of the variable in a string
 		bool Iteration(SearchResult search, SearchType type);
+		void SetIndex(int index);
+		const VarData& GetVariableData();
+		VariableType GetVariableType();
 
 	private:
 		VariableType variableType;
@@ -60,9 +64,13 @@ namespace scripts
 		void AddNewVariable(const std::string& type, const std::string& name, const std::string& value);
 		void SetResult(SearchResult result);
 		void PrintState();
+		void ReadIPCVariables(const nlohmann::json& msg);
+		nlohmann::json GetVariablesJson();
 
 	private:
 		bool Successful(SearchResult result);
+		void PromptIPC();
+		void SendIPCResult(SearchResult result);
 		SearchResult lastResult;
 	};
 } // namespace scripts

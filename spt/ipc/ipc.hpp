@@ -22,6 +22,7 @@ namespace ipc
 		void CloseConnections();
 		void Loop();
 		bool BlockForMessages(const std::string& msg, int timeoutMsec);
+		void RemoveMessagesFromQueue(const std::string& type);
 		void AddCallback(std::string type, MsgCallback callback, bool blocking);
 		void SendMsg(const nlohmann::json& msg);
 		bool ClientConnected();

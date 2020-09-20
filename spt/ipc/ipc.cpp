@@ -163,6 +163,18 @@ bool ipc::IPCServer::BlockForMessages(const std::string& type, int timeoutMsec)
 	}
 }
 
+void ipc::IPCServer::RemoveMessagesFromQueue(const std::string& type)
+{
+	if (msgQueue.find(type) != msgQueue.end())
+	{
+		msgQueue.find(type)->second.clear();
+	}
+	else
+	{
+		Print("Couldn't remove messages of type %s\n", type.c_str());
+	}
+}
+
 void ipc::IPCServer::AddCallback(std::string type, MsgCallback callback, bool blocking)
 {
 	callbacks[type] = callback;

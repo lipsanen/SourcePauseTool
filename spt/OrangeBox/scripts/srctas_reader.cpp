@@ -62,7 +62,10 @@ namespace scripts
 		try
 		{
 			variables.SetResult(result);
-			CommonExecuteScript(true);
+
+			// The search command needs to be issued again for IPC searches
+			if (searchType != SearchType::IPC)
+				CommonExecuteScript(true);
 		}
 		catch (const std::exception& ex)
 		{
@@ -174,6 +177,11 @@ namespace scripts
 	int SourceTASReader::GetCurrentScriptLength()
 	{
 		return currentScript.GetScriptLength();
+	}
+
+	void SourceTASReader::ReadIPCVariables(const nlohmann::json& msg)
+	{
+		variables.ReadIPCVariables(msg);
 	}
 
 	void SourceTASReader::Execute()
@@ -494,6 +502,8 @@ namespace scripts
 			searchType = SearchType::RandomLowest;
 		else if (value == "randomhigh")
 			searchType = SearchType::RandomHighest;
+		else if (value == "ipc")
+			searchType = SearchType::IPC;
 		else
 			throw std::exception("Search type was invalid");
 	}

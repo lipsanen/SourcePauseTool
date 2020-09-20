@@ -3,6 +3,7 @@
 #include "..\cvars.hpp"
 #include "dbg.h"
 #include "srctas_reader.hpp"
+#include "spt\ipc\ipc-spt.hpp"
 
 namespace scripts
 {
@@ -36,7 +37,12 @@ namespace scripts
 		int changes = 0;
 		searchType = type;
 
-		if (type == SearchType::None)
+		if (type == SearchType::IPC)
+		{
+			PromptIPC();
+			return;
+		}
+		else if (type == SearchType::None)
 			maxChanges = 0;
 		else if (type == SearchType::Highest || type == SearchType::Lowest || type == SearchType::Range)
 			maxChanges = 1;
@@ -68,10 +74,14 @@ namespace scripts
 
 	void VariableContainer::SetResult(SearchResult result)
 	{
+		if (searchType == SearchType::None)
+			throw std::exception("Set result while not in search mode");
+
+		SendIPCResult(result);
+
+		// If in IPC search or not in search mode, don't repeat the search
 		if (result == SearchResult::NoSearch)
 			throw SearchDoneException();
-		else if (searchType == SearchType::None)
-			throw std::exception("Set result while not in search mode");
 
 		lastResult = result;
 
@@ -101,6 +111,94 @@ namespace scripts
 		}
 	}
 
+	void VariableContainer::ReadIPCVariables(const nlohmann::json& msg)
+	{
+		if (msg.find("variables") == msg.end())
+		{
+			throw std::exception("Variable response did not contain a variables property!");
+		}
+
+		for (auto& variable : variableMap)
+		{
+			if (variable.second.GetVariableType() == VariableType::Var)
+				continue;
+
+			if (msg["variables"].find(variable.first) == msg["variables"].end())
+			{
+				const char* string =
+				    FormatTempString("Variable %s missing from IPC message", variable.first.c_str());
+				throw std::exception(string);
+			}
+
+			auto& value = msg["variables"][variable.first];
+
+			if (!value.is_number_integer())
+			{
+				const char* string =
+				    FormatTempString("Variable %s value was not an integer", variable.first.c_str());
+				throw std::exception(string);
+			}
+
+			variable.second.SetIndex(value);
+		}
+	}
+
+	nlohmann::json VariableContainer::GetVariablesJson()
+	{
+		nlohmann::json variables;
+		for (auto& variable : variableMap)
+		{
+			auto type = variable.second.GetVariableType();
+			if (type == VariableType::Var)
+				continue;
+
+			variables[variable.first] = nlohmann::json();
+			auto& variableData = variable.second.GetVariableData();
+
+			switch (type)
+			{
+			case VariableType::AngleRange:
+				variables[variable.first]["type"] = "angle";
+				break;
+			case VariableType::FloatRange:
+				variables[variable.first]["type"] = "float";
+				break;
+			case VariableType::IntRange:
+				variables[variable.first]["type"] = "int";
+				break;
+			default:
+				throw std::exception(
+				    FormatTempString("Got error type in variable %s when prompting IPC variables",
+				                     variable.first.c_str()));
+			}
+
+			switch (type)
+			{
+			case VariableType::AngleRange:
+			case VariableType::FloatRange:
+				variables[variable.first]["lowIndex"] = 0;
+				variables[variable.first]["highIndex"] = variableData.floatRange.GetHighIndex();
+				variables[variable.first]["high"] = variableData.floatRange.GetHigh();
+				variables[variable.first]["low"] = variableData.floatRange.GetLow();
+				variables[variable.first]["increment"] = variableData.floatRange.GetIncrement();
+				variables[variable.first]["index"] = variableData.floatRange.GetIndex();
+				variables[variable.first]["value"] = variableData.floatRange.GetValue();
+				break;
+			case VariableType::IntRange:
+				variables[variable.first]["lowIndex"] = 0;
+				variables[variable.first]["highIndex"] = variableData.intRange.GetHighIndex();
+				variables[variable.first]["high"] = variableData.intRange.GetHigh();
+				variables[variable.first]["low"] = variableData.intRange.GetLow();
+				variables[variable.first]["increment"] = variableData.intRange.GetIncrement();
+				variables[variable.first]["index"] = variableData.intRange.GetIndex();
+				variables[variable.first]["value"] = variableData.intRange.GetValue();
+				break;
+			}
+		}
+
+		return variables;
+	}
+
 	bool VariableContainer::Successful(SearchResult result)
 	{
 		if (result != SearchResult::Success)
@@ -121,6 +219,39 @@ namespace scripts
 		}
 
 		return true;
+	}
+
+	void VariableContainer::PromptIPC()
+	{
+		if (!ipc::IsActive())
+		{
+			throw std::exception("Tried to use IPC search when IPC client is not connected.\n");
+		}
+
+		nlohmann::json msg;
+		msg["type"] = "variables";
+		msg["variables"] = GetVariablesJson();
+
+		ipc::RemoveMessagesFromQueue("variables");
+		ipc::Send(msg);
+		bool result = ipc::BlockFor("variables");
+		if (!result)
+		{
+			throw std::exception("IPC variable request timed out.\n");
+		}
+	}
+
+	void VariableContainer::SendIPCResult(SearchResult result)
+	{
+		if (ipc::IsActive() && searchType == SearchType::IPC)
+		{
+			nlohmann::json msg;
+			msg["type"] = "searchResult";
+			msg["success"] = result == SearchResult::Success;
+			msg["variables"] = GetVariablesJson();
+			msg["tick"] = g_TASReader.GetCurrentTick();
+			ipc::Send(msg);
+		}
 	}
 
 	ScriptVariable::ScriptVariable(const std::string& type, const std::string& value)
@@ -197,5 +328,28 @@ namespace scripts
 		default:
 			throw std::exception("Unexpected variable type while starting iteration");
 		}
+	}
+	void ScriptVariable::SetIndex(int index)
+	{
+		if (GetVariableType() == VariableType::IntRange)
+		{
+			data.intRange.SetIndex(index);
+		}
+		else if (GetVariableType() == VariableType::FloatRange || GetVariableType() == VariableType::AngleRange)
+		{
+			data.floatRange.SetIndex(index);
+		}
+		else
+		{
+			throw std::exception("Tried to set the value of a non-mutable variable!");
+		}
+	}
+	const VarData& ScriptVariable::GetVariableData()
+	{
+		return data;
+	}
+	VariableType ScriptVariable::GetVariableType()
+	{
+		return variableType;
 	}
 } // namespace scripts
