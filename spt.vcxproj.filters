@@ -336,6 +336,9 @@
     <ClInclude Include="spt\strafe_utils.hpp">
       <Filter>spt</Filter>
     </ClInclude>
+    <ClInclude Include="spt\aim.hpp">
+      <Filter>spt</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">

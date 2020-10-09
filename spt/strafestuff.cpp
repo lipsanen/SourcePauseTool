@@ -1094,7 +1094,8 @@ namespace Strafe
 		// If forward is pressed, strafing should occur
 		if (dummy.Forward)
 		{
-			if (!yawChanged && tas_strafe_vectorial_increment.GetFloat() > 0)
+			// Outdated angle change stuff, now resides in aim.cpp
+			if (!yawChanged && tas_strafe_vectorial_increment.GetFloat() > 0&& tas_strafe_version.GetInt() <= 3)
 			{
 				// Calculate updated yaw
 				double adjustedTarget =

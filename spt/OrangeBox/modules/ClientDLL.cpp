@@ -13,6 +13,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "..\scripts\tests\test.hpp"
+#include "..\..\aim.hpp"
 #include "bspflags.h"
 
 #ifdef max
@@ -940,26 +941,36 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 		return;
 	float va[3];
 	EngineGetViewAngles(va);
-	bool yawChanged = false;
-	double pitchSpeed = atof(_y_spt_pitchspeed.GetString()), yawSpeed = atof(_y_spt_yawspeed.GetString());
-
-	if (pitchSpeed != 0.0f)
-		va[PITCH] += pitchSpeed;
-	if (setPitch.set)
+	bool regularYawChangeOccurred = false;
+	
+	if (tas_strafe_version.GetInt() >= 4)
 	{
-		setPitch.set = DoAngleChange(va[PITCH], setPitch.angle);
+		// Not set to true when angle changes due to using vectorial strafing
+		regularYawChangeOccurred = aim::UpdateView(va[PITCH], va[YAW]);
+	}
+	else // Disable old angle change stuff under tas_strafe_version >= 4
+	{
+		double pitchSpeed = atof(_y_spt_pitchspeed.GetString()), yawSpeed = atof(_y_spt_yawspeed.GetString());
+
+		if (pitchSpeed != 0.0f)
+			va[PITCH] += pitchSpeed;
+		if (setPitch.set)
+		{
+			setPitch.set = DoAngleChange(va[PITCH], setPitch.angle);
+		}
+
+		if (yawSpeed != 0.0f)
+		{
+			va[YAW] += yawSpeed;
+		}
+		if (setYaw.set)
+		{
+			regularYawChangeOccurred = true;
+			setYaw.set = DoAngleChange(va[YAW], setYaw.angle);
+		}
 	}
 
-	if (yawSpeed != 0.0f)
-	{
-		va[YAW] += yawSpeed;
-	}
-	if (setYaw.set)
-	{
-		yawChanged = true;
-		setYaw.set = DoAngleChange(va[YAW], setYaw.angle);
-	}
-
+	
 	if (tasAddressesWereFound && tas_strafe.GetBool())
 	{
 		auto player = ORIG_GetLocalPlayer();
@@ -1044,8 +1055,8 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 			                        tas_strafe_yaw.GetFloat(),
 			                        va[YAW],
 			                        out,
-			                        yawChanged);
-		else if (!yawChanged) // not changing yaw, can do regular strafe
+			                        regularYawChangeOccurred);
+		else if (!regularYawChangeOccurred) // not changing yaw, can do regular strafe
 			Strafe::Strafe(pl,
 			               vars,
 			               jumped,

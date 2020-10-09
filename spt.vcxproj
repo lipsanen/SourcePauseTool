@@ -1750,6 +1750,7 @@
     <ClInclude Include="SPTLib\patterns.hpp" />
     <ClInclude Include="SPTLib\patterns_macros.hpp" />
     <ClInclude Include="SPTLib\Windows\DetoursUtils.hpp" />
+    <ClInclude Include="spt\aim.hpp" />
     <ClInclude Include="spt\OrangeBox\module_hooks.hpp" />
     <ClInclude Include="spt\strafe_utils.hpp" />
     <ClInclude Include="spt\utils\ent_utils.hpp" />
