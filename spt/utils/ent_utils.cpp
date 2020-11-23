@@ -590,5 +590,20 @@ namespace utils
 			}
 		}
 	}
+
+	bool GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel)
+	{
+		if (serverDLL.offM_vecPunchAngle != 0 && serverDLL.offM_vecPunchAngleVel != 0)
+		{
+			auto ply = GetServerEntity(1);
+			punchAngle = *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + serverDLL.offM_vecPunchAngle);
+			punchAngleVel = *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + serverDLL.offM_vecPunchAngleVel);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
 #endif
 } // namespace utils

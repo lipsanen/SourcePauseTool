@@ -13,6 +13,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "..\scripts\tests\test.hpp"
+#include "..\..\aim.hpp"
 #include "bspflags.h"
 
 #ifdef max
@@ -940,7 +941,15 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 		return;
 	float va[3];
 	EngineGetViewAngles(va);
-	bool yawChanged = false;
+	bool regularYawChangeOccurred = false;
+
+	// Use tas_aim stuff for tas_strafe_version >= 4
+	if (tas_strafe_version.GetInt() >= 4)
+	{
+		// Not set to true when angle changes due to using vectorial strafing
+		regularYawChangeOccurred = aim::UpdateView(va[PITCH], va[YAW]);
+	}
+
 	double pitchSpeed = atof(_y_spt_pitchspeed.GetString()), yawSpeed = atof(_y_spt_yawspeed.GetString());
 
 	if (pitchSpeed != 0.0f)
@@ -956,7 +965,7 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 	}
 	if (setYaw.set)
 	{
-		yawChanged = true;
+		regularYawChangeOccurred = true;
 		setYaw.set = DoAngleChange(va[YAW], setYaw.angle);
 	}
 
@@ -1044,8 +1053,8 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 			                        tas_strafe_yaw.GetFloat(),
 			                        va[YAW],
 			                        out,
-			                        yawChanged);
-		else if (!yawChanged) // not changing yaw, can do regular strafe
+			                        regularYawChangeOccurred);
+		else if (!regularYawChangeOccurred) // not changing yaw, can do regular strafe
 			Strafe::Strafe(pl,
 			               vars,
 			               jumped,
@@ -1064,6 +1073,11 @@ void __fastcall ClientDLL::HOOKED_AdjustAngles_Func(void* thisptr, int edx, floa
 			if (out.Jump && !pl.Ducking && pl.DuckPressed && tas_strafe_autojb.GetBool())
 			{
 				forceUnduck = true;
+			}
+
+			if (out.Jump && tas_strafe_jumptype.GetInt() > 0)
+			{
+				aim::SetJump();
 			}
 
 			forceJump = out.Jump;
