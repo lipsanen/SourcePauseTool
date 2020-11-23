@@ -376,8 +376,9 @@ namespace aim
 		current[1] -= diff[1];
 	}
 
-#define PUNCH_DAMPING 9.0f // bigger number makes the response more damped, smaller is less damped
-	// currently the system will overshoot, with larger damping values it won't
+#define PUNCH_DAMPING \
+	9.0f // bigger number makes the response more damped, smaller is less damped \
+	     // currently the system will overshoot, with larger damping values it won't
 #define PUNCH_SPRING_CONSTANT 65.0f // bigger number increases the speed at which the view corrects
 
 	static QAngle DecayPunchAngle(QAngle m_vecPunchAngle, QAngle m_vecPunchAngleVel, int frames)
