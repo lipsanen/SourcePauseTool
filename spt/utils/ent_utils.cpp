@@ -615,4 +615,65 @@ namespace utils
 		}
 	}
 #endif
+
+	void FirePortalFromPlayer(QAngle angles, trace_t& tr)
+	{
+		Vector fwd;
+		AngleVectors(angles, &fwd);
+		serverDLL.FirePortal(serverDLL.GetActiveWeapon(GetServerPlayer()), 0, false, &fwd, true);
+		tr = serverDLL.lastPortalTrace;
+	}
+
+	void FindClosestPlane(const trace_t& tr, trace_t& out, float maxDistSqr)
+	{
+		//look for an edge point
+		Vector checkDirs[4];
+
+		//a vector lying on a plane
+		Vector upVector = Vector(0, 0, 1);
+		if (tr.plane.normal.z == 1)
+		{
+			upVector = Vector(1, 0, 0);
+		}
+		checkDirs[0] = tr.plane.normal.Cross(upVector);
+		//a vector crossing the previous one
+		checkDirs[1] = tr.plane.normal.Cross(checkDirs[0]);
+
+		VectorNormalize(checkDirs[0]);
+		VectorNormalize(checkDirs[1]);
+
+		//the rest is the inverse of other vectors to get 4 vectors in all directions
+		checkDirs[2] = checkDirs[0] * -1;
+		checkDirs[3] = checkDirs[1] * -1;
+
+		out.fraction = 1.0f;
+
+		for (int i = 0; i < 4; i++)
+		{
+			trace_t newEdgeTr;
+			serverDLL.TraceFirePortal(newEdgeTr, tr.endpos, checkDirs[i]);
+
+			if (utils::TraceHit(newEdgeTr, maxDistSqr))
+			{
+				if (newEdgeTr.fraction < out.fraction)
+				{
+					out = newEdgeTr;
+				}
+			}
+		}
+
+		// Hack the seam position to lie exactly on the intersection of the two surfaces
+		out.endpos -= (out.plane.normal.Dot(out.endpos) - out.plane.dist) * out.plane.normal;
+		out.endpos -= (tr.plane.normal.Dot(out.endpos) - tr.plane.dist) * tr.plane.normal;
+	}
+
+	bool TraceHit(const trace_t& tr, float maxDistSqr)
+	{
+		if (tr.fraction == 1.0f)
+			return false;
+
+		float lengthSqr = (tr.endpos - tr.startpos).LengthSqr();
+		return lengthSqr < maxDistSqr;
+	}
+
 } // namespace utils

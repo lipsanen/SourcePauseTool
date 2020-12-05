@@ -50,6 +50,7 @@ std::unique_ptr<EngineClientWrapper> engine;
 IVEngineServer* engine_server = nullptr;
 IMatSystemSurface* surface = nullptr;
 vgui::ISchemeManager* scheme = nullptr;
+IVDebugOverlay* debugOverlay = nullptr;
 void* gm = nullptr;
 
 int lastSeed = 0;
@@ -125,6 +126,11 @@ void DefaultFOVChangeCallback(ConVar* var, char const* pOldString)
 IVEngineServer* GetEngine()
 {
 	return engine_server;
+}
+
+IVDebugOverlay* GetDebugOverlay()
+{
+	return debugOverlay;
 }
 
 void* GetGamemovement()
@@ -330,9 +336,16 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	}
 
 	engine_server = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
+	debugOverlay = (IVDebugOverlay*)interfaceFactory(VDEBUG_OVERLAY_INTERFACE_VERSION, NULL);
 	if (!engine_server)
 	{
 		DevWarning("SPT: Failed to get the IVEngineServer interface.\n");
+	}
+
+	if (!debugOverlay)
+	{
+		DevWarning("SPT: Failed to get the debug overlay interface.\n");
+		Warning("Seam visualization has no effect.\n");
 	}
 
 #ifndef OE
@@ -1116,7 +1129,6 @@ CON_COMMAND(
 	}
 }
 
-#undef max
 void setang_exact(const QAngle& angles)
 {
 	auto player = GetServerPlayer();
@@ -1127,57 +1139,43 @@ void setang_exact(const QAngle& angles)
 	serverDLL.SnapEyeAngles(player, 0, angles);
 }
 
-// Trace as if we were firing a Portal with the given viewangles, return the squared distance to the resulting point and the normal.
-double trace_fire_portal(QAngle angles, Vector& normal)
+bool TestSeamshot(const Vector& cameraPos, const Vector& seamPos, QAngle& seamAngle)
 {
-	setang_exact(angles);
+	constexpr float SEAMSHOT_DIFFERENCE = 50.0f * 50.0f;
+	Vector diff1 = (seamPos - cameraPos);
+	VectorAngles(diff1, seamAngle);
+	seamAngle.x = utils::NormalizeDeg(seamAngle.x);
+	seamAngle.y = utils::NormalizeDeg(seamAngle.y);
 
-	serverDLL.FirePortal(serverDLL.GetActiveWeapon(GetServerPlayer()), 0, false, nullptr, true);
+	trace_t seamTrace;
+	utils::FirePortalFromPlayer(seamAngle, seamTrace);
 
-	normal = serverDLL.lastTraceFirePortalNormal;
-	return serverDLL.lastTraceFirePortalDistanceSq;
-}
-
-QAngle firstAngle;
-bool firstInvocation = true;
-
-CON_COMMAND(
-    y_spt_find_seam_shot,
-    "y_spt_find_seam_shot [<pitch1> <yaw1> <pitch2> <yaw2> <epsilon>] - tries to find a seam shot on a \"line\" between viewangles (pitch1; yaw1) and (pitch2; yaw2) with binary search. Decreasing epsilon will result in more viewangles checked. A default value is 0.00001. If no arguments are given, first invocation selects the first point, second invocation selects the second point and searches between them.")
-{
-	QAngle a, b;
-	double eps = 0.00001 * 0.00001;
-
-	if (args.ArgC() == 1)
+	if (seamTrace.fraction == 1.0f)
 	{
-		if (firstInvocation)
-		{
-			engine->GetViewAngles(firstAngle);
-			firstInvocation = !firstInvocation;
-
-			Msg("First point set.\n");
-			return;
-		}
-		else
-		{
-			firstInvocation = !firstInvocation;
-
-			a = firstAngle;
-			engine->GetViewAngles(b);
-		}
+		return true;
 	}
 	else
 	{
-		if (args.ArgC() != 5 && args.ArgC() != 6)
-		{
-			Msg("Usage: y_spt_find_seam_shot <pitch1> <yaw1> <pitch2> <yaw2> <epsilon> - tries to find a seam shot on a \"line\" between viewangles (pitch1; yaw1) and (pitch2; yaw2) with binary search. Decreasing epsilon will result in more viewangles checked. A default value is 0.00001. If no arguments are given, first invocation selects the first point, second invocation selects the second point and searches between them.\n");
-			return;
-		}
+		Vector diff2 = (seamTrace.endpos - cameraPos);
 
-		a = QAngle(atof(args.Arg(1)), atof(args.Arg(2)), 0);
-		b = QAngle(atof(args.Arg(3)), atof(args.Arg(4)), 0);
-		eps = (args.ArgC() == 5) ? eps : std::pow(atof(args.Arg(5)), 2);
+		if (diff2.LengthSqr() > diff1.LengthSqr() + SEAMSHOT_DIFFERENCE)
+		{
+			return true;
+		}
 	}
+
+	return false;
+}
+
+CON_COMMAND(
+    y_spt_find_seam_shot,
+    "y_spt_find_seam_shot <distance>",
+    "Finds a seamshot near the position you are pointing at. Distance from seam determines how far away from the seam you will shoot (default is 0.01).\n")
+{
+	QAngle angle;
+	trace_t tr, edge;
+	constexpr float EDGE_DIST_DIFFERENCE = 150.0f * 150.0f;
+	float distance = 0.05f;
 
 	if (!serverDLL.GetActiveWeapon(GetServerPlayer()))
 	{
@@ -1185,44 +1183,67 @@ CON_COMMAND(
 		return;
 	}
 
-	Vector a_normal;
-	const auto distance = std::max(trace_fire_portal(a, a_normal), trace_fire_portal(b, Vector()));
-
-	// If our trace had a distance greater than the a or b distance by this amount, treat it as a seam shot.
-	constexpr double GOOD_DISTANCE_DIFFERENCE = 50.0 * 50.0;
-
-	QAngle test = a + (b - a) / 2;
-	double difference;
-
-	do
+	if (args.ArgC() > 1)
 	{
-		Vector test_normal;
+		distance = std::stof(args.Arg(1));
 
-		if (trace_fire_portal(test, test_normal) - distance > GOOD_DISTANCE_DIFFERENCE)
+		if (std::abs(distance) > 1)
 		{
-			Msg("Found a seam shot at setang %.8f %.8f 0\n", test.x, test.y);
+			Warning("Distance cannot be outside of the range [-1, 1].\n");
 			return;
 		}
+	}
 
-		if (test_normal == a_normal)
-		{
-			a = test;
-			test += (b - a) / 2;
+	engine->GetViewAngles(angle);
+	utils::FirePortalFromPlayer(angle, tr);
 
-			difference = (test - a).LengthSqr();
-		}
-		else
-		{
-			b = test;
-			test += (a - b) / 2;
+	if (tr.fraction == 1.0f)
+	{
+		Warning("Trace hit nothing.\n");
+		return;
+	}
 
-			difference = (test - b).LengthSqr();
-		}
+	utils::FindClosestPlane(tr, edge, EDGE_DIST_DIFFERENCE);
 
-		Msg("Difference: %.8f\n", std::sqrt(difference));
-	} while (difference > eps);
+	if (edge.fraction == 1.0f)
+	{
+		Warning("Did not find any seam.\n");
+		return;
+	}
 
-	Msg("Could not find a seam shot. Best guess: setang %.8f %.8f 0\n", test.x, test.y);
+	Vector cameraOrigin = tr.startpos;
+	Vector diff = (edge.endpos - tr.startpos);
+	diff.NormalizeInPlace();
+
+	float dot1 = tr.plane.normal.Dot(diff);
+	float dot2 = edge.plane.normal.Dot(diff);
+
+	Vector seamPos;
+
+	if (dot1 < dot2)
+	{
+		seamPos = edge.endpos + edge.plane.normal * distance;
+	}
+	else
+	{
+		seamPos = edge.endpos + tr.plane.normal * distance;
+	}
+
+	QAngle seamAngle;
+	bool seamshot = TestSeamshot(tr.startpos, seamPos, seamAngle);
+
+	if (seamshot)
+	{
+		Msg("Found a seam shot at setang %.8f %.8f %.8f\n", seamAngle.x, seamAngle.y, seamAngle.z);
+		setang_exact(seamAngle);
+	}
+	else
+	{
+		Msg("Could not find a seam shot. Best guess: setang %.8f %.8f %.8f\n",
+		    seamAngle.x,
+		    seamAngle.y,
+		    seamAngle.z);
+	}
 }
 
 #endif
