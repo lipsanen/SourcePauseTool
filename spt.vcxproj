@@ -1351,6 +1351,7 @@
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />
     <ClCompile Include="spt\ipc\ipc-spt.cpp" />
     <ClCompile Include="spt\ipc\ipc.cpp" />
+    <ClCompile Include="spt\ljstats.cpp" />
     <ClCompile Include="spt\OrangeBox\modules\inputSystemDLL.cpp" />
     <ClCompile Include="spt\OrangeBox\module_hooks.cpp" />
     <ClCompile Include="spt\utils\ent_utils.cpp" />
@@ -1752,6 +1753,7 @@
     <ClInclude Include="spt\aim.hpp" />
     <ClInclude Include="spt\ipc\ipc-spt.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
+    <ClInclude Include="spt\ljstats.hpp" />
     <ClInclude Include="spt\OrangeBox\modules\inputSystemDLL.hpp" />
     <ClInclude Include="spt\OrangeBox\module_hooks.hpp" />
     <ClInclude Include="spt\strafe_utils.hpp" />

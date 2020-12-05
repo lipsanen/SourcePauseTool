@@ -20,6 +20,7 @@
 #include "Color.h"
 #include "const.h"
 #include "vgui_controls\controls.h"
+#include "..\..\ljstats.hpp"
 
 #undef max
 #undef min
@@ -38,6 +39,7 @@ ConVar _y_spt_overlay_crosshair_color("_y_spt_overlay_crosshair_color",
                                       "0 255 0 255",
                                       FCVAR_CHEAT,
                                       "Overlay crosshair RGBA color.");
+ConVar y_spt_hud_ljstats("y_spt_hud_ljstats", "0", FCVAR_CHEAT, "Display longjump statistics.\n");
 const int INDEX_MASK = MAX_EDICTS - 1;
 
 #define DEF_FUTURE(name) auto f##name = FindAsync(ORIG_##name, patterns::vguimatsurface::##name);
@@ -159,7 +161,7 @@ void VGui_MatSurfaceDLL::DrawHUD(vrect_t* screen)
 
 	try
 	{
-		if (y_spt_hud_hops.GetBool())
+		if (y_spt_hud_hops.GetBool() || y_spt_hud_ljstats.GetBool())
 		{
 			DrawHopHud(screen, scheme, surface);
 		}
@@ -358,20 +360,86 @@ void VGui_MatSurfaceDLL::DrawHopHud(vrect_t* screen, vgui::IScheme* scheme, IMat
 	wchar_t buffer[BUFFER_SIZE];
 
 	int width = y_spt_hud_decimals.GetInt();
-	swprintf_s(buffer, BUFFER_SIZE, L"Timing: %d", displayHop);
-	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat());
-	surface->DrawPrintText(buffer, wcslen(buffer));
+	int x = screen->width / 2 + y_spt_hud_hops_x.GetFloat();
+	int y = screen->height / 2 + y_spt_hud_hops_y.GetFloat();
 
-	swprintf_s(buffer, BUFFER_SIZE, L"Speed loss: %.*f", width, loss);
-	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN));
-	surface->DrawPrintText(buffer, wcslen(buffer));
+	#define DrawBuffer() surface->DrawSetTextPos(x, y); \
+		surface->DrawPrintText(buffer, wcslen(buffer)); \
+		y += (fontTall + MARGIN);
 
-	swprintf_s(buffer, BUFFER_SIZE, L"Percentage: %.*f", width, percentage);
-	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN) * 2);
-	surface->DrawPrintText(buffer, wcslen(buffer));
+	#define DrawFloat(fmt, value) swprintf_s(buffer, BUFFER_SIZE, fmt, width, value); \
+		DrawBuffer();
+
+	#define DrawInt(fmt, value) swprintf_s(buffer, BUFFER_SIZE, fmt, value); \
+		DrawBuffer();
+
+	if (y_spt_hud_hops.GetBool())
+	{
+		DrawInt(L"Timing: %d", displayHop);
+		DrawFloat(L"Speed loss: %.*f", loss);
+		DrawFloat(L"Percentage: %.*f", percentage);
+	}
+
+	if (y_spt_hud_ljstats.GetBool())
+	{
+		// Main stats
+		DrawFloat(L"Length: %.*f", ljstats::lastJump.Length());
+		DrawFloat(L"Prestrafe: %.*f", ljstats::lastJump.Prestrafe());
+		DrawInt(L"Strafes: %d", ljstats::lastJump.StrafeCount());
+		DrawFloat(L"Sync: %.*f%%", ljstats::lastJump.Sync());
+		DrawFloat(L"Time accelerating: %.*f%%", ljstats::lastJump.TimeAccelerating());
+		DrawFloat(L"Accel per tick: %.*f", ljstats::lastJump.AccelPerTick());
+		DrawFloat(L"Straightness: %.*f%%", ljstats::lastJump.Straightness());
+
+		// Individual strafes
+		surface->DrawSetTextFont(font);
+		surface->DrawSetTextColor(255, 255, 255, 255);
+		surface->DrawSetTexture(0);
+		fontTall = surface->GetFontTall(font);
+		int i = 0;
+		int ticks = ljstats::lastJump.TotalTicks();
+
+		x = 6;
+		y = screen->height / 3;
+
+		for (auto& segment : ljstats::lastJump.segments) {
+			if (segment.ticks == 0 || segment.dir == ljstats::AccelDirection::Forward)
+			{
+				continue;
+			}
+
+			float weight = segment.ticks / static_cast<double>(ticks) * 100;
+
+			swprintf_s(buffer,
+				BUFFER_SIZE,
+				L"%d %.*f %.*f %.*f%% %.*f%%",
+				i,
+				width,
+				segment.positiveAccel,
+				width,
+				segment.negativeAccel,
+				width,
+				weight,
+				width,
+				segment.Sync());
+			DrawBuffer();
+			++i;
+		}
+
+		if (i > 0)
+		{
+			x = 18;
+			swprintf_s(buffer,
+				BUFFER_SIZE,
+				L"%.*f %.*f",
+				width,
+				ljstats::lastJump.PositiveAccel(),
+				width,
+				ljstats::lastJump.NegativeAccel());
+			DrawBuffer();
+		}
+	}
+
 }
 
 void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSurface* surface)

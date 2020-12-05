@@ -8,6 +8,7 @@
 #include "modules\EngineDLL.hpp"
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
+#include "..\ljstats.hpp"
 
 namespace ModuleHooks
 {
@@ -41,12 +42,14 @@ namespace ModuleHooks
 #endif
 
 		clientDLL.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
+		clientDLL.TickSignal.Connect(ljstats::OnTick);
 
 #ifndef OE
 		clientDLL.TickSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::NewTick);
 		clientDLL.OngroundSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::OnGround);
 
 		serverDLL.JumpSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::Jump);
+		serverDLL.JumpSignal.Connect(ljstats::OnJump);
 #endif
 	}
 } // namespace ModuleHooks

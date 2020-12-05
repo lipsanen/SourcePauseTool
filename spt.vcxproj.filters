@@ -139,6 +139,9 @@
     <ClCompile Include="spt\aim.cpp">
       <Filter>spt</Filter>
     </ClCompile>
+    <ClCompile Include="spt\ljstats.cpp">
+      <Filter>spt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -365,6 +368,9 @@
     </ClInclude>
     <ClInclude Include="SDK\usercmd.h">
       <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\ljstats.hpp">
+      <Filter>spt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

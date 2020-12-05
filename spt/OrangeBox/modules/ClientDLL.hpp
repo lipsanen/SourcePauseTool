@@ -158,10 +158,12 @@ public:
 	Vector GetPlayerVelocity();
 	Vector GetPlayerEyePos();
 	Vector GetCameraOrigin();
+	Vector GetPlayerAbsPos();
 	int GetPlayerFlags();
 	bool GetFlagsDucking();
 	double GetDuckJumpTime();
 	bool CanUnDuckJump(trace_t& ptr);
+	bool OnGround();
 
 	Gallant::Signal0<void> FrameSignal;
 	Gallant::Signal0<void> AfterFramesSignal;

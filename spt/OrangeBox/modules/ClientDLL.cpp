@@ -715,6 +715,11 @@ Vector ClientDLL::GetCameraOrigin()
 	return ORIG_MainViewOrigin();
 }
 
+Vector ClientDLL::GetPlayerAbsPos()
+{
+	return *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + offServerAbsOrigin);
+}
+
 int ClientDLL::GetPlayerFlags()
 {
 	if (!ORIG_GetLocalPlayer)
@@ -747,6 +752,13 @@ bool ClientDLL::CanUnDuckJump(trace_t& ptr)
 	}
 
 	return ORIG_CGameMovement__CanUnDuckJump(GetGamemovement(), 0, ptr);
+}
+
+bool ClientDLL::OnGround()
+{
+	auto pl = GetPlayerData();
+	return Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
+		== Strafe::PositionType::GROUND;
 }
 
 void ClientDLL::OnFrame()
