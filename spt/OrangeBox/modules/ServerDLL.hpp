@@ -74,6 +74,14 @@ typedef void(__cdecl* _TracePlayerBBoxForGround2)(const Vector& start,
                                                   int collisionGroup,
                                                   trace_t& pm);
 typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
+typedef bool(__cdecl* _FindClosestPassableSpace)(CBaseEntity* pEntity,
+                                                 const Vector& vIndecisivePush,
+                                                 unsigned int fMask);
+typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
+                                      unsigned int mask,
+                                      const IHandleEntity* ignore,
+                                      int collisionGroup,
+                                      trace_t* ptr);
 
 class ServerDLL : public IHookableNameFilter
 {
@@ -155,6 +163,9 @@ public:
 	                     int collisionGroup,
 	                     trace_t& pm);
 	float TraceFirePortal(trace_t& tr, const Vector& startPos, const Vector& vDirection);
+	static bool __cdecl HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity,
+	                                                    const Vector& vIndecisivePush,
+	                                                    unsigned int fMask);
 
 	void StartTimer()
 	{
@@ -195,6 +206,8 @@ public:
 	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox;
 	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround;
 	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2;
+	_FindClosestPassableSpace ORIG_FindClosestPassableSpace;
+	_UTIL_TraceRay ORIG_UTIL_TraceRay;
 	Gallant::Signal0<void> JumpSignal;
 	bool overrideMinMax;
 	Vector _mins;

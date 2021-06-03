@@ -463,6 +463,16 @@ namespace patterns
 		         "5135",
 		         "8B 80 24 27 00 00 8B CD 8B A9 24 27 00 00 89 44 24 3C");
 		PATTERNS(EndOfTeleportTouchingEntity, "5135", "E8 E3 CC DB FF 8D 8C 24 B8 00 00 00 E8 17 45 F5 FF");
+		PATTERNS(FindClosestPassableSpace,
+		         "5135",
+		         "55 8B EC 83 E4 F0 A1 ?? ?? ?? ?? 81 EC 84 02 00 00 83 78 30 00 53 56 57");
+		// same as the client patterns
+		PATTERNS(
+		    UTIL_TraceRay,
+		    "5135",
+		    "8B 44 24 10 8B 4C 24 0C 83 EC 10 56 6A 00 50 51 8D 4C 24 10 E8 ?? ?? ?? ?? 8B 74 24 28 8B 0D ?? ?? ?? ?? 8B 11 8B 52 10",
+		    "3420",
+		    "8B 44 24 10 8B 4C 24 0C 83 EC 0C 56 50 51 8D 4C 24 0C E8 ?? ?? ?? ?? 8B 74 24 24 8B 0D ?? ?? ?? ?? 8B 11 8B 52 10");
 	} // namespace server
 
 	namespace vguimatsurface

@@ -9,6 +9,7 @@
 #include "..\overlay\overlays.hpp"
 #include "..\patterns.hpp"
 #include "ServerDLL.hpp"
+#include "..\..\fcps\fcps_override.hpp"
 
 #ifdef OE
 #include "SDK\usercmd.h"
@@ -254,6 +255,8 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CGameMovement__GetPlayerMins);
 	DEF_FUTURE(SetPredictionRandomSeed);
 	DEF_FUTURE(CGameMovement__DecayPunchAngle);
+	DEF_FUTURE(FindClosestPassableSpace);
+	DEF_FUTURE(UTIL_TraceRay);
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
@@ -272,6 +275,8 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMins);
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 	GET_FUTURE(CGameMovement__DecayPunchAngle);
+	GET_HOOKEDFUTURE(FindClosestPassableSpace);
+	GET_FUTURE(UTIL_TraceRay);
 
 	if (DoesGameLookLikePortal())
 	{
@@ -592,6 +597,10 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		patternContainer.AddHook(HOOKED_TraceFirePortal, (PVOID*)&ORIG_TraceFirePortal);
 	}
 #endif
+
+	if (!ORIG_FindClosestPassableSpace || ORIG_UTIL_TraceRay)
+		Warning("FCPS visualization/overriding may not be available\n");
+
 	patternContainer.Hook();
 }
 
@@ -613,6 +622,8 @@ void ServerDLL::Clear()
 	ORIG_MiddleOfSlidingFunction = nullptr;
 	ORIG_MiddleOfTeleportTouchingEntity = nullptr;
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
+	ORIG_FindClosestPassableSpace = nullptr;
+	ORIG_UTIL_TraceRay = nullptr;
 	off1M_nOldButtons = 0;
 	off2M_nOldButtons = 0;
 	cantJumpNextTime = false;
@@ -1044,4 +1055,12 @@ int ServerDLL::GetEnviromentPortalHandle() const
 
 		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offset));
 	}
+}
+
+
+bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask)
+{
+	if (un_override_fcps.GetBool())
+		return fcps::FindClosestPassableSpaceOverride(pEntity, vIndecisivePush, fMask);
+	return serverDLL.ORIG_FindClosestPassableSpace(pEntity, vIndecisivePush, fMask);
 }
