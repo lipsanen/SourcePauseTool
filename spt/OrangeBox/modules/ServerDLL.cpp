@@ -598,7 +598,7 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	}
 #endif
 
-	if (!ORIG_FindClosestPassableSpace || ORIG_UTIL_TraceRay)
+	if (!ORIG_FindClosestPassableSpace || !ORIG_UTIL_TraceRay)
 		Warning("FCPS visualization/overriding may not be available\n");
 
 	patternContainer.Hook();
@@ -1074,7 +1074,10 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 				caller = Debug_FixMyPosition;
 				break;
 			case 0x004259FB:
-				caller = ReleaseAllEntityOwnership;
+				caller = RemoveEntityFromPortalHole;
+				break;
+			case 0x00427e24:
+				caller = PortalSimulator__MoveTo;
 				break;
 			case 0x0042F076:
 				caller = TeleportTouchingEntity;
@@ -1094,7 +1097,7 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 }
 
 __declspec(naked) bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
-	// I want to pass in the address of whatever called this
+	// I want to pass in the address so I know what called this
 	__asm {
 		push [esp]      // caller return address
 		push [esp+0x10] // fMask

@@ -148,6 +148,9 @@
     <ClCompile Include="spt\fcps\fcps_override.cpp">
       <Filter>spt\fcps</Filter>
     </ClCompile>
+    <ClCompile Include="spt\utils\fixed_size_queue.cpp">
+      <Filter>spt\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -383,6 +386,9 @@
     </ClInclude>
     <ClInclude Include="spt\fcps\fcps_override.hpp">
       <Filter>spt\fcps</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\utils\fixed_size_queue.hpp">
+      <Filter>spt\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
