@@ -166,7 +166,10 @@ public:
 	static bool __cdecl HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity,
 	                                                    const Vector& vIndecisivePush,
 	                                                    unsigned int fMask);
-
+	static bool HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntity,
+	                                                 const Vector& vIndecisivePush,
+	                                                 unsigned int fMask,
+	                                                 void* stackPtr);
 	void StartTimer()
 	{
 		timerRunning = true;

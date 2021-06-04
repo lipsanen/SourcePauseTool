@@ -85,7 +85,7 @@ namespace fcps {
 			return true;
 
 		if (!hacks::CanDoHacks()) {
-			Msg("spt: Cannot run custom fcps, one or more functions were not found\n");
+			Warning("spt: Cannot run custom FCPS, one or more necessary functions were not found\n");
 			return true;
 		}
 

@@ -1057,10 +1057,51 @@ int ServerDLL::GetEnviromentPortalHandle() const
 	}
 }
 
+// clang-format off
 
-bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask)
-{
-	if (un_override_fcps.GetBool())
-		return fcps::FindClosestPassableSpaceOverride(pEntity, vIndecisivePush, fMask);
+bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask, void* retAddress) {
+	if (un_override_fcps.GetBool()) {
+		using namespace fcps;
+		FcpsCaller caller;
+		switch ((uint32_t)retAddress - (uint32_t)serverDLL.m_Base) {
+			case 0x0040FC69:
+				caller = CheckStuck;
+				break;
+			case 0x0041B822:
+				caller = VPhysicsShadowUpdate;
+				break;
+			case 0x00422345:
+				caller = Debug_FixMyPosition;
+				break;
+			case 0x004259FB:
+				caller = ReleaseAllEntityOwnership;
+				break;
+			case 0x0042F076:
+				caller = TeleportTouchingEntity;
+				break;
+			default:
+				caller = Unknown;
+				break;
+		}
+		bool fcpsSuccess = FindClosestPassableSpaceOverride(pEntity, vIndecisivePush, fMask);
+		if (caller == Unknown)
+			Msg("spt: FCPS called from address serverdll!0x%p\n", (uint32_t)retAddress - (uint32_t)serverDLL.m_Base);
+		else
+			Msg("spt: FCPS called from %s: %s\n", FcpsCallerNames[caller], fcpsSuccess ? "SUCCESS" : "FAILED");
+		return fcpsSuccess;
+	}
 	return serverDLL.ORIG_FindClosestPassableSpace(pEntity, vIndecisivePush, fMask);
+}
+
+__declspec(naked) bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
+	// I want to pass in the address of whatever called this
+	__asm {
+		push [esp]      // caller return address
+		push [esp+0x10] // fMask
+		push [esp+0x10] // vIndecisivePush
+		push [esp+0x10] // pEntity
+		call HOOKED_FindClosestPassableSpace_Func
+		add esp, 0x10   // clean stack
+		ret
+	}
 }
