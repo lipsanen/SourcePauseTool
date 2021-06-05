@@ -1365,7 +1365,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug blank|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="spt\aim.cpp" />
+    <ClCompile Include="spt\fcps\fcps_animation.cpp" />
     <ClCompile Include="spt\fcps\fcps_override.cpp" />
+    <ClCompile Include="spt\fcps\fcps_memory_repr.cpp" />
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />
     <ClCompile Include="spt\ipc\ipc-spt.cpp" />
     <ClCompile Include="spt\ipc\ipc.cpp" />
@@ -1374,7 +1376,6 @@
     <ClCompile Include="spt\OrangeBox\module_hooks.cpp" />
     <ClCompile Include="spt\OrangeBox\vgui\graphics.cpp" />
     <ClCompile Include="spt\utils\ent_utils.cpp" />
-    <ClCompile Include="spt\utils\fixed_size_queue.cpp" />
     <ClCompile Include="spt\utils\patterncontainer.cpp" />
     <ClCompile Include="sptlib\sptlib.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">sptlib-stdafx.hpp</PrecompiledHeaderFile>
@@ -1771,7 +1772,9 @@
     <ClInclude Include="SPTLib\patterns_macros.hpp" />
     <ClInclude Include="SPTLib\Windows\DetoursUtils.hpp" />
     <ClInclude Include="spt\aim.hpp" />
+    <ClInclude Include="spt\fcps\fcps_animation.hpp" />
     <ClInclude Include="spt\fcps\fcps_override.hpp" />
+    <ClInclude Include="spt\fcps\fcps_memory_repr.hpp" />
     <ClInclude Include="spt\ipc\ipc-spt.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
     <ClInclude Include="spt\OrangeBox\modules\inputSystemDLL.hpp" />
@@ -1780,7 +1783,6 @@
     <ClInclude Include="spt\OrangeBox\vgui\graphics.hpp" />
     <ClInclude Include="spt\strafe_utils.hpp" />
     <ClInclude Include="spt\utils\ent_utils.hpp" />
-    <ClInclude Include="spt\utils\fixed_size_queue.hpp" />
     <ClInclude Include="spt\utils\patterncontainer.hpp" />
     <ClInclude Include="sptlib\sptlib.hpp" />
     <ClInclude Include="sptlib\sptlib-stdafx.hpp" />

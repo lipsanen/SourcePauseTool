@@ -148,8 +148,11 @@
     <ClCompile Include="spt\fcps\fcps_override.cpp">
       <Filter>spt\fcps</Filter>
     </ClCompile>
-    <ClCompile Include="spt\utils\fixed_size_queue.cpp">
-      <Filter>spt\utils</Filter>
+    <ClCompile Include="spt\fcps\fcps_animation.cpp">
+      <Filter>spt\fcps</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\fcps\fcps_memory_repr.cpp">
+      <Filter>spt\fcps</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -387,8 +390,11 @@
     <ClInclude Include="spt\fcps\fcps_override.hpp">
       <Filter>spt\fcps</Filter>
     </ClInclude>
-    <ClInclude Include="spt\utils\fixed_size_queue.hpp">
-      <Filter>spt\utils</Filter>
+    <ClInclude Include="spt\fcps\fcps_animation.hpp">
+      <Filter>spt\fcps</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\fcps\fcps_memory_repr.hpp">
+      <Filter>spt\fcps</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

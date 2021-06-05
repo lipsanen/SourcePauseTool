@@ -1,31 +1,32 @@
 #pragma once
 
 #include "..\OrangeBox\spt-serverplugin.hpp"
-//#include "..\utils\fixed_size_queue.hpp"
+#define GAME_DLL
+#include "cbase.h"
 
 // clang-format off
 
 namespace fcps {
 
-	enum FcpsCaller {
+	enum FcpsCaller : int {
 		// happens when the player is in a portal environment and a bunch of other conditions
-		// vIndecisivePush - newPosition - GetAbsOrigin()
+		// vIndecisivePush: newPosition - GetAbsOrigin()
 		VPhysicsShadowUpdate,
 		// inlined in CPortalSimulator::ReleaseAllEntityOwnership
 		// called when the portal moves/closes?
-		// vIndecisivePush - portal normal
+		// vIndecisivePush: portal normal
 		RemoveEntityFromPortalHole,
 		// called when in portal hole and stuck on something?
-		// vIndecisivePush - portal normal if in portal environment, <0,0,0> otherwise
+		// vIndecisivePush: portal normal if in portal environment, <0,0,0> otherwise
 		CheckStuck,
 		// called when the m_bHeldObjectOnOppositeSideOfPortal flag switch from 1 to 0, only called on entities the player is holding
-		// vIndecisivePush - portal normal of the portal to which the entity just teleported to?
+		// vIndecisivePush: portal normal of the portal to which the entity just teleported to?
 		TeleportTouchingEntity,
 		// not sure when this is called
-		// vIndecisivePush - portal normal
+		// vIndecisivePush: portal normal
 		PortalSimulator__MoveTo,
 		// called when running command debug_fixmyposition
-		// vIndecisivePush - <0,0,0>
+		// vIndecisivePush: <0,0,0>
 		Debug_FixMyPosition,
 		Unknown
 	};
@@ -40,7 +41,8 @@ namespace fcps {
 		"UNKNOWN"
 	};
 
-	bool FindClosestPassableSpaceOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
+	// regular fcps implemented in spt for debugging
+	bool FcpsOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
 
-	bool FindClosestPassableSpaceOverrideAndSave(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
+	bool FcpsOverrideAndQueue(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
 }

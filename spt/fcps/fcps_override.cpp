@@ -3,8 +3,8 @@
 #include "fcps_override.hpp"
 
 #include "..\OrangeBox\modules.hpp"
-#define GAME_DLL
-#include "cbase.h"
+//#define GAME_DLL
+//#include "cbase.h"
 
 
 // clang-format off
@@ -76,8 +76,8 @@ namespace fcps {
 	}
 
 
-	// basically an exact ripoff of the regular fcps
-	bool FindClosestPassableSpaceOverride(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
+	// a ripoff of the regular fcps for debugging
+	bool FcpsOverride(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
 
 		DevMsg("spt: Running override of FCPS\n");
 
@@ -88,9 +88,6 @@ namespace fcps {
 			Warning("spt: Cannot run custom FCPS, one or more necessary functions were not found\n");
 			return true;
 		}
-
-		// TODO figure out where this was called from
-
 
 		if (hacks::HasMoveParent(pEntity))
 			return true;

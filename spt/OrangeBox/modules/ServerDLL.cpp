@@ -1086,7 +1086,7 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 				caller = Unknown;
 				break;
 		}
-		bool fcpsSuccess = FindClosestPassableSpaceOverride(pEntity, vIndecisivePush, fMask);
+		bool fcpsSuccess = FcpsOverride(pEntity, vIndecisivePush, fMask);
 		if (caller == Unknown)
 			Msg("spt: FCPS called from address serverdll!0x%p\n", (uint32_t)retAddress - (uint32_t)serverDLL.m_Base);
 		else
@@ -1097,7 +1097,7 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 }
 
 __declspec(naked) bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
-	// I want to pass in the address so I know what called this
+	// I want to pass in the return address so I know what called this
 	__asm {
 		push [esp]      // caller return address
 		push [esp+0x10] // fMask
