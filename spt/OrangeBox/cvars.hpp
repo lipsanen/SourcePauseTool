@@ -78,8 +78,6 @@ extern ConVar _y_spt_overlay_width;
 extern ConVar _y_spt_overlay_fov;
 extern ConVar _y_spt_overlay_swap;
 
-extern ConVar un_override_fcps;
-
 #ifdef OE
 extern ConVar y_spt_gamedir;
 #endif

@@ -10,6 +10,9 @@
 #include "..\patterns.hpp"
 #include "ServerDLL.hpp"
 #include "..\..\fcps\fcps_override.hpp"
+#include "..\..\fcps\fcps_memory_repr.hpp"
+#include <chrono>
+using namespace std::chrono;
 
 #ifdef OE
 #include "SDK\usercmd.h"
@@ -1059,8 +1062,11 @@ int ServerDLL::GetEnviromentPortalHandle() const
 
 // clang-format off
 
+ConVar un_override_fcps("un_override_fcps", "0", FCVAR_CHEAT, "FCPS override types:\n\t1 - overrides the default FCPS implementation with one that records the steps of the algorithm\
+\n\t2 - overrides the default FCPS implementation but does not record events (for debugging)");
+
 bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask, void* retAddress) {
-	if (un_override_fcps.GetBool()) {
+	if (un_override_fcps.GetInt() > 0) {
 		using namespace fcps;
 		FcpsCaller caller;
 		switch ((uint32_t)retAddress - (uint32_t)serverDLL.m_Base) {
@@ -1086,18 +1092,31 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 				caller = Unknown;
 				break;
 		}
-		bool fcpsSuccess = FcpsOverride(pEntity, vIndecisivePush, fMask);
-		if (caller == Unknown)
-			Msg("spt: FCPS called from address serverdll!0x%p\n", (uint32_t)retAddress - (uint32_t)serverDLL.m_Base);
-		else
-			Msg("spt: FCPS called from %s: %s\n", FcpsCallerNames[caller], fcpsSuccess ? "SUCCESS" : "FAILED");
+		bool fcpsSuccess;
+		auto start = high_resolution_clock::now();
+		if (un_override_fcps.GetInt() == 1) {
+			FcpsEvent* eventResult = FcpsOverrideAndRecord(pEntity, vIndecisivePush, fMask, caller);
+			if (eventResult) {
+				fcpsSuccess = eventResult->wasSuccess;
+				Msg("spt: recorded FCPS event - ");
+				eventResult->print();
+			} else {
+				// TODO give a better message. riding a piston seems to trigger the parent condition?
+				Msg("Overrided version of FCPS not run, it might not work on this version of portal or sv_use_find_closest_passable_space is set to 0\n");
+				fcpsSuccess = true; // default implementation returns true if stuff l
+			}
+		} else {
+			fcpsSuccess = FcpsOverride(pEntity, vIndecisivePush, fMask);
+		}
+		auto stop = high_resolution_clock::now();
+		DevMsg("FCPS override took %dus\n", duration_cast<microseconds>(stop - start));
 		return fcpsSuccess;
 	}
 	return serverDLL.ORIG_FindClosestPassableSpace(pEntity, vIndecisivePush, fMask);
 }
 
 __declspec(naked) bool ServerDLL::HOOKED_FindClosestPassableSpace(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
-	// I want to pass in the return address so I know what called this
+	// I want to pass in the return address to figure out what called this
 	__asm {
 		push [esp]      // caller return address
 		push [esp+0x10] // fMask

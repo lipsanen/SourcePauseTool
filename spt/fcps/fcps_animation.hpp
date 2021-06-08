@@ -8,10 +8,14 @@ namespace fcps {
 
 	class FcpsAnimator {
 	private:
-		bool isAnimating;
+		bool isAnimating, isSetToStep;
+		int totalSteps;
+		float stepDuration;
 	public:
 		FcpsAnimator();
 		void stopAnimation();
+		void beginAnimation(int from, int to, double seconds);
+		void stepAnimation();
 	};
 
 

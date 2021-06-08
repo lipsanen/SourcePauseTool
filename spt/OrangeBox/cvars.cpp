@@ -232,8 +232,6 @@ ConCommand y_spt_set_isg("y_spt_set_isg",
                          FCVAR_DONTRECORD | FCVAR_CHEAT);
 #endif // SSDK2007 || SSDK2013
 
-ConVar un_override_fcps("un_override_fcps", "0", FCVAR_CHEAT, "Overrides the default implementation of FindClosestPassableSpace\n");
-
 ConVar* _viewmodel_fov = nullptr;
 ConVar* _sv_accelerate = nullptr;
 ConVar* _sv_airaccelerate = nullptr;

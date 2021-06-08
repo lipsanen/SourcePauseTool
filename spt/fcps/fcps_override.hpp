@@ -3,6 +3,7 @@
 #include "..\OrangeBox\spt-serverplugin.hpp"
 #define GAME_DLL
 #include "cbase.h"
+#include "fcps_memory_repr.hpp"
 
 // clang-format off
 
@@ -19,7 +20,7 @@ namespace fcps {
 		// called when in portal hole and stuck on something?
 		// vIndecisivePush: portal normal if in portal environment, <0,0,0> otherwise
 		CheckStuck,
-		// called when the m_bHeldObjectOnOppositeSideOfPortal flag switch from 1 to 0, only called on entities the player is holding
+		// called when the m_bHeldObjectOnOppositeSideOfPortal flag switches from 1 to 0, only called on entities the player is holding
 		// vIndecisivePush: portal normal of the portal to which the entity just teleported to?
 		TeleportTouchingEntity,
 		// not sure when this is called
@@ -31,18 +32,12 @@ namespace fcps {
 		Unknown
 	};
 
-	static char* FcpsCallerNames[] = {
-		"CPortal_Player::VPhysicsShadowUpdate",
-		"CPortalSimulator::RemoveEntityFromPortalHole",
-		"CPortalGameMovement::CheckStuck",
-		"CProp_Portal::TeleportTouchingEntity",
-		"CPortalSimulator::MoveTo",
-		"CC_Debug_FixMyPosition",
-		"UNKNOWN"
-	};
+
+	extern char* FcpsCallerNames[];
+
 
 	// regular fcps implemented in spt for debugging
 	bool FcpsOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
 
-	bool FcpsOverrideAndQueue(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
+	FcpsEvent* FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
 }

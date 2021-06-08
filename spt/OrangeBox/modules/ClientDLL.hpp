@@ -194,7 +194,6 @@ protected:
 	_CViewEffects__Shake ORIG_CViewEffects__Shake;
 	_MainViewOrigin ORIG_MainViewOrigin;
 
-	uintptr_t* pgpGlobals;
 	ptrdiff_t offM_pCommands;
 	ptrdiff_t off1M_nOldButtons;
 	ptrdiff_t off2M_nOldButtons;
@@ -208,6 +207,7 @@ protected:
 	ptrdiff_t offServerSurfaceFriction;
 	ptrdiff_t offServerPreviouslyPredictedOrigin;
 	std::size_t sizeofCUserCmd;
+	uintptr_t* pgpGlobals;
 
 public:
 	ptrdiff_t offServerAbsOrigin;

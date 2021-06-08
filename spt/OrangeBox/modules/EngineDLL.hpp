@@ -64,6 +64,7 @@ public:
 	bool Demo_IsPlayingBack() const;
 	bool Demo_IsPlaybackPaused() const;
 	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
+	void* pGameServer;
 
 protected:
 	PatternContainer patternContainer;
@@ -77,7 +78,6 @@ protected:
 	_VGui_Paint ORIG_VGui_Paint;
 	_Host_AccumulateTime ORIG_Host_AccumulateTime;
 
-	void* pGameServer;
 	bool* pM_bLoadgame;
 	bool shouldPreventNextUnpause;
 	float* pIntervalPerTick;

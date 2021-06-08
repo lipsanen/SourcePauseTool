@@ -1,30 +1,37 @@
 #pragma once
 
-#include "fcps_override.hpp"
+//#include "fcps_override.hpp"
 #include <fstream>
+#define GAME_DLL
+#include "cbase.h"
 
 // clang-format off
 
 // contains objects to store the FCPS algorithm in memory and read/write it from disk
 
 namespace fcps {
+	enum FcpsCaller;
 
 	#define FCPS_EVENT_VERSION 1
 
+	#define MAP_NAME_LEN 64
+	#define ENT_CLASS_NAME_LEN 256
 
 	// if ANYTHING in this struct is changed, the event version must be updated
 
-	struct FcpsEvent {
-		int eventId; // ID
-		char mapName[20];
-		FcpsCaller caller;
+	struct alignas(16) FcpsEvent {
 
 		// general info
+		int eventId;
+		char mapName[MAP_NAME_LEN];
+		FcpsCaller caller;
 		int tickTime;
 		float curTime;
 		bool wasRunOnPlayer;
-		char entName[120];
-		Vector playerMins, playerMaxs; // in case this was not run on the player
+		char entClassName[ENT_CLASS_NAME_LEN];
+		bool isHeldObject;
+		Vector playerMins, playerMaxs; // in case this was not run on the player and the player is holding this
+		Vector vIndecisivePush;
 		int fMask;
 		
 		// pre-loop
@@ -37,27 +44,28 @@ namespace fcps {
 
 
 		struct FcpsLoop {
-			int failCount;
-			Vector rayStart, rayDelta;
-			Ray_t testRayResult;
+			uint failCount;
+			Ray_t testRay;
+			trace_t testTraceResult;
 			bool wasSuccess;
 			// the rest of this is only valid in case of failure
-			Vector corners[8];
+			Vector corners[8]; // the extents can get modified on every iteration so wee need to keep track of that
 			bool cornersInbounds[8];
 
 			struct ValidationCheck {
-				int fromCorner, toCorner;
-				Ray_t ray;
-				trace_t trace;
-				float validation;
+				int cornerIdx[2];
+				Ray_t ray[2];
+				trace_t trace[2];
+				float validationDelta[2];
 			};
 
 			int validationCheckCount;
-			ValidationCheck validationChecks[56];
+			ValidationCheck validationChecks[28];
 
-			Vector newOriginDirection;
+			float cornerValidation[8];
 			float totalValidation;
-			Vector newCenter, newMins, newMaxs; // new Extents?
+			Vector newOriginDirection;
+			Vector newCenter, newMins, newMaxs; // new Extents
 		};
 
 		// all of the loops
@@ -68,6 +76,8 @@ namespace fcps {
 		Vector newPos;
 
 		FcpsEvent() = default;
+		FcpsEvent(int eventId);
+		~FcpsEvent() = default;
 		FcpsEvent(std::istream& infile);
 		void writeToDisk(std::ofstream* outBinFile, std::ofstream* outTextFile);
 		void print(); // should all fit on one line
@@ -83,7 +93,7 @@ namespace fcps {
 		FixedFcpsQueue(int count);
 		~FixedFcpsQueue();
 		FcpsEvent& beginNextEvent(); // returns with ID field set
-		FcpsEvent* getEventWithId(int id); // returns null if there is no such event
+		FcpsEvent* getEventWithId(unsigned long id); // returns null if there is no such event
 		void printAllEvents();
 		int count();
 	};
@@ -94,5 +104,5 @@ namespace fcps {
 
 
 	extern void stopFcpsAnimation();
-	bool parseFcpsEventRange(const char* arg, int* lower, int* upper); // parses "x" or "x:y" into a range, returns true on success
+	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue); // parses "x" or "x:y" into a range, returns true on success
 }

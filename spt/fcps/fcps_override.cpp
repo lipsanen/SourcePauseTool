@@ -3,15 +3,25 @@
 #include "fcps_override.hpp"
 
 #include "..\OrangeBox\modules.hpp"
-//#define GAME_DLL
-//#include "cbase.h"
-
+#include "..\OrangeBox\spt-serverplugin.hpp"
 
 // clang-format off
 
 namespace fcps {
 
-	// implementations for non-virtual and non-inlined methods
+	
+	char* FcpsCallerNames[] = {
+		"CPortal_Player::VPhysicsShadowUpdate",
+		"CPortalSimulator::RemoveEntityFromPortalHole",
+		"CPortalGameMovement::CheckStuck",
+		"CProp_Portal::TeleportTouchingEntity",
+		"CPortalSimulator::MoveTo",
+		"CC_Debug_FixMyPosition",
+		"UNKNOWN"
+	};
+
+
+	// implementations for non-virtual and non-inlined methods, or for functions/fields which are at the wrong offset in the sdk due to an incorrect number of fields
 	namespace hacks {
 
 		bool CanDoHacks() {
@@ -56,22 +66,48 @@ namespace fcps {
 			return m_hMoveParent.ToInt() != -1;
 		}
 
-		// sdk doesn't have the correct number of virtual functions so the wrong one gets called
-		inline void Teleport(CBaseEntity* pEntity, const Vector* newPosition, const QAngle* newAngles, const Vector* newVelocity) {
+		#define VIRTUAL_CALL(obj, byteOffset) __asm { \
+			__asm mov ecx, dword ptr [obj] \
+			__asm mov edx, dword ptr [ecx] \
+			__asm mov eax, dword ptr [edx + byteOffset] \
+			__asm call eax \
+		}
+
+		inline void __cdecl Teleport(CBaseEntity* pEntity, const Vector* newPosition, const QAngle* newAngles, const Vector* newVelocity) {
 			__asm {
 				push newVelocity
 				push newAngles
 				push newPosition
-				mov ecx, dword ptr [pEntity]
-				mov edx, dword ptr [ecx]
-				mov eax, dword ptr [edx+0x1a4]
-				call eax
 			}
+			VIRTUAL_CALL(pEntity, 0x1a4)
 		}
 
-		// sdk 'm_Collision' field is off by 4 bytes
+		inline unsigned short __cdecl GetGameFlags(IPhysicsObject* pPhys) {
+			VIRTUAL_CALL(pPhys, 0x4c)
+		}
+
+		inline bool __cdecl IsPlayer(CBaseEntity* pEntity) {
+			VIRTUAL_CALL(pEntity, 0x138)
+		}
+
 		inline CCollisionProperty* CollisionProp(CBaseEntity* pEntity) {
 			return (CCollisionProperty*)((uint32_t)pEntity + 320);
+		}
+
+		inline IPhysicsObject* VPhysicsGetObject(CBaseEntity* pEntity) {
+			return *(IPhysicsObject**)((uint32_t)pEntity + 0x1a8);
+		}
+
+		inline int tickCount() {
+			return *((int*)engineDLL.pGameServer + 3);
+		}
+
+		inline char* mapName() {
+			return (char*)engineDLL.pGameServer + 16;
+		}
+
+		inline float curTime() {
+			return *((float*)engineDLL.pGameServer + 66) * tickCount();
 		}
 	}
 
@@ -115,7 +151,7 @@ namespace fcps {
 		entRay.m_IsSwept = true;
 		entRay.m_StartOffset = vec3_origin;
 
-		Vector vOriginalExtents = vEntityMaxs;	
+		Vector vOriginalExtents = vEntityMaxs;
 		Vector vGrowSize = vEntityMaxs / 101.0f;
 		vEntityMaxs -= vGrowSize;
 		vEntityMins += vGrowSize;
@@ -203,5 +239,194 @@ namespace fcps {
 			}		
 		}
 		return false;
+	}
+
+
+	// in this version we record the process of the algorithm as an fcps event
+	FcpsEvent* FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller) {
+
+		// TODO - vww in this version and the non-record kills you
+
+		DevMsg("spt: Running override of FCPS\n");
+
+		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool())
+			return nullptr;
+
+		if (!hacks::CanDoHacks()) {
+			Warning("spt: Cannot run custom FCPS, one or more necessary functions were not found\n");
+			return nullptr;
+		}
+
+		if (hacks::HasMoveParent(pEntity))
+			return nullptr;
+
+		// init new event and fill it with data as the alg iterates
+		FcpsEvent& thisEvent = RecordedFcpsQueue->beginNextEvent();
+
+		// general info
+		strcpy_s(thisEvent.mapName, MAP_NAME_LEN, hacks::mapName());
+		thisEvent.caller = caller;
+		thisEvent.tickTime = hacks::tickCount();
+		thisEvent.curTime = hacks::curTime();
+		thisEvent.wasRunOnPlayer = hacks::IsPlayer(pEntity);
+		strcpy_s(thisEvent.entClassName, ENT_CLASS_NAME_LEN, pEntity->GetClassname());
+		IPhysicsObject *pPhys = hacks::VPhysicsGetObject(pEntity);
+		if (pPhys && hacks::GetGameFlags(pPhys) & FVPHYSICS_PLAYER_HELD) {
+			thisEvent.isHeldObject = true;
+			CBaseEntity* holdingPlayer = (CBaseEntity*)GetServerPlayer();
+			CCollisionProperty* pPlayerCollision = hacks::CollisionProp(holdingPlayer);
+			hacks::WorldSpaceAABB(pPlayerCollision, &thisEvent.playerMins, &thisEvent.playerMaxs);
+		} else {
+			thisEvent.isHeldObject = false;
+		}
+		thisEvent.fMask = fMask;
+
+
+		Vector vEntityMaxs;
+		Vector vEntityMins;
+		CCollisionProperty* pEntityCollision = hacks::CollisionProp(pEntity);
+		hacks::WorldSpaceAABB(pEntityCollision, &vEntityMins, &vEntityMaxs);
+
+		Vector ptEntityCenter = (vEntityMins + vEntityMaxs) / 2.0f;
+		thisEvent.entMins = vEntityMins;
+		thisEvent.entMaxs = vEntityMaxs;
+		thisEvent.originalCenter = ptEntityCenter;
+		vEntityMins -= ptEntityCenter;
+		vEntityMaxs -= ptEntityCenter;
+
+		Vector ptExtents[8]; // ordering is going to be like 3 bits, where 0 is a min on the related axis, and 1 is a max on the same axis, axis order x y z
+		float fExtentsValidation[8]; // some points are more valid than others, and this is our measure
+
+		Vector ptEntityOriginalCenter = ptEntityCenter;
+		ptEntityCenter.z += 0.001f; // to satisfy m_IsSwept on first pass
+		thisEvent.zNudgedCenter = ptEntityCenter;
+		int iEntityCollisionGroup = pEntity->GetCollisionGroup();
+		thisEvent.collisionGroup = iEntityCollisionGroup;
+
+		trace_t traces[2];
+		Ray_t entRay;
+		entRay.m_Extents = vEntityMaxs;
+		entRay.m_IsRay = false;
+		entRay.m_IsSwept = true;
+		entRay.m_StartOffset = vec3_origin;
+
+		Vector vOriginalExtents = vEntityMaxs;	
+		Vector vGrowSize = vEntityMaxs / 101.0f;
+		vEntityMaxs -= vGrowSize;
+		vEntityMins += vGrowSize;
+
+		thisEvent.growSize = vGrowSize;
+		thisEvent.adjustedMins = vEntityMins;
+		thisEvent.totalFailCount = 0;
+		
+		Ray_t testRay;
+		testRay.m_Extents = vGrowSize;
+		testRay.m_IsRay = false;
+		testRay.m_IsSwept = true;
+		testRay.m_StartOffset = vec3_origin;
+
+
+		for(unsigned int iFailCount = 0; iFailCount != 100; ++iFailCount) {
+
+			entRay.m_Start = ptEntityCenter;
+			entRay.m_Delta = ptEntityOriginalCenter - ptEntityCenter;
+
+			hacks::UTIL_TraceRay(entRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
+
+			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[thisEvent.totalFailCount++];
+			thisLoop.failCount = iFailCount;
+			thisLoop.testRay = entRay;
+			thisLoop.testTraceResult = traces[0];
+
+			if( traces[0].startsolid == false ) {
+				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
+				hacks::Teleport(pEntity, &vNewPos, nullptr, nullptr);
+				thisLoop.wasSuccess = true; // current placement worked
+				thisEvent.newPos = vNewPos;
+				return &thisEvent;
+			}
+
+			bool bExtentInvalid[8];
+			for(int i = 0; i != 8; ++i) {
+				fExtentsValidation[i] = 0.0f;
+				ptExtents[i] = ptEntityCenter;
+				ptExtents[i].x += i & (1 << 0) ? vEntityMaxs.x : vEntityMins.x;
+				ptExtents[i].y += i & (1 << 1) ? vEntityMaxs.y : vEntityMins.y;
+				ptExtents[i].z += i & (1 << 2) ? vEntityMaxs.z : vEntityMins.z;
+				bExtentInvalid[i] = hacks::CEngineTrace__PointOutsideWorld(ptExtents[i]);
+
+				thisLoop.corners[i] = ptExtents[i];
+				thisLoop.cornersInbounds[i] = bExtentInvalid[i];
+			}
+			thisLoop.validationCheckCount = 0;
+
+			for(unsigned int counter = 0; counter != 7; ++counter) {
+				for(unsigned int counter2 = counter + 1; counter2 != 8; ++counter2) {
+
+					auto& thisValidationCheck = thisLoop.validationChecks[thisLoop.validationCheckCount++];
+					thisValidationCheck.cornerIdx[0] = counter;
+					thisValidationCheck.cornerIdx[1] = counter2;
+
+					testRay.m_Delta = ptExtents[counter2] - ptExtents[counter];
+					if(bExtentInvalid[counter]) {
+						traces[0].startsolid = true;
+					} else {
+						testRay.m_Start = ptExtents[counter];
+						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
+						thisValidationCheck.ray[0] = testRay;
+						thisValidationCheck.trace[0] = traces[0];
+					}
+
+					if(bExtentInvalid[counter2]) {
+						traces[1].startsolid = true;
+					} else {
+						testRay.m_Start = ptExtents[counter2];
+						testRay.m_Delta = -testRay.m_Delta;
+						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[1]);
+						thisValidationCheck.ray[1] = testRay;
+						thisValidationCheck.trace[1] = traces[1];
+					}
+
+					float fDistance = testRay.m_Delta.Length();
+
+					for(int i = 0; i != 2; ++i) {
+						int iExtent = i == 0 ? counter : counter2;
+						float validationDelta = traces[i].startsolid ? -100.0f : traces[i].fraction * fDistance;
+						fExtentsValidation[iExtent] += validationDelta;
+						thisValidationCheck.validationDelta[i] = validationDelta;
+					}
+				}
+			}
+
+			Vector vNewOriginDirection( 0.0f, 0.0f, 0.0f );
+			float fTotalValidation = 0.0f;
+			for(unsigned int counter = 0; counter != 8; ++counter) {
+				if(fExtentsValidation[counter] > 0.0f) {
+					vNewOriginDirection += (ptExtents[counter] - ptEntityCenter) * fExtentsValidation[counter];
+					fTotalValidation += fExtentsValidation[counter];
+				}
+				thisLoop.cornerValidation[counter] = fExtentsValidation[counter];
+			}
+			thisLoop.totalValidation = fTotalValidation;
+
+			if(fTotalValidation != 0.0f) {
+				ptEntityCenter += thisLoop.newOriginDirection = vNewOriginDirection / fTotalValidation;
+				// increase sizing
+				testRay.m_Extents += vGrowSize;
+				vEntityMaxs -= vGrowSize;
+				vEntityMins = -vEntityMaxs;
+			} else {
+				// no point was valid, apply the indecisive vector & reset sizing
+				ptEntityCenter += thisLoop.newOriginDirection = vIndecisivePush;
+				testRay.m_Extents = vGrowSize;
+				vEntityMaxs = vOriginalExtents;
+				vEntityMins = -vEntityMaxs;
+			}
+			thisLoop.newCenter = ptEntityCenter;
+			thisLoop.newMins = vEntityMins;
+			thisLoop.newMaxs = vEntityMaxs;
+		}
+		thisEvent.wasSuccess = false;
+		return &thisEvent;
 	}
 }
