@@ -19,7 +19,7 @@ namespace fcps {
 
 	// if ANYTHING in this struct is changed, the event version must be updated
 
-	struct alignas(16) FcpsEvent {
+	struct FcpsEvent {
 
 		// general info
 		int eventId;
@@ -50,17 +50,17 @@ namespace fcps {
 			bool wasSuccess;
 			// the rest of this is only valid in case of failure
 			Vector corners[8]; // the extents can get modified on every iteration so wee need to keep track of that
-			bool cornersInbounds[8];
+			bool cornersOob[8];
 
-			struct ValidationCheck {
+			struct ValidationRayCheck {
 				int cornerIdx[2];
 				Ray_t ray[2];
 				trace_t trace[2];
 				float validationDelta[2];
 			};
 
-			int validationCheckCount;
-			ValidationCheck validationChecks[28];
+			int validationRayCheckCount;
+			ValidationRayCheck validationRayChecks[28];
 
 			float cornerValidation[8];
 			float totalValidation;
@@ -69,7 +69,8 @@ namespace fcps {
 		};
 
 		// all of the loops
-		int totalFailCount;
+		int loopStartCount;
+		int loopFinishCount;
 		FcpsLoop loops[100];
 		bool wasSuccess;
 		// in case of success
@@ -99,8 +100,8 @@ namespace fcps {
 	};
 
 	
-	extern FixedFcpsQueue* RecordedFcpsQueue; // any new events are put here
-	extern FixedFcpsQueue* LoadedFcpsQueue;   // any events loaded from disk are put here
+	extern FixedFcpsQueue* RecordedFcpsQueue;
+	extern FixedFcpsQueue* LoadedFcpsQueue;
 
 
 	extern void stopFcpsAnimation();

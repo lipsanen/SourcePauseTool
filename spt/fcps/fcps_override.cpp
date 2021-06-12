@@ -288,11 +288,11 @@ namespace fcps {
 		hacks::WorldSpaceAABB(pEntityCollision, &vEntityMins, &vEntityMaxs);
 
 		Vector ptEntityCenter = (vEntityMins + vEntityMaxs) / 2.0f;
+		vEntityMins -= ptEntityCenter;
+		vEntityMaxs -= ptEntityCenter;
 		thisEvent.entMins = vEntityMins;
 		thisEvent.entMaxs = vEntityMaxs;
 		thisEvent.originalCenter = ptEntityCenter;
-		vEntityMins -= ptEntityCenter;
-		vEntityMaxs -= ptEntityCenter;
 
 		Vector ptExtents[8]; // ordering is going to be like 3 bits, where 0 is a min on the related axis, and 1 is a max on the same axis, axis order x y z
 		float fExtentsValidation[8]; // some points are more valid than others, and this is our measure
@@ -317,7 +317,8 @@ namespace fcps {
 
 		thisEvent.growSize = vGrowSize;
 		thisEvent.adjustedMins = vEntityMins;
-		thisEvent.totalFailCount = 0;
+		thisEvent.adjustedMaxs = vEntityMaxs;
+		thisEvent.loopStartCount = thisEvent.loopFinishCount = 0;
 		
 		Ray_t testRay;
 		testRay.m_Extents = vGrowSize;
@@ -328,12 +329,14 @@ namespace fcps {
 
 		for(unsigned int iFailCount = 0; iFailCount != 100; ++iFailCount) {
 
+			thisEvent.loopStartCount++;
+
 			entRay.m_Start = ptEntityCenter;
 			entRay.m_Delta = ptEntityOriginalCenter - ptEntityCenter;
 
 			hacks::UTIL_TraceRay(entRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
 
-			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[thisEvent.totalFailCount++];
+			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[iFailCount];
 			thisLoop.failCount = iFailCount;
 			thisLoop.testRay = entRay;
 			thisLoop.testTraceResult = traces[0];
@@ -356,14 +359,14 @@ namespace fcps {
 				bExtentInvalid[i] = hacks::CEngineTrace__PointOutsideWorld(ptExtents[i]);
 
 				thisLoop.corners[i] = ptExtents[i];
-				thisLoop.cornersInbounds[i] = bExtentInvalid[i];
+				thisLoop.cornersOob[i] = bExtentInvalid[i];
 			}
-			thisLoop.validationCheckCount = 0;
+			thisLoop.validationRayCheckCount = 0;
 
 			for(unsigned int counter = 0; counter != 7; ++counter) {
 				for(unsigned int counter2 = counter + 1; counter2 != 8; ++counter2) {
 
-					auto& thisValidationCheck = thisLoop.validationChecks[thisLoop.validationCheckCount++];
+					auto& thisValidationCheck = thisLoop.validationRayChecks[thisLoop.validationRayCheckCount++]; // this'll just go up to its max
 					thisValidationCheck.cornerIdx[0] = counter;
 					thisValidationCheck.cornerIdx[1] = counter2;
 
@@ -425,6 +428,7 @@ namespace fcps {
 			thisLoop.newCenter = ptEntityCenter;
 			thisLoop.newMins = vEntityMins;
 			thisLoop.newMaxs = vEntityMaxs;
+			thisEvent.loopFinishCount++;
 		}
 		thisEvent.wasSuccess = false;
 		return &thisEvent;

@@ -3,4 +3,5 @@
 namespace vgui
 {
 	void DrawLines();
+	void DrawFcpsAnimationFrame();
 }

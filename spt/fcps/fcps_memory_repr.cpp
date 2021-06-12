@@ -7,8 +7,8 @@
 
 namespace fcps {
 
-	FixedFcpsQueue* RecordedFcpsQueue = new FixedFcpsQueue(200);
-	FixedFcpsQueue* LoadedFcpsQueue = nullptr;
+	FixedFcpsQueue* RecordedFcpsQueue = new FixedFcpsQueue(200); // any new events are put here
+	FixedFcpsQueue* LoadedFcpsQueue = nullptr; // any events loaded from disk are put here
 
 	
 	// fixed queue
@@ -82,8 +82,8 @@ namespace fcps {
 	extern char* FcpsCallerNames[];
 
 	void FcpsEvent::print() {
-		Msg("ID: %2d, map: %-14s, time: %-4.3f, %2d iterations, %s, called from %s\n",
-			eventId, mapName, curTime, totalFailCount, wasSuccess ? "SUCCEEDED" : "FAILED", FcpsCallerNames[caller]);
+		Msg("ID: %2d, map: %14s, time: %4.3f, %2d iteration%s, %s, called from %s\n",
+			eventId, mapName, curTime, loopFinishCount, loopFinishCount == 1 ? "" : "s", wasSuccess ? "SUCCEEDED" : "FAILED", FcpsCallerNames[caller]);
 	}
 
 
@@ -124,7 +124,7 @@ namespace fcps {
 		while (*curPtr) {
 			if (*curPtr == ':') {
 				if (isRange)
-					return false; // we alredy parsed a second digit, this tells us there's a second separator "x:y:..."
+					return false; // we alredy parsed a separator, this tells us there's a second one "x:y:..."
 				isRange = true;
 				curPtr++;
 			} else if (isdigit(*curPtr)) {
@@ -141,7 +141,7 @@ namespace fcps {
 		if ((isRange && !upperParsed) || lower > upper)
 			return false;
 		// check that events with these ID's exist, all IDs in between must also exist
-		return fcpsQueue->getEventWithId(lower) && !fcpsQueue->getEventWithId(upper);
+		return fcpsQueue->getEventWithId(lower) && fcpsQueue->getEventWithId(upper);
 	}
 
 

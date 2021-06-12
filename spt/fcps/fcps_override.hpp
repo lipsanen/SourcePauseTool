@@ -9,6 +9,11 @@
 
 namespace fcps {
 
+	// these were originally only used for the override but there might be some useful util functions here
+	namespace hacks {
+		float curTime();
+	}
+
 	enum FcpsCaller : int {
 		// happens when the player is in a portal environment and a bunch of other conditions
 		// vIndecisivePush: newPosition - GetAbsOrigin()

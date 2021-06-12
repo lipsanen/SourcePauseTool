@@ -6,6 +6,7 @@
 #include "..\modules.hpp"
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\property_getter.hpp"
+#include "..\..\fcps\fcps_animation.hpp"
 
 ConVar y_spt_drawseams("y_spt_drawseams", "0", FCVAR_CHEAT, "Draws seamshot stuff.\n");
 
@@ -116,5 +117,10 @@ namespace vgui
 
 		if (y_spt_drawseams.GetBool())
 			DrawSeams(debugOverlay);
+	}
+
+	void DrawFcpsAnimationFrame()
+	{
+		fcps::fcpsAnimator.draw();
 	}
 } // namespace vgui
