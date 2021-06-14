@@ -47,7 +47,6 @@ namespace fcps {
 			uint failCount;
 			Ray_t testRay;
 			trace_t testTraceResult;
-			bool wasSuccess;
 			// the rest of this is only valid in case of failure
 			Vector corners[8]; // the extents can get modified on every iteration so wee need to keep track of that
 			bool cornersOob[8];

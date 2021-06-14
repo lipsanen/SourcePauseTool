@@ -344,7 +344,7 @@ namespace fcps {
 			if( traces[0].startsolid == false ) {
 				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
 				hacks::Teleport(pEntity, &vNewPos, nullptr, nullptr);
-				thisLoop.wasSuccess = true; // current placement worked
+				thisEvent.wasSuccess = true; // current placement worked
 				thisEvent.newPos = vNewPos;
 				return &thisEvent;
 			}

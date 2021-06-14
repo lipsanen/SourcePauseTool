@@ -96,7 +96,7 @@ namespace fcps {
 				unscaledTime += subStepCounts[i] * relativeSubstepTimes[i];
 		// get the i,j,k values and store them
 		for (int i = 0; i < AS_Count; i++)
-			subStepDurations[i] = seconds / unscaledTime * relativeSubstepTimes[i];
+			subStepDurations[i] = shouldDrawStep[i] ? (seconds / unscaledTime * relativeSubstepTimes[i]) : 0;
 	}
 
 
@@ -115,6 +115,29 @@ namespace fcps {
 
 	void stopFcpsAnimation() {
 		fcpsAnimator.stopAnimation();
+	}
+
+
+	void FcpsAnimator::drawRayTest(float duration) {
+
+		auto vdo = GetDebugOverlay();
+		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoop];
+		auto& rayCheck = loopInfo.validationRayChecks[curValidationRay];
+
+		Assert(!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid); // at least one ray should have been fired
+
+		const Vector& c1 = loopInfo.corners[rayCheck.cornerIdx[0]];
+		const Vector& c2 = loopInfo.corners[rayCheck.cornerIdx[1]];
+		Vector corner[2];
+		Vector impact[2];
+
+		for (int i = 0; i < 2; i++) {
+			corner[i] = loopInfo.corners[rayCheck.cornerIdx[i]];
+			impact[i] = rayCheck.trace[i].startsolid ? corner[i] : rayCheck.trace[i].endpos;
+		}
+		vdo->AddLineOverlay(corner[0], impact[0], 0, 255, 0, false, duration);
+		vdo->AddLineOverlay(corner[1], impact[1], 0, 255, 0, false, duration);
+		vdo->AddLineOverlay(impact[0], impact[1], 255, 0, 0, false, duration);
 	}
 
 
@@ -151,23 +174,14 @@ namespace fcps {
 							vdo->AddTextOverlay(fe->loops[curLoop].corners[i], dur, "%d: %s", i + 1, fe->loops[curLoop].cornersOob[i] ? "OOB" : "INBOUNDS");
 						break;
 					case AS_CornerRays: {
-						auto& curValidationTest = fe->loops[curLoop].validationRayChecks[curValidationRay];
-						for (int i = 0; i < 2; i++) {
-							if (curValidationTest.trace[i].startsolid)
-								continue;
-							Vector start = curValidationTest.trace[i].startpos;
-							Vector end = curValidationTest.trace[i].endpos;
-							Vector hitPos = lerp(start, end, curValidationTest.trace[i].fraction);
-							vdo->AddLineOverlay(start, hitPos, 0, 255, 0, 0, dur);
-							vdo->AddLineOverlay(hitPos, end, 255, 0, 0, 0, dur);
-						}
+						drawRayTest(dur);
 						break;
 					}
 					case AS_Revert:
-						vdo->AddBoxOverlay(fe->zNudgedCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 50, dur);
+						vdo->AddBoxOverlay(fe->originalCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 50, dur);
 						break;
 					case AS_Success:
-						vdo->AddBoxOverlay(fe->newPos, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
+						vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
 						break;
 				}
 			}
@@ -219,9 +233,9 @@ namespace fcps {
 						if (++curLoop == 100) {
 							curStep = AS_Revert;
 						} else {
-							curCenter = fe->loops[curLoop].newCenter;
-							curMins = fe->loops[curLoop].newMins;
-							curMaxs = fe->loops[curLoop].newMaxs;
+							curCenter = fe->loops[curLoop - 1].newCenter;
+							curMins = fe->loops[curLoop - 1].newMins;
+							curMaxs = fe->loops[curLoop - 1].newMaxs;
 							curStep = AS_TestTrace;
 						}
 						break;

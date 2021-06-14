@@ -25,10 +25,6 @@ namespace fcps {
 			AS_Count = AS_Finished
 		};
 
-		inline Vector lerp(Vector v1, Vector v2, float frac) {
-			return v1 * (1 - frac) + v2 * frac;
-		}
-
 		/*template<typename T>
 		T easeInterp(T t1, T t2, float frac); // x^2 * (3 - 2x)*/
 
@@ -54,6 +50,7 @@ namespace fcps {
 		Vector curCenter, curMins, curMaxs;
 
 		void calcSubStepDurations(double seconds);
+		void drawRayTest(float duration);
 		void loadAnimationSettings();
 		void drawFrame();
 
