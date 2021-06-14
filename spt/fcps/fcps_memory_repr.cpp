@@ -124,7 +124,7 @@ namespace fcps {
 		while (*curPtr) {
 			if (*curPtr == ':') {
 				if (isRange)
-					return false; // we alredy parsed a separator, this tells us there's a second one "x:y:..."
+					return false; // we already parsed a separator, this tells us there's a second one "x:y:..."
 				isRange = true;
 				curPtr++;
 			} else if (isdigit(*curPtr)) {

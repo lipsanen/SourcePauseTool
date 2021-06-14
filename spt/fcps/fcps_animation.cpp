@@ -38,6 +38,7 @@ namespace fcps {
 		isAnimating = true;
 		curStep = AS_DrawBBox;
 		lastDrawTime = hacks::curTime();
+		lastDrawFrame = hacks::frameCount();
 
 		// animation vars
 		curLoop = 0;
@@ -125,34 +126,42 @@ namespace fcps {
 		auto& rayCheck = loopInfo.validationRayChecks[curValidationRay];
 
 		Assert(!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid); // at least one ray should have been fired
-
-		const Vector& c1 = loopInfo.corners[rayCheck.cornerIdx[0]];
-		const Vector& c2 = loopInfo.corners[rayCheck.cornerIdx[1]];
 		Vector corner[2];
 		Vector impact[2];
+		const Vector rayMaxs = Vector(0.5, 0.5, 0.5);
+		const Vector rayMins = -rayMaxs;
 
 		for (int i = 0; i < 2; i++) {
 			corner[i] = loopInfo.corners[rayCheck.cornerIdx[i]];
 			impact[i] = rayCheck.trace[i].startsolid ? corner[i] : rayCheck.trace[i].endpos;
+			vdo->AddSweptBoxOverlay(corner[i], impact[i], rayMins, rayMaxs, vec3_angle, 0, 255, 0, 100, duration);
 		}
-		vdo->AddLineOverlay(corner[0], impact[0], 0, 255, 0, false, duration);
-		vdo->AddLineOverlay(corner[1], impact[1], 0, 255, 0, false, duration);
-		vdo->AddLineOverlay(impact[0], impact[1], 255, 0, 0, false, duration);
+		vdo->AddSweptBoxOverlay(impact[0], impact[1], rayMins/1.5, rayMaxs/1.5, vec3_angle, 255, 0, 0, 100, duration);
+
+		const Vector boxMaxs = Vector(1, 1, 1);
+		const Vector boxMins = -boxMaxs;
+		const float threshold = 0.01;
+		// check if the ray travelled at least a tiny bit (and didn't get all the way to the other corner)
+		for (int i = 0; i < 2; i++)
+			if ((corner[0] - impact[i]).LengthSqr() > threshold && (corner[1] - impact[i]).LengthSqr() > threshold)
+				vdo->AddBoxOverlay(impact[i], boxMins, boxMaxs, vec3_angle, 0, 255, 0, 50, duration); // draw box at impact location
 	}
 
 
 	void FcpsAnimator::draw() {
 		if (!isAnimating || curStep == AS_Finished)
 			return;
+		if (hacks::frameCount() == lastDrawFrame)
+			return;
+		lastDrawFrame = hacks::frameCount();
 		auto vdo = GetDebugOverlay();
 		if (!vdo)
 			return;
 		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER;
-		// TODO there's gonna be some problems with alpha stacking or whatever
 		if (!isSetToManualStep) {
-			float curTime = hacks::curTime();
-			curSubStepTime += curTime - lastDrawTime;
-			lastDrawTime = curTime;
+			// TODO now that I'm drawing once per frame this gets updated by like 0.1s every draw() call, not sure why
+			curSubStepTime += hacks::curTime() - lastDrawTime;
+			lastDrawTime = hacks::curTime();
 		}
 		//double subStepFrac = std::fmin(1, curSubStepTime / subStepDurations[curStep]); // how far are we into the current substep, 0..1 range
 		//Assert(subStepFrac >= 0);
@@ -161,11 +170,11 @@ namespace fcps {
 			Assert(curQueue);
 			FcpsEvent* fe = curQueue->getEventWithId(curId);
 			Assert(fe);
-			// draw current sub step
+			// draw current substep
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
 					vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
-					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 50, dur); // extended bounds
+					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // extended bounds
 					hasDrawnBBoxThisFrame = true;
 				}
 				switch (curStep) {
@@ -173,10 +182,9 @@ namespace fcps {
 						for (int i = 0; i <= cornerIdx; i++)
 							vdo->AddTextOverlay(fe->loops[curLoop].corners[i], dur, "%d: %s", i + 1, fe->loops[curLoop].cornersOob[i] ? "OOB" : "INBOUNDS");
 						break;
-					case AS_CornerRays: {
+					case AS_CornerRays:
 						drawRayTest(dur);
 						break;
-					}
 					case AS_Revert:
 						vdo->AddBoxOverlay(fe->originalCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 50, dur);
 						break;
@@ -233,10 +241,13 @@ namespace fcps {
 						if (++curLoop == 100) {
 							curStep = AS_Revert;
 						} else {
+							Vector oldCenter = curCenter;
 							curCenter = fe->loops[curLoop - 1].newCenter;
 							curMins = fe->loops[curLoop - 1].newMins;
 							curMaxs = fe->loops[curLoop - 1].newMaxs;
 							curStep = AS_TestTrace;
+							if (curCenter.DistToSqr(oldCenter) > 10)
+								hasDrawnBBoxThisFrame = false; // allow redrawning of bbox if it won't be exactly in the same spot
 						}
 						break;
 					case AS_Success:
@@ -250,6 +261,7 @@ namespace fcps {
 							curCenter = nextEvent->zNudgedCenter;
 							curMins = nextEvent->adjustedMins;
 							curMaxs = nextEvent->adjustedMaxs;
+							hasDrawnBBoxThisFrame = false;
 						}
 						break;
 				}

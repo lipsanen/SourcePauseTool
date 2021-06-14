@@ -207,10 +207,10 @@ protected:
 	ptrdiff_t offServerSurfaceFriction;
 	ptrdiff_t offServerPreviouslyPredictedOrigin;
 	std::size_t sizeofCUserCmd;
-	uintptr_t* pgpGlobals;
 
 public:
 	ptrdiff_t offServerAbsOrigin;
+	uintptr_t* pgpGlobals;
 
 protected:
 	uintptr_t pCmd;

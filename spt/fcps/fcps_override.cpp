@@ -106,8 +106,12 @@ namespace fcps {
 			return (char*)engineDLL.pGameServer + 16;
 		}
 
-		inline float curTime() {
+		float curTime() {
 			return *((float*)engineDLL.pGameServer + 66) * tickCount();
+		}
+
+		int frameCount() {
+			return *(*(int**)clientDLL.pgpGlobals + 1);
 		}
 	}
 

@@ -35,6 +35,7 @@ namespace fcps {
 		int fromId, curId, toId; // event IDs
 		FixedFcpsQueue* curQueue;
 		double lastDrawTime;
+		int lastDrawFrame;
 
 		// For any given step, each substep is gonna take the same amount of time e.g. all rays fired during the CornerRays step will all take the same amount of time.
 		double subStepDurations[AS_Count];

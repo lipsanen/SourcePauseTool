@@ -12,6 +12,7 @@ namespace fcps {
 	// these were originally only used for the override but there might be some useful util functions here
 	namespace hacks {
 		float curTime();
+		int frameCount();
 	}
 
 	enum FcpsCaller : int {
