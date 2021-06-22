@@ -40,7 +40,7 @@ namespace fcps {
 		lastDrawTime = hacks::curTime();
 		lastDrawFrame = hacks::frameCount();
 
-		// animation vars
+		// substep specific vars
 		curLoop = 0;
 		cornerIdx = 0;
 		curValidationRay = 0;
@@ -128,23 +128,42 @@ namespace fcps {
 		Assert(!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid); // at least one ray should have been fired
 		Vector corner[2];
 		Vector impact[2];
-		const Vector rayMaxs = Vector(0.5, 0.5, 0.5);
-		const Vector rayMins = -rayMaxs;
+		bool exceededThresholdFromStart[2];
+		bool exceededThresholdFromEnd[2];
+		const float distThresholdSqr = 0.01;
+		const Vector impactMaxs = Vector(1, 1, 1);
+		const Vector raySuccessMaxs = impactMaxs / 1.8;
+		const Vector rayFailMaxs = raySuccessMaxs / 1.5;
 
 		for (int i = 0; i < 2; i++) {
 			corner[i] = loopInfo.corners[rayCheck.cornerIdx[i]];
 			impact[i] = rayCheck.trace[i].startsolid ? corner[i] : rayCheck.trace[i].endpos;
-			vdo->AddSweptBoxOverlay(corner[i], impact[i], rayMins, rayMaxs, vec3_angle, 0, 255, 0, 100, duration);
 		}
-		vdo->AddSweptBoxOverlay(impact[0], impact[1], rayMins/1.5, rayMaxs/1.5, vec3_angle, 255, 0, 0, 100, duration);
 
-		const Vector boxMaxs = Vector(1, 1, 1);
-		const Vector boxMins = -boxMaxs;
-		const float threshold = 0.01;
 		// check if the ray travelled at least a tiny bit (and didn't get all the way to the other corner)
-		for (int i = 0; i < 2; i++)
-			if ((corner[0] - impact[i]).LengthSqr() > threshold && (corner[1] - impact[i]).LengthSqr() > threshold)
-				vdo->AddBoxOverlay(impact[i], boxMins, boxMaxs, vec3_angle, 0, 255, 0, 50, duration); // draw box at impact location
+		for (int i = 0; i < 2; i++) {
+			exceededThresholdFromStart[i] = (corner[i] - impact[i]).LengthSqr() > distThresholdSqr;
+			exceededThresholdFromEnd[i] = (corner[(i+1)%2] - impact[i]).LengthSqr() > distThresholdSqr;
+		}
+		// part of the trace that passed through "passable" space
+		Vector testRayExtents;
+		for (int i = 0; i < 2; i++) {
+			if (exceededThresholdFromStart[i]) {
+				vdo->AddSweptBoxOverlay(corner[i], impact[i], -raySuccessMaxs, raySuccessMaxs, vec3_angle, 0, 255, 0, 100, duration);
+				testRayExtents = rayCheck.ray[i].m_Extents*1.001; // prevent z-fighting
+			}
+		}
+		// draw the ray with proper extents
+		if (exceededThresholdFromStart[0] || exceededThresholdFromStart[1])
+			vdo->AddSweptBoxOverlay(corner[0], corner[1], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
+		// part of the trace that passed through "non-passable" space
+		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
+			vdo->AddSweptBoxOverlay(impact[0], impact[1], -rayFailMaxs, rayFailMaxs, vec3_angle, 255, 0, 0, 100, duration);
+			// draw box at impact location
+			for (int i = 0; i < 2; i++)
+				if (exceededThresholdFromStart[i])
+					vdo->AddBoxOverlay(impact[i], -impactMaxs, impactMaxs, vec3_angle, 0, 255, 0, 75, duration);
+		}
 	}
 
 
@@ -165,7 +184,11 @@ namespace fcps {
 		}
 		//double subStepFrac = std::fmin(1, curSubStepTime / subStepDurations[curStep]); // how far are we into the current substep, 0..1 range
 		//Assert(subStepFrac >= 0);
+
+		// If we have a fast enough animation speed it's possible to draw several substeps on the same frame.
+		// This is a problem since the bbox of the ents get drawn every time (and has an alpha component), so just keep track if we've done that already.
 		bool hasDrawnBBoxThisFrame = false;
+		bool hasDrawnPlayerBBoxThisFrame = false;
 		for (;;) {
 			Assert(curQueue);
 			FcpsEvent* fe = curQueue->getEventWithId(curId);
@@ -176,6 +199,10 @@ namespace fcps {
 					vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
 					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // extended bounds
 					hasDrawnBBoxThisFrame = true;
+				}
+				if (!hasDrawnPlayerBBoxThisFrame && !fe->wasRunOnPlayer) {
+					vdo->AddBoxOverlay(vec3_origin, fe->playerMins, fe->playerMaxs, vec3_angle, 255, 0, 255, 25, dur);
+					hasDrawnPlayerBBoxThisFrame = true;
 				}
 				switch (curStep) {
 					case AS_CornerValidation:

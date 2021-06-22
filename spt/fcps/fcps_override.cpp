@@ -274,15 +274,13 @@ namespace fcps {
 		thisEvent.curTime = hacks::curTime();
 		thisEvent.wasRunOnPlayer = hacks::IsPlayer(pEntity);
 		strcpy_s(thisEvent.entClassName, ENT_CLASS_NAME_LEN, pEntity->GetClassname());
-		IPhysicsObject *pPhys = hacks::VPhysicsGetObject(pEntity);
-		if (pPhys && hacks::GetGameFlags(pPhys) & FVPHYSICS_PLAYER_HELD) {
-			thisEvent.isHeldObject = true;
-			CBaseEntity* holdingPlayer = (CBaseEntity*)GetServerPlayer();
-			CCollisionProperty* pPlayerCollision = hacks::CollisionProp(holdingPlayer);
+		if (!thisEvent.wasRunOnPlayer) {
+			CBaseEntity* playerEnt = (CBaseEntity*)GetServerPlayer();
+			CCollisionProperty* pPlayerCollision = hacks::CollisionProp(playerEnt);
 			hacks::WorldSpaceAABB(pPlayerCollision, &thisEvent.playerMins, &thisEvent.playerMaxs);
-		} else {
-			thisEvent.isHeldObject = false;
 		}
+		IPhysicsObject *pPhys = hacks::VPhysicsGetObject(pEntity);
+		thisEvent.isHeldObject = pPhys && hacks::GetGameFlags(pPhys) & FVPHYSICS_PLAYER_HELD;
 		thisEvent.fMask = fMask;
 
 

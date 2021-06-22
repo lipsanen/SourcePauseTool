@@ -30,7 +30,8 @@ namespace fcps {
 		bool wasRunOnPlayer;
 		char entClassName[ENT_CLASS_NAME_LEN];
 		bool isHeldObject;
-		Vector playerMins, playerMaxs; // in case this was not run on the player and the player is holding this
+		// if this wasn't run on the player, we probably want to see where the player was
+		Vector playerMins, playerMaxs;
 		Vector vIndecisivePush;
 		int fMask;
 		
