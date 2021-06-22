@@ -340,14 +340,15 @@ namespace fcps {
 
 			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[iFailCount];
 			thisLoop.failCount = iFailCount;
-			thisLoop.testRay = entRay;
-			thisLoop.testTraceResult = traces[0];
+			thisLoop.entRay = entRay;
+			thisLoop.entTrace = traces[0];
 
 			if( traces[0].startsolid == false ) {
 				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
 				hacks::Teleport(pEntity, &vNewPos, nullptr, nullptr);
 				thisEvent.wasSuccess = true; // current placement worked
-				thisEvent.newPos = vNewPos;
+				thisEvent.newOrigin = vNewPos;
+				thisEvent.newCenter = traces[0].endpos;
 				return &thisEvent;
 			}
 

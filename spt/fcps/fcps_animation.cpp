@@ -41,7 +41,7 @@ namespace fcps {
 		lastDrawFrame = hacks::frameCount();
 
 		// substep specific vars
-		curLoop = 0;
+		curLoopIdx = 0;
 		cornerIdx = 0;
 		curValidationRay = 0;
 		FcpsEvent* nextEvent = curQueue->getEventWithId(from);
@@ -122,7 +122,7 @@ namespace fcps {
 	void FcpsAnimator::drawRayTest(float duration) {
 
 		auto vdo = GetDebugOverlay();
-		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoop];
+		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoopIdx];
 		auto& rayCheck = loopInfo.validationRayChecks[curValidationRay];
 
 		Assert(!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid); // at least one ray should have been fired
@@ -193,11 +193,13 @@ namespace fcps {
 			Assert(curQueue);
 			FcpsEvent* fe = curQueue->getEventWithId(curId);
 			Assert(fe);
+			auto& curLoop = fe->loops[curLoopIdx];
 			// draw current substep
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
 					vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
-					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // extended bounds
+					if (curStep != AS_TestTrace)
+						vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
 					hasDrawnBBoxThisFrame = true;
 				}
 				if (!hasDrawnPlayerBBoxThisFrame && !fe->wasRunOnPlayer) {
@@ -205,9 +207,25 @@ namespace fcps {
 					hasDrawnPlayerBBoxThisFrame = true;
 				}
 				switch (curStep) {
+					case AS_TestTrace: {
+						Ray_t& entRay = curLoop.entRay;
+						trace_t& entTrace = curLoop.entTrace;
+						Vector rayEnd = entRay.m_Start + curLoop.entRay.m_Delta;
+						// draw first half of trace to impact location
+						if (!curLoop.entTrace.startsolid) {
+							vdo->AddSweptBoxOverlay(entRay.m_Start, entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 0, 100, 100, 0, dur);
+							vdo->AddBoxOverlay(entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
+						} else {
+							vdo->AddBoxOverlay(entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 100, 255, 255, 50, dur);
+						}
+						// draw second half of trace (from impact location)
+						if (curLoop.entTrace.endpos.DistToSqr(rayEnd) > 0.01)
+							vdo->AddSweptBoxOverlay(entTrace.endpos, rayEnd, fe->entMins, fe->entMaxs, vec3_angle, 150, 150, 0, 0, dur);
+						break;
+					}
 					case AS_CornerValidation:
 						for (int i = 0; i <= cornerIdx; i++)
-							vdo->AddTextOverlay(fe->loops[curLoop].corners[i], dur, "%d: %s", i + 1, fe->loops[curLoop].cornersOob[i] ? "OOB" : "INBOUNDS");
+							vdo->AddTextOverlay(curLoop.corners[i], dur, "%d: %s", i + 1, curLoop.cornersOob[i] ? "OOB" : "INBOUNDS");
 						break;
 					case AS_CornerRays:
 						drawRayTest(dur);
@@ -216,7 +234,7 @@ namespace fcps {
 						vdo->AddBoxOverlay(fe->originalCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 50, dur);
 						break;
 					case AS_Success:
-						vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
+						vdo->AddBoxOverlay(fe->newCenter, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
 						break;
 				}
 			}
@@ -231,11 +249,11 @@ namespace fcps {
 				switch (curStep) {
 					case AS_DrawBBox:
 						curStep = AS_TestTrace;
-						curLoop = 0;
+						curLoopIdx = 0;
 						break;
 					case AS_TestTrace:
 						// after the trace, FCPS either succeeds or goes on to the rest of the loop
-						if (fe->wasSuccess && curLoop == fe->loopStartCount - 1)
+						if (fe->wasSuccess && curLoopIdx == fe->loopStartCount - 1)
 							curStep = AS_Success;
 						else
 							curStep = AS_CornerValidation;
@@ -244,12 +262,12 @@ namespace fcps {
 					case AS_CornerValidation:
 						if (++cornerIdx >= 8) {
 							// After checking all corners for validity, FCPS fires rays. Check if there's any rays to fire.
-							for (curValidationRay = 0; curValidationRay < fe->loops[curLoop].validationRayCheckCount; curValidationRay++) {
-								auto& rayCheck = fe->loops[curLoop].validationRayChecks[curValidationRay];
+							for (curValidationRay = 0; curValidationRay < curLoop.validationRayCheckCount; curValidationRay++) {
+								auto& rayCheck = curLoop.validationRayChecks[curValidationRay];
 								if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)
 									break;
 							}
-							if (curValidationRay == fe->loops[curLoop].validationRayCheckCount)
+							if (curValidationRay == curLoop.validationRayCheckCount)
 								curStep = AS_NudgeAndAdjust;
 							else
 								curStep = AS_CornerRays;
@@ -257,24 +275,25 @@ namespace fcps {
 						break;
 					case AS_CornerRays:
 						for (;;) {
-							if (++curValidationRay == fe->loops[curLoop].validationRayCheckCount) {
+							if (++curValidationRay == curLoop.validationRayCheckCount) {
 								curStep = AS_NudgeAndAdjust;
 								break;
 							} else {
-								auto& rayCheck = fe->loops[curLoop].validationRayChecks[curValidationRay];
+								auto& rayCheck = curLoop.validationRayChecks[curValidationRay];
 								if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)
 									break;
 							}
 						}
 						break;
 					case AS_NudgeAndAdjust:
-						if (++curLoop == 100) {
+						if (curLoopIdx == 99) {
 							curStep = AS_Revert;
 						} else {
+							curLoopIdx++;
 							Vector oldCenter = curCenter;
-							curCenter = fe->loops[curLoop - 1].newCenter;
-							curMins = fe->loops[curLoop - 1].newMins;
-							curMaxs = fe->loops[curLoop - 1].newMaxs;
+							curCenter = fe->loops[curLoopIdx - 1].newCenter;
+							curMins = fe->loops[curLoopIdx - 1].newMins;
+							curMaxs = fe->loops[curLoopIdx - 1].newMaxs;
 							curStep = AS_TestTrace;
 							if (curCenter.DistToSqr(oldCenter) > 10)
 								hasDrawnBBoxThisFrame = false; // allow redrawning of bbox if it won't be exactly in the same spot

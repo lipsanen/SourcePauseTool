@@ -42,10 +42,10 @@ namespace fcps {
 		// the relative lengths of the substeps
 		double relativeSubstepTimes[AS_Count] = {5, 1, 1, 1, 1, 5, 5};
 		// which steps do we draw?
-		bool shouldDrawStep[AS_Count] = {1, 0, 1, 1, 1, 1, 1};
+		bool shouldDrawStep[AS_Count] = {1, 1, 1, 1, 1, 1, 1};
 
 		// animations vars
-		int curLoop;
+		int curLoopIdx;
 		int cornerIdx;
 		int curValidationRay;
 		Vector curCenter, curMins, curMaxs;

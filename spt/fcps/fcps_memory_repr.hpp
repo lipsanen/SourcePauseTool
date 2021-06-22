@@ -12,7 +12,7 @@
 namespace fcps {
 	enum FcpsCaller;
 
-	#define FCPS_EVENT_VERSION 1
+	#define FCPS_EVENT_VERSION 2
 
 	#define MAP_NAME_LEN 64
 	#define ENT_CLASS_NAME_LEN 256
@@ -46,8 +46,8 @@ namespace fcps {
 
 		struct FcpsLoop {
 			uint failCount;
-			Ray_t testRay;
-			trace_t testTraceResult;
+			Ray_t entRay;
+			trace_t entTrace;
 			// the rest of this is only valid in case of failure
 			Vector corners[8]; // the extents can get modified on every iteration so wee need to keep track of that
 			bool cornersOob[8];
@@ -74,7 +74,7 @@ namespace fcps {
 		FcpsLoop loops[100];
 		bool wasSuccess;
 		// in case of success
-		Vector newPos;
+		Vector newOrigin, newCenter;
 
 		FcpsEvent() = default;
 		FcpsEvent(int eventId);
