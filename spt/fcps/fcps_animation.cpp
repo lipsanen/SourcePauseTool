@@ -235,7 +235,10 @@ namespace fcps {
 						break;
 					case AS_TestTrace:
 						// after the trace, FCPS either succeeds or goes on to the rest of the loop
-						curStep = curLoop == fe->loopStartCount - 1 ? AS_Success : AS_CornerValidation;
+						if (fe->wasSuccess && curLoop == fe->loopStartCount - 1)
+							curStep = AS_Success;
+						else
+							curStep = AS_CornerValidation;
 						cornerIdx = 0;
 						break;
 					case AS_CornerValidation:
