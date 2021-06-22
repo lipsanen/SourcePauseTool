@@ -82,8 +82,17 @@ namespace fcps {
 	extern char* FcpsCallerNames[];
 
 	void FcpsEvent::print() {
-		Msg("ID: %2d, map: %14s, time: %4.3f, %2d iteration%s, %s, called from %s\n",
-			eventId, mapName, curTime, loopFinishCount, loopFinishCount == 1 ? "" : "s", wasSuccess ? "SUCCEEDED" : "FAILED", FcpsCallerNames[caller]);
+		Msg("ID: %d, map: %s, time: %4.3f, %d iteration%s (%s), called from %s, run on (%d) Name: %s (%s)\n",
+			eventId,
+			mapName,
+			curTime,
+			loopFinishCount,
+			loopFinishCount == 1 ? "" : "s",
+			wasSuccess ? "SUCCEEDED" : "FAILED",
+			FcpsCallerNames[caller],
+			thisEnt.entIdx,
+			thisEnt.debugName,
+			thisEnt.className);
 	}
 
 

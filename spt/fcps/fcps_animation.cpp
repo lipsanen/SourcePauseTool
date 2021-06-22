@@ -45,7 +45,7 @@ namespace fcps {
 		cornerIdx = 0;
 		curValidationRay = 0;
 		FcpsEvent* nextEvent = curQueue->getEventWithId(from);
-		curCenter = nextEvent->zNudgedCenter;
+		curCenter = nextEvent->origCenter;
 		curMins = nextEvent->adjustedMins;
 		curMaxs = nextEvent->adjustedMaxs;
 		// TODO, don't forget to check map name
@@ -102,10 +102,8 @@ namespace fcps {
 
 
 	void FcpsAnimator::stepAnimation() {
-		if (!isAnimating) {
-			Msg("No animation in progress!\n");
+		if (!isAnimating)
 			return;
-		}
 		if (!isSetToManualStep) {
 			Msg("Current animation is not in step mode\n");
 			return;
@@ -145,18 +143,18 @@ namespace fcps {
 			exceededThresholdFromStart[i] = (corner[i] - impact[i]).LengthSqr() > distThresholdSqr;
 			exceededThresholdFromEnd[i] = (corner[(i+1)%2] - impact[i]).LengthSqr() > distThresholdSqr;
 		}
-		// part of the trace that passed through "passable" space
+		// trace up to impact
 		Vector testRayExtents;
 		for (int i = 0; i < 2; i++) {
 			if (exceededThresholdFromStart[i]) {
 				vdo->AddSweptBoxOverlay(corner[i], impact[i], -raySuccessMaxs, raySuccessMaxs, vec3_angle, 0, 255, 0, 100, duration);
-				testRayExtents = rayCheck.ray[i].m_Extents*1.001; // prevent z-fighting
+				testRayExtents = rayCheck.ray[i].m_Extents * 1.001; // prevent z-fighting
 			}
 		}
 		// draw the ray with proper extents
 		if (exceededThresholdFromStart[0] || exceededThresholdFromStart[1])
 			vdo->AddSweptBoxOverlay(corner[0], corner[1], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
-		// part of the trace that passed through "non-passable" space
+		// part of the trace after the impact
 		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
 			vdo->AddSweptBoxOverlay(impact[0], impact[1], -rayFailMaxs, rayFailMaxs, vec3_angle, 255, 0, 0, 100, duration);
 			// draw box at impact location
@@ -186,9 +184,9 @@ namespace fcps {
 		//Assert(subStepFrac >= 0);
 
 		// If we have a fast enough animation speed it's possible to draw several substeps on the same frame.
-		// This is a problem since the bbox of the ents get drawn every time (and has an alpha component), so just keep track if we've done that already.
+		// This is a problem since the bbox of the ents get drawn every time (and have an alpha component), so just keep track if we've done that already.
 		bool hasDrawnBBoxThisFrame = false;
-		bool hasDrawnPlayerBBoxThisFrame = false;
+		bool hasDrawnCollidedEntsThisFrame = false;
 		for (;;) {
 			Assert(curQueue);
 			FcpsEvent* fe = curQueue->getEventWithId(curId);
@@ -197,14 +195,18 @@ namespace fcps {
 			// draw current substep
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
-					vdo->AddBoxOverlay(curCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
+					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
 					if (curStep != AS_TestTrace)
 						vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
 					hasDrawnBBoxThisFrame = true;
 				}
-				if (!hasDrawnPlayerBBoxThisFrame && !fe->wasRunOnPlayer) {
-					vdo->AddBoxOverlay(vec3_origin, fe->playerMins, fe->playerMaxs, vec3_angle, 255, 0, 255, 25, dur);
-					hasDrawnPlayerBBoxThisFrame = true;
+				if (!hasDrawnCollidedEntsThisFrame) {
+					for (int i = 0; i < fe->collidingEntsCount; i++) {
+						auto& cEnt = fe->collidingEnts[i];
+						vdo->AddBoxOverlay(cEnt.center, -cEnt.extents, cEnt.extents, cEnt.angles, 200, 0, 200, 25, dur);
+						vdo->AddTextOverlay(cEnt.center, dur, "(%d) Name: %s (%s)", cEnt.entIdx, cEnt.debugName, cEnt.className);
+					}
+					hasDrawnCollidedEntsThisFrame = true;
 				}
 				switch (curStep) {
 					case AS_TestTrace: {
@@ -213,14 +215,14 @@ namespace fcps {
 						Vector rayEnd = entRay.m_Start + curLoop.entRay.m_Delta;
 						// draw first half of trace to impact location
 						if (!curLoop.entTrace.startsolid) {
-							vdo->AddSweptBoxOverlay(entRay.m_Start, entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 0, 100, 100, 0, dur);
-							vdo->AddBoxOverlay(entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
+							vdo->AddSweptBoxOverlay(entRay.m_Start, entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 100, 100, 0, dur);
+							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 255, 0, 50, dur);
 						} else {
-							vdo->AddBoxOverlay(entTrace.endpos, fe->entMins, fe->entMaxs, vec3_angle, 100, 255, 255, 50, dur);
+							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 100, 255, 255, 50, dur);
 						}
 						// draw second half of trace (from impact location)
 						if (curLoop.entTrace.endpos.DistToSqr(rayEnd) > 0.01)
-							vdo->AddSweptBoxOverlay(entTrace.endpos, rayEnd, fe->entMins, fe->entMaxs, vec3_angle, 150, 150, 0, 0, dur);
+							vdo->AddSweptBoxOverlay(entTrace.endpos, rayEnd, fe->origMins, fe->origMaxs, vec3_angle, 150, 150, 0, 0, dur);
 						break;
 					}
 					case AS_CornerValidation:
@@ -228,13 +230,13 @@ namespace fcps {
 							vdo->AddTextOverlay(curLoop.corners[i], dur, "%d: %s", i + 1, curLoop.cornersOob[i] ? "OOB" : "INBOUNDS");
 						break;
 					case AS_CornerRays:
-						drawRayTest(dur);
+						drawRayTest(dur); // TODO validation counts
 						break;
 					case AS_Revert:
-						vdo->AddBoxOverlay(fe->originalCenter, fe->entMins, fe->entMaxs, vec3_angle, 255, 0, 0, 50, dur);
+						vdo->AddBoxOverlay(fe->origCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 0, 0, 50, dur);
 						break;
 					case AS_Success:
-						vdo->AddBoxOverlay(fe->newCenter, fe->entMins, fe->entMaxs, vec3_angle, 0, 255, 0, 50, dur);
+						vdo->AddBoxOverlay(fe->newCenter, fe->origMins, fe->origMaxs, vec3_angle, 0, 255, 0, 50, dur);
 						break;
 				}
 			}
@@ -307,7 +309,7 @@ namespace fcps {
 						} else {
 							curStep = AS_DrawBBox;
 							FcpsEvent* nextEvent = curQueue->getEventWithId(curId);
-							curCenter = nextEvent->zNudgedCenter;
+							curCenter = nextEvent->origCenter;
 							curMins = nextEvent->adjustedMins;
 							curMaxs = nextEvent->adjustedMaxs;
 							hasDrawnBBoxThisFrame = false;

@@ -10,14 +10,22 @@
 // contains objects to store the FCPS algorithm in memory and read/write it from disk
 
 namespace fcps {
+	
 	enum FcpsCaller;
-
-	#define FCPS_EVENT_VERSION 2
+	
+	// if ANYTHING in these structs are changed, the event version must be updated
+	#define FCPS_EVENT_VERSION 3
 
 	#define MAP_NAME_LEN 64
-	#define ENT_CLASS_NAME_LEN 256
+	#define MAX_COLLIDING_ENTS 10
 
-	// if ANYTHING in this struct is changed, the event version must be updated
+	struct EntInfo {
+		int entIdx;
+		char debugName[256];
+		char className[256];
+		Vector center, extents; // not axis-aligned
+		QAngle angles;
+	};
 
 	struct FcpsEvent {
 
@@ -28,21 +36,22 @@ namespace fcps {
 		int tickTime;
 		float curTime;
 		bool wasRunOnPlayer;
-		char entClassName[ENT_CLASS_NAME_LEN];
 		bool isHeldObject;
 		// if this wasn't run on the player, we probably want to see where the player was
-		Vector playerMins, playerMaxs;
+		EntInfo playerInfo;
 		Vector vIndecisivePush;
 		int fMask;
 		
 		// pre-loop
-		Vector entMins, entMaxs;
-		Vector originalCenter;
-		Vector zNudgedCenter;
+		EntInfo thisEnt; // the entity that fcps was called on
+		Vector origMins, origMaxs;
+		Vector origCenter;
 		int collisionGroup;
 		Vector growSize;
 		Vector adjustedMins, adjustedMaxs;
 
+		EntInfo collidingEnts[MAX_COLLIDING_ENTS]; // ents that get hit by rays from this event, only used for animation
+		int collidingEntsCount;
 
 		struct FcpsLoop {
 			uint failCount;
@@ -85,7 +94,7 @@ namespace fcps {
 	};
 
 
-	// circular queue of fixed size
+	// circular queue with fixed size
 	class FixedFcpsQueue {
 	private:
 		int arrSize, size, start, pushCount;

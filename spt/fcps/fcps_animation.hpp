@@ -15,7 +15,7 @@ namespace fcps {
 		*/
 		enum AnimationStep {
 			AS_DrawBBox,
-			AS_TestTrace,        // tests if the space is "passable"
+			AS_TestTrace,        // tests if the space is empty and fires a ray towards original location
 			AS_CornerValidation, // tests which corners are oob
 			AS_CornerRays,       // fires rays between the corners
 			AS_NudgeAndAdjust,   // nudges the entity and adjusts the mins/maxs
@@ -44,7 +44,7 @@ namespace fcps {
 		// which steps do we draw?
 		bool shouldDrawStep[AS_Count] = {1, 1, 1, 1, 1, 1, 1};
 
-		// animations vars
+		// substep animations vars
 		int curLoopIdx;
 		int cornerIdx;
 		int curValidationRay;
@@ -53,7 +53,6 @@ namespace fcps {
 		void calcSubStepDurations(double seconds);
 		void drawRayTest(float duration);
 		void loadAnimationSettings();
-		void drawFrame();
 
 
 	public:

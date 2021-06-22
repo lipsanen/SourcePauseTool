@@ -4,6 +4,7 @@
 
 #include "..\OrangeBox\modules.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
+#include <unordered_set>
 
 // clang-format off
 
@@ -21,12 +22,12 @@ namespace fcps {
 	};
 
 
+	void populateEntInfo(EntInfo& entInfo, CBaseEntity* ent);
+	void checkTraceForEntCollision(FcpsEvent& fcpsEvent, std::unordered_set<int>& entSet, trace_t& trace);
+
+
 	// implementations for non-virtual and non-inlined methods, or for functions/fields which are at the wrong offset in the sdk due to an incorrect number of fields
 	namespace hacks {
-
-		bool CanDoHacks() {
-			return serverDLL.ORIG_UTIL_TraceRay && engineDLL.ORIG_CEngineTrace__PointOutsideWorld;
-		}
 
 		inline void UTIL_TraceRay(const Ray_t& ray, unsigned int mask, const IHandleEntity* ignore, int collisionGroup, trace_t* ptr) {
 			serverDLL.ORIG_UTIL_TraceRay(ray, mask, ignore, collisionGroup, ptr);
@@ -38,13 +39,13 @@ namespace fcps {
 
 		inline const Vector& GetAbsOrigin(CBaseEntity* pEntity) {
 			if (pEntity->IsEFlagSet(EFL_DIRTY_ABSTRANSFORM))
-				Warning("spt: entity has dirty abs transform during fcps\n");
+				Warning("spt: entity has dirty abs transform during FCPS call\n");
 			return *(Vector*)((uint32_t)pEntity + 580);
 		}
 
 		inline const QAngle& GetAbsAngles(CBaseEntity* pEntity) {
 			if (pEntity->IsEFlagSet(EFL_DIRTY_ABSTRANSFORM))
-				Warning("spt: entity has dirty abs transform during fcps\n");
+				Warning("spt: entity has dirty abs transform during FCPS call\n");
 			return *(QAngle*)((uint32_t)pEntity + 704);
 		}
 
@@ -98,6 +99,20 @@ namespace fcps {
 			return *(IPhysicsObject**)((uint32_t)pEntity + 0x1a8);
 		}
 
+		inline string_t GetEntityName(CBaseEntity* pEntity) {
+			return *(string_t*)((uint32_t)pEntity+260);
+		}
+
+		inline const char* GetDebugName(CBaseEntity* pEntity) {
+			if (GetEntityName(pEntity) != NULL_STRING)
+				return STRING(GetEntityName(pEntity));
+			return pEntity->GetClassname();
+		}
+
+		inline int entindex(CBaseEntity* pEntity) {
+			return GetEngine()->IndexOfEdict(pEntity->edict());
+		}
+
 		inline int tickCount() {
 			return *((int*)engineDLL.pGameServer + 3);
 		}
@@ -123,11 +138,6 @@ namespace fcps {
 
 		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool())
 			return true;
-
-		if (!hacks::CanDoHacks()) {
-			Warning("spt: Cannot run custom FCPS, one or more necessary functions were not found\n");
-			return true;
-		}
 
 		if (hacks::HasMoveParent(pEntity))
 			return true;
@@ -256,11 +266,6 @@ namespace fcps {
 		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool())
 			return nullptr;
 
-		if (!hacks::CanDoHacks()) {
-			Warning("spt: Cannot run custom FCPS, one or more necessary functions were not found\n");
-			return nullptr;
-		}
-
 		if (hacks::HasMoveParent(pEntity))
 			return nullptr;
 
@@ -273,15 +278,14 @@ namespace fcps {
 		thisEvent.tickTime = hacks::tickCount();
 		thisEvent.curTime = hacks::curTime();
 		thisEvent.wasRunOnPlayer = hacks::IsPlayer(pEntity);
-		strcpy_s(thisEvent.entClassName, ENT_CLASS_NAME_LEN, pEntity->GetClassname());
-		if (!thisEvent.wasRunOnPlayer) {
-			CBaseEntity* playerEnt = (CBaseEntity*)GetServerPlayer();
-			CCollisionProperty* pPlayerCollision = hacks::CollisionProp(playerEnt);
-			hacks::WorldSpaceAABB(pPlayerCollision, &thisEvent.playerMins, &thisEvent.playerMaxs);
-		}
+		populateEntInfo(thisEvent.thisEnt, pEntity);
+		if (!thisEvent.wasRunOnPlayer)
+			populateEntInfo(thisEvent.playerInfo, (CBaseEntity*)GetServerPlayer());
 		IPhysicsObject *pPhys = hacks::VPhysicsGetObject(pEntity);
 		thisEvent.isHeldObject = pPhys && hacks::GetGameFlags(pPhys) & FVPHYSICS_PLAYER_HELD;
 		thisEvent.fMask = fMask;
+		thisEvent.collidingEntsCount = 0;
+		std::unordered_set<int> collidedEnts;
 
 
 		Vector vEntityMaxs;
@@ -292,16 +296,15 @@ namespace fcps {
 		Vector ptEntityCenter = (vEntityMins + vEntityMaxs) / 2.0f;
 		vEntityMins -= ptEntityCenter;
 		vEntityMaxs -= ptEntityCenter;
-		thisEvent.entMins = vEntityMins;
-		thisEvent.entMaxs = vEntityMaxs;
-		thisEvent.originalCenter = ptEntityCenter;
+		thisEvent.origMins = vEntityMins;
+		thisEvent.origMaxs = vEntityMaxs;
 
 		Vector ptExtents[8]; // ordering is going to be like 3 bits, where 0 is a min on the related axis, and 1 is a max on the same axis, axis order x y z
 		float fExtentsValidation[8]; // some points are more valid than others, and this is our measure
 
 		Vector ptEntityOriginalCenter = ptEntityCenter;
 		ptEntityCenter.z += 0.001f; // to satisfy m_IsSwept on first pass
-		thisEvent.zNudgedCenter = ptEntityCenter;
+		thisEvent.origCenter = ptEntityCenter;
 		int iEntityCollisionGroup = pEntity->GetCollisionGroup();
 		thisEvent.collisionGroup = iEntityCollisionGroup;
 
@@ -342,6 +345,7 @@ namespace fcps {
 			thisLoop.failCount = iFailCount;
 			thisLoop.entRay = entRay;
 			thisLoop.entTrace = traces[0];
+			checkTraceForEntCollision(thisEvent, collidedEnts, traces[0]);
 
 			if( traces[0].startsolid == false ) {
 				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
@@ -381,6 +385,7 @@ namespace fcps {
 						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
 						thisValidationCheck.ray[0] = testRay;
 						thisValidationCheck.trace[0] = traces[0];
+						checkTraceForEntCollision(thisEvent, collidedEnts, traces[0]);
 					}
 
 					if(bExtentInvalid[counter2]) {
@@ -391,6 +396,7 @@ namespace fcps {
 						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[1]);
 						thisValidationCheck.ray[1] = testRay;
 						thisValidationCheck.trace[1] = traces[1];
+						checkTraceForEntCollision(thisEvent, collidedEnts, traces[1]);
 					}
 
 					float fDistance = testRay.m_Delta.Length();
@@ -435,5 +441,29 @@ namespace fcps {
 		}
 		thisEvent.wasSuccess = false;
 		return &thisEvent;
+	}
+
+
+	void populateEntInfo(EntInfo& entInfo, CBaseEntity* ent) {
+		entInfo.entIdx = hacks::entindex(ent);
+		V_strncpy(entInfo.debugName, hacks::GetDebugName(ent), sizeof(entInfo.debugName));
+		V_strncpy(entInfo.className, ent->GetClassname(), sizeof(entInfo.className));
+		CCollisionProperty* pEntityCollision = hacks::CollisionProp(ent);
+		auto& mins = pEntityCollision->OBBMins();
+		auto& maxs = pEntityCollision->OBBMaxs();
+		auto localCenter = (mins + maxs) / 2.0f;
+		entInfo.center = pEntityCollision->GetCollisionOrigin() + localCenter;
+		entInfo.angles = pEntityCollision->GetCollisionAngles();
+		entInfo.extents = maxs - localCenter;
+	}
+
+
+	void checkTraceForEntCollision(FcpsEvent& fcpsEvent, std::unordered_set<int>& entSet, trace_t& trace) {
+		if (!trace.m_pEnt || fcpsEvent.collidingEntsCount == MAX_COLLIDING_ENTS)
+			return;
+		int idx = hacks::entindex(trace.m_pEnt);
+		if (idx == 0 || !entSet.insert(idx).second) // don't add world or ents we've seen before
+			return;
+		populateEntInfo(fcpsEvent.collidingEnts[fcpsEvent.collidingEntsCount++], trace.m_pEnt);
 	}
 }
