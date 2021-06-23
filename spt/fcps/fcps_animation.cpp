@@ -76,14 +76,15 @@ namespace fcps {
 			FcpsEvent* fe = curQueue->getEventWithId(fromId + i);
 
 			subStepCounts[AS_DrawBBox]++;
-			subStepCounts[AS_TestTrace] += fe->loopStartCount;
-			subStepCounts[AS_CornerValidation] += fe->loopFinishCount * 8;
+			subStepCounts[AS_TestTrace] += fe->loopStartCount - 1; // first trace does nothing so -1
+			subStepCounts[AS_CornerValidation] += fe->loopFinishCount * 8 + (i ? 1 : 0); // +1 for one substep without any info (except for the first time)
 			
 			for (int loop = 0; loop < fe->loopFinishCount; loop++) {
 				int inboundsCorners = 0;
 				for (int c = 0; c < 8; c++)
 					inboundsCorners += !fe->loops[loop].cornersOob[c];
-				subStepCounts[AS_CornerRays] += inboundsCorners * 7; // a ray from each inbounds corner to every other corner
+				// a ray from each inbounds corner to every other corner
+				subStepCounts[AS_CornerRays] += inboundsCorners * 7;
 			}
 
 			subStepCounts[AS_NudgeAndAdjust] += fe->loopFinishCount;
@@ -98,6 +99,17 @@ namespace fcps {
 		// get the i,j,k values and store them
 		for (int i = 0; i < AS_Count; i++)
 			subStepDurations[i] = shouldDrawStep[i] ? (seconds / unscaledTime * relativeSubstepTimes[i]) : 0;
+	}
+
+
+	void FcpsAnimator::adjustAnimationSpeed(double seconds) {
+		isSetToManualStep = seconds == 0;
+		double curSubStepFrac = (isAnimating && curStep != AS_Finished) ? curSubStepTime / subStepDurations[curStep] : 0;
+		calcSubStepDurations(seconds);
+		if (isSetToManualStep)
+			curSubStepTime = MANUAL_STEP_DURATION;
+		else
+			curSubStepTime = (isAnimating && curStep != AS_Finished) ? curSubStepFrac * subStepDurations[curStep] : 0;
 	}
 
 
@@ -177,9 +189,9 @@ namespace fcps {
 		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER;
 		if (!isSetToManualStep) {
 			// TODO now that I'm drawing once per frame this gets updated by like 0.1s every draw() call, not sure why
-			curSubStepTime += hacks::curTime() - lastDrawTime;
-			lastDrawTime = hacks::curTime();
+			curSubStepTime += std::fmax(0, hacks::curTime() - lastDrawTime); // prevents saveloads from messing up the animation
 		}
+		lastDrawTime = hacks::curTime();
 		//double subStepFrac = std::fmin(1, curSubStepTime / subStepDurations[curStep]); // how far are we into the current substep, 0..1 range
 		//Assert(subStepFrac >= 0);
 
@@ -196,8 +208,7 @@ namespace fcps {
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
 					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
-					if (curStep != AS_TestTrace)
-						vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
+					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
 					hasDrawnBBoxThisFrame = true;
 				}
 				if (!hasDrawnCollidedEntsThisFrame) {
@@ -213,16 +224,9 @@ namespace fcps {
 						Ray_t& entRay = curLoop.entRay;
 						trace_t& entTrace = curLoop.entTrace;
 						Vector rayEnd = entRay.m_Start + curLoop.entRay.m_Delta;
-						// draw first half of trace to impact location
-						if (!curLoop.entTrace.startsolid) {
-							vdo->AddSweptBoxOverlay(entRay.m_Start, entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 100, 100, 0, dur);
-							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 255, 0, 50, dur);
-						} else {
-							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 100, 255, 255, 50, dur);
-						}
-						// draw second half of trace (from impact location)
-						if (curLoop.entTrace.endpos.DistToSqr(rayEnd) > 0.01)
-							vdo->AddSweptBoxOverlay(entTrace.endpos, rayEnd, fe->origMins, fe->origMaxs, vec3_angle, 150, 150, 0, 0, dur);
+						vdo->AddSweptBoxOverlay(entRay.m_Start, rayEnd, fe->origMins * 1.001, fe->origMaxs * 1.001, vec3_angle, 0, 150, 150, 0, dur);
+						if (!curLoop.entTrace.startsolid)
+							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 255, 0, 25, dur);
 						break;
 					}
 					case AS_CornerValidation:
@@ -250,16 +254,15 @@ namespace fcps {
 				// something and "take time" to do so. If the current substep is done, advance to the next one. (this is poorly worded, too bad)
 				switch (curStep) {
 					case AS_DrawBBox:
-						curStep = AS_TestTrace;
-						curLoopIdx = 0;
-						break;
+						curLoopIdx = 0; // fall through to skip the first TestTrace step (nothing happens in it)
 					case AS_TestTrace:
 						// after the trace, FCPS either succeeds or goes on to the rest of the loop
-						if (fe->wasSuccess && curLoopIdx == fe->loopStartCount - 1)
+						if (fe->wasSuccess && curLoopIdx == fe->loopStartCount - 1) {
 							curStep = AS_Success;
-						else
+						} else {
 							curStep = AS_CornerValidation;
-						cornerIdx = 0;
+							cornerIdx = curLoopIdx == 0 ? 0 : -1; // don't draw any traces on the first substep (but do the first loop)
+						}
 						break;
 					case AS_CornerValidation:
 						if (++cornerIdx >= 8) {
@@ -328,29 +331,42 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(un_animate_fcps_events, "[x]|[x:y] [seconds] - animates the FCPS events with the given ID or range of IDs over the given number of seconds, use 0s to use un_fcps_animation_step.") {
-		if (args.ArgC() < 3) {
-			Msg("you must specify event IDs and a number of seconds to animate for\n");
+	void CC_Animate_Events(const CCommand& args, fcps::FixedFcpsQueue* fcpsQueue) {
+		if (args.ArgC() < 2) {
+			Msg("you must specify event IDs to animate\n");
 			return;
 		}
 		unsigned long lower, upper;
-		if (!parseFcpsEventRange(args.Arg(1), lower, upper, RecordedFcpsQueue)) {
-			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values are loaded)\n", args.Arg(1));
+		if (!fcpsQueue || !parseFcpsEventRange(args.Arg(1), lower, upper, fcpsQueue)) {
+			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values exist)\n", args.Arg(1));
 			return;
 		}
-		char* endPtr;
-		double seconds = std::strtod(args.Arg(2), &endPtr);
-		while (*endPtr) {
-			if (seconds < 0 || !isspace(*endPtr++)) {
-				Msg("\"%s\" is not a valid number of seconds\n", args.Arg(2));
-				return;
-			}
-		}
-		fcpsAnimator.beginAnimation(lower, upper, seconds, RecordedFcpsQueue); // TODO change this to LoadedQueue eventually
+		fcpsAnimator.beginAnimation(lower, upper, un_fcps_animation_speed.GetFloat(), fcpsQueue);
 	}
 
 
-	CON_COMMAND(un_fcps_animation_step, "Sets the current FCPS animation to the next step.") {
+	CON_COMMAND(un_animate_recorded_fcps_events, "[x]|[x:y] - animates the FCPS events with the given ID or range of IDs, use un_fcps_animation_speed to specify the animation speed.") {
+		CC_Animate_Events(args, RecordedFcpsQueue);
+	}
+
+
+	CON_COMMAND(un_animate_loaded_fcps_events, "[x]|[x:y] - animates the FCPS events with the given ID or range of IDs, use un_fcps_animation_speed to specify the animation speed.") {
+		CC_Animate_Events(args, LoadedFcpsQueue);
+	}
+
+
+	CON_COMMAND(un_step_fcps_animation, "Sets the current FCPS animation to the next step.") {
 		fcpsAnimator.stepAnimation();
 	}
+
+	void animation_speed_callback(IConVar* var, const char* pOldValue, float flOldValue) {
+		if (un_fcps_animation_speed.GetFloat() < 0) {
+			Msg("animation speed must be greater than or equal to 0\n");
+			un_fcps_animation_speed.SetValue(pOldValue);
+			return;
+		}
+		fcpsAnimator.adjustAnimationSpeed(un_fcps_animation_speed.GetFloat());
+	}
+
+	ConVar un_fcps_animation_speed("un_fcps_animation_speed", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
 }

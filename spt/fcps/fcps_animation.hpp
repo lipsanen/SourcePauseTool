@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fcps_memory_repr.hpp"
+#include "convar.h"
 
 // clang-format off
 
@@ -62,10 +63,13 @@ namespace fcps {
 		void beginAnimation(int from, int to, double seconds, FixedFcpsQueue* fcpsQueue);
 		void stepAnimation();
 		void draw();
+		void adjustAnimationSpeed(double seconds);
 	};
 
 
 	extern FcpsAnimator fcpsAnimator;
+
+	extern ConVar un_fcps_animation_speed;
 
 
 	inline void drawAnimationFrame() {
