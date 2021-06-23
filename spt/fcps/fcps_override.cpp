@@ -404,8 +404,9 @@ namespace fcps {
 					for(int i = 0; i != 2; ++i) {
 						int iExtent = i == 0 ? counter : counter2;
 						float validationDelta = traces[i].startsolid ? -100.0f : traces[i].fraction * fDistance;
-						fExtentsValidation[iExtent] += validationDelta;
+						thisValidationCheck.oldValidationVal[i] = fExtentsValidation[iExtent];
 						thisValidationCheck.validationDelta[i] = validationDelta;
+						fExtentsValidation[iExtent] += validationDelta;
 					}
 				}
 			}

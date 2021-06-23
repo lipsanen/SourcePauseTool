@@ -14,7 +14,7 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if ANYTHING in these structs are changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 3
+	#define FCPS_EVENT_VERSION 4
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 10
@@ -66,6 +66,7 @@ namespace fcps {
 				Ray_t ray[2];
 				trace_t trace[2];
 				float validationDelta[2];
+				float oldValidationVal[2];
 			};
 
 			int validationRayCheckCount;
