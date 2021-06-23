@@ -144,6 +144,7 @@ namespace fcps {
 		const Vector impactMaxs = Vector(1, 1, 1);
 		const Vector raySuccessMaxs = impactMaxs / 1.8;
 		const Vector rayFailMaxs = raySuccessMaxs / 1.5;
+		const bool drawProperExtentsWithImpact = true;
 
 		for (int i = 0; i < 2; i++) {
 			corner[i] = loopInfo.corners[rayCheck.cornerIdx[i]];
@@ -155,17 +156,18 @@ namespace fcps {
 			exceededThresholdFromStart[i] = (corner[i] - impact[i]).LengthSqr() > distThresholdSqr;
 			exceededThresholdFromEnd[i] = (corner[(i+1)%2] - impact[i]).LengthSqr() > distThresholdSqr;
 		}
-		// trace up to impact
 		Vector testRayExtents;
 		for (int i = 0; i < 2; i++) {
+			// save the extends of whichever ray was traced
+			if (!rayCheck.trace[i].startsolid)
+				testRayExtents = rayCheck.ray[i].m_Extents * 1.001; // prevent z-fighting
+			// draw trace up to impact
 			if (exceededThresholdFromStart[i]) {
 				vdo->AddSweptBoxOverlay(corner[i], impact[i], -raySuccessMaxs, raySuccessMaxs, vec3_angle, 0, 255, 0, 100, duration);
-				testRayExtents = rayCheck.ray[i].m_Extents * 1.001; // prevent z-fighting
+				if (drawProperExtentsWithImpact)
+					vdo->AddSweptBoxOverlay(corner[i], impact[i], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 			}
 		}
-		// draw the ray with proper extents
-		if (exceededThresholdFromStart[0] || exceededThresholdFromStart[1])
-			vdo->AddSweptBoxOverlay(corner[0], corner[1], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 		// part of the trace after the impact
 		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
 			vdo->AddSweptBoxOverlay(impact[0], impact[1], -rayFailMaxs, rayFailMaxs, vec3_angle, 255, 0, 0, 100, duration);
@@ -174,6 +176,8 @@ namespace fcps {
 				if (exceededThresholdFromStart[i])
 					vdo->AddBoxOverlay(impact[i], -impactMaxs, impactMaxs, vec3_angle, 0, 255, 0, 75, duration);
 		}
+		if (!drawProperExtentsWithImpact)
+			vdo->AddSweptBoxOverlay(corner[0], corner[1], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 	}
 
 
@@ -224,7 +228,7 @@ namespace fcps {
 						Ray_t& entRay = curLoop.entRay;
 						trace_t& entTrace = curLoop.entTrace;
 						Vector rayEnd = entRay.m_Start + curLoop.entRay.m_Delta;
-						vdo->AddSweptBoxOverlay(entRay.m_Start, rayEnd, fe->origMins * 1.001, fe->origMaxs * 1.001, vec3_angle, 0, 150, 150, 0, dur);
+						vdo->AddSweptBoxOverlay(entRay.m_Start, rayEnd, fe->origMins * 1.001, fe->origMaxs * 1.001, vec3_angle, 50, 200, 200, 0, dur);
 						if (!curLoop.entTrace.startsolid)
 							vdo->AddBoxOverlay(entTrace.endpos, fe->origMins, fe->origMaxs, vec3_angle, 0, 255, 0, 25, dur);
 						break;
