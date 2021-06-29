@@ -136,8 +136,12 @@ namespace fcps {
 
 		// last substep - don't draw rays, just draw the total validation values
 		if (curValidationRayIdx == -1) {
-			for (int i = 0; i < 8; i++)
-				vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i, loopInfo.cornerValidation[i]);
+			for (int i = 0; i < 8; i++) {
+				if (loopInfo.cornerValidation[i] <= 0)
+					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: 0.00", i); // if the validation is less than 0 it's ignored
+				else
+					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i, loopInfo.cornerValidation[i]);
+			}
 			return;
 		}
 
@@ -176,7 +180,10 @@ namespace fcps {
 					vdo->AddSweptBoxOverlay(corner[i], impact[i], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 			}
 			// draw weight for both corners
-			vdo->AddTextOverlay(corner[i], duration, "%d: %.2f %c %.2f", rayCheck.cornerIdx[i], rayCheck.oldValidationVal[i], rayCheck.validationDelta[i] >= 0 ? '+' : '-', std::fabsf(rayCheck.validationDelta[i]));
+			if (rayCheck.trace[i].startsolid)
+				vdo->AddTextOverlay(corner[i], duration, "0.00"); // even tho the validation is -100 it's treated as 0
+			else
+				vdo->AddTextOverlay(corner[i], duration, "%d: %.2f + %.2f", rayCheck.cornerIdx[i], rayCheck.oldValidationVal[i], rayCheck.validationDelta[i]);
 		}
 		// part of the trace after the impact
 		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
@@ -221,8 +228,8 @@ namespace fcps {
 			// draw current substep
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
-					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 0, 0, 25, dur); // original bounds
-					vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
+					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 255, 0, 25, dur); // original bounds
+					// vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
 					hasDrawnBBoxThisFrame = true;
 				}
 				if (!hasDrawnCollidedEntsThisFrame) {

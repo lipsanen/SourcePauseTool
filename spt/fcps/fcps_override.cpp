@@ -70,8 +70,7 @@ namespace fcps {
 		#define VIRTUAL_CALL(obj, byteOffset) __asm { \
 			__asm mov ecx, dword ptr [obj] \
 			__asm mov edx, dword ptr [ecx] \
-			__asm mov eax, dword ptr [edx + byteOffset] \
-			__asm call eax \
+			__asm call [edx + byteOffset] \
 		}
 
 		inline void __cdecl Teleport(CBaseEntity* pEntity, const Vector* newPosition, const QAngle* newAngles, const Vector* newVelocity) {
@@ -384,9 +383,9 @@ namespace fcps {
 						testRay.m_Start = ptExtents[counter];
 						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
 						thisValidationCheck.ray[0] = testRay;
-						thisValidationCheck.trace[0] = traces[0];
 						checkTraceForEntCollision(thisEvent, collidedEnts, traces[0]);
 					}
+					thisValidationCheck.trace[0] = traces[0];
 
 					if(bExtentInvalid[counter2]) {
 						traces[1].startsolid = true;
@@ -395,9 +394,9 @@ namespace fcps {
 						testRay.m_Delta = -testRay.m_Delta;
 						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[1]);
 						thisValidationCheck.ray[1] = testRay;
-						thisValidationCheck.trace[1] = traces[1];
 						checkTraceForEntCollision(thisEvent, collidedEnts, traces[1]);
 					}
+					thisValidationCheck.trace[1] = traces[1];
 
 					float fDistance = testRay.m_Delta.Length();
 
