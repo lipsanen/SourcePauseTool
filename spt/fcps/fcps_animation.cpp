@@ -293,12 +293,9 @@ namespace fcps {
 								if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)
 									break;
 							}
-							if (curValidationRayIdx == curLoop.validationRayCheckCount) {
-								curStep = AS_NudgeAndAdjust;
-								nextSubStepIsTrace = false;
-							} else {
-								curStep = AS_CornerRays;
-							}
+							curStep = AS_CornerRays;
+							if (curValidationRayIdx == curLoop.validationRayCheckCount)
+								curValidationRayIdx = -1; // just show weights, no rays to fire
 						}
 						break;
 					case AS_CornerRays:
@@ -348,6 +345,9 @@ namespace fcps {
 						}
 						break;
 				}
+				// don't subtract time if we shouldn't be drawing this step
+				if (!shouldDrawStep[curStep])
+					curSubStepTime += subStepDurations[curStep];
 			} else {
 				break;
 			}

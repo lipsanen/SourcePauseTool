@@ -104,6 +104,7 @@ namespace fcps {
 		FixedFcpsQueue(int count);
 		~FixedFcpsQueue();
 		FcpsEvent& beginNextEvent(); // returns with ID field set
+		FcpsEvent* getLastEvent();
 		FcpsEvent* getEventWithId(unsigned long id); // returns null if there is no such event
 		void printAllEvents();
 		int count();

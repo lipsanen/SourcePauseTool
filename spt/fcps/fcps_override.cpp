@@ -131,15 +131,19 @@ namespace fcps {
 
 
 	// a ripoff of the regular fcps for debugging
-	bool FcpsOverride(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
+	FcpsCallResult FcpsOverride(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
+
+		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool()) {
+			DevMsg("FCPS override not run, sv_use_find_closest_passable_space is set to 0\n");
+			return FCPS_NotRun;
+		}
+
+		if (hacks::HasMoveParent(pEntity)) {
+			DevMsg("FCPS override not run, entity \"%s\" has a move parent\n", hacks::GetDebugName(pEntity));
+			return FCPS_NotRun;
+		}
 
 		DevMsg("spt: Running override of FCPS\n");
-
-		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool())
-			return true;
-
-		if (hacks::HasMoveParent(pEntity))
-			return true;
 
 		Vector ptExtents[8]; // ordering is going to be like 3 bits, where 0 is a min on the related axis, and 1 is a max on the same axis, axis order x y z
 		float fExtentsValidation[8]; // some points are more valid than others, and this is our measure
@@ -184,7 +188,7 @@ namespace fcps {
 			if( traces[0].startsolid == false ) {
 				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
 				hacks::Teleport(pEntity, &vNewPos, nullptr, nullptr);
-				return true; // current placement worked
+				return FCPS_Success; // current placement worked
 			}
 
 			bool bExtentInvalid[8];
@@ -251,22 +255,24 @@ namespace fcps {
 				vEntityMins = -vEntityMaxs;
 			}		
 		}
-		return false;
+		return FCPS_Fail;
 	}
 
 
 	// in this version we record the process of the algorithm as an fcps event
-	FcpsEvent* FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller) {
+	FcpsCallResult FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller) {
 
-		// TODO - vww in this version and the non-record kills you
+		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool()) {
+			DevMsg("FCPS override not run, sv_use_find_closest_passable_space is set to 0\n");
+			return FCPS_NotRun;
+		}
+
+		if (hacks::HasMoveParent(pEntity)) {
+			DevMsg("FCPS override not run, entity \"%s\" has a move parent\n", hacks::GetDebugName(pEntity));
+			return FCPS_NotRun;
+		}
 
 		DevMsg("spt: Running override of FCPS\n");
-
-		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool())
-			return nullptr;
-
-		if (hacks::HasMoveParent(pEntity))
-			return nullptr;
 
 		// init new event and fill it with data as the alg iterates
 		FcpsEvent& thisEvent = RecordedFcpsQueue->beginNextEvent();
@@ -352,7 +358,7 @@ namespace fcps {
 				thisEvent.wasSuccess = true; // current placement worked
 				thisEvent.newOrigin = vNewPos;
 				thisEvent.newCenter = traces[0].endpos;
-				return &thisEvent;
+				return FCPS_Success;
 			}
 
 			bool bExtentInvalid[8];
@@ -440,7 +446,7 @@ namespace fcps {
 			thisEvent.loopFinishCount++;
 		}
 		thisEvent.wasSuccess = false;
-		return &thisEvent;
+		return FCPS_Fail;
 	}
 
 

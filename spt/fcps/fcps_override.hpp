@@ -13,6 +13,7 @@ namespace fcps {
 	namespace hacks {
 		float curTime();
 		int frameCount();
+		const char* GetDebugName(CBaseEntity* pEntity);
 	}
 
 	enum FcpsCaller : int {
@@ -39,11 +40,18 @@ namespace fcps {
 	};
 
 
+	enum FcpsCallResult {
+		FCPS_Success,
+		FCPS_Fail,
+		FCPS_NotRun
+	};
+
+
 	extern char* FcpsCallerNames[];
 
 
 	// regular fcps implemented in spt for debugging
-	bool FcpsOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
+	FcpsCallResult FcpsOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
 
-	FcpsEvent* FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
+	FcpsCallResult FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
 }

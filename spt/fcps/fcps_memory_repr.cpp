@@ -29,13 +29,20 @@ namespace fcps {
 
 
 	FcpsEvent& FixedFcpsQueue::beginNextEvent() {
-		if (size == arrSize)
-			start = (start + 1) % arrSize;
 		FcpsEvent& nextEvent = arr[(start + size) % arrSize];
 		new (&nextEvent) FcpsEvent(++pushCount); // placement new; smallest ID is 1, increments from then on
+		if (size == arrSize)
+			start = (start + 1) % arrSize;
 		if (size != arrSize)
 			size++;
 		return nextEvent;
+	}
+
+
+	FcpsEvent* FixedFcpsQueue::getLastEvent() {
+		if (size)
+			return &arr[(start + size - 1) % arrSize];
+		return nullptr;
 	}
 
 

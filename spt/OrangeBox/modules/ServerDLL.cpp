@@ -1092,25 +1092,35 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 				caller = Unknown;
 				break;
 		}
-		bool fcpsSuccess;
 		auto start = high_resolution_clock::now();
-		if (un_override_fcps.GetInt() == 1) {
-			FcpsEvent* eventResult = FcpsOverrideAndRecord(pEntity, vIndecisivePush, fMask, caller);
-			if (eventResult) {
-				fcpsSuccess = eventResult->wasSuccess;
-				Msg("spt: recorded FCPS event - ");
-				eventResult->print();
-			} else {
-				// TODO give a better message. riding a piston seems to trigger the parent condition?
-				Msg("Overrided version of FCPS not run, it might not work on this version of portal or sv_use_find_closest_passable_space is set to 0\n");
-				fcpsSuccess = true; // default implementation returns true if stuff l
-			}
-		} else {
-			fcpsSuccess = FcpsOverride(pEntity, vIndecisivePush, fMask);
+		bool returnVal, showTimeStats;
+		FcpsCallResult eventResult = un_override_fcps.GetInt() == 1
+			? FcpsOverrideAndRecord(pEntity, vIndecisivePush, fMask, caller)
+			: FcpsOverride(pEntity, vIndecisivePush, fMask);
+
+		switch (eventResult) {
+			case FCPS_Success:
+				returnVal = true;
+				showTimeStats = true;
+				break;
+			case FCPS_Fail:
+				returnVal = false;
+				showTimeStats = true;
+				break;
+			case FCPS_NotRun:
+				returnVal = true;
+				showTimeStats = false;
+				break;
 		}
-		auto stop = high_resolution_clock::now();
-		DevMsg("FCPS override took %dus\n", duration_cast<microseconds>(stop - start));
-		return fcpsSuccess;
+		if (eventResult != FCPS_NotRun && un_override_fcps.GetInt() == 1) {
+			auto e = fcps::RecordedFcpsQueue->getLastEvent();
+			Assert(e);
+			Msg("spt: recorded FCPS event - ");
+			e->print();
+		}
+		if (showTimeStats)
+			DevMsg("FCPS override took %dus\n", duration_cast<microseconds>(high_resolution_clock::now() - start));
+		return returnVal;
 	}
 	return serverDLL.ORIG_FindClosestPassableSpace(pEntity, vIndecisivePush, fMask);
 }
