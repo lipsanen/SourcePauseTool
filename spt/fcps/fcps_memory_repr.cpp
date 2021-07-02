@@ -2,6 +2,8 @@
 
 #include "fcps_memory_repr.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
+#include <chrono>
+#include <thread>
 
 // clang-format off
 
@@ -62,8 +64,11 @@ namespace fcps {
 
 
 	void FixedFcpsQueue::printAllEvents() {
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < size; i++) {
+			// sleep to minimize lines getting shuffled around
+			std::this_thread::sleep_for(std::chrono::microseconds(10));
 			arr[(start + i) % arrSize].print();
+		}
 	}
 
 
@@ -194,15 +199,14 @@ namespace fcps {
 			Msg("you must specify a .fcps file\n");
 			return;
 		}
-
 		std::ifstream infile(GetGameDir() + "\\" + args.Arg(1) + ".fcps", std::ios::binary | std::ios::ate | std::ios::in);
 		if (!infile.is_open()) {
 			Msg("Could not open file.\n");
 			return;
 		}
 		int infileSize = infile.tellg();
-		if (infileSize < 5 || (infileSize - 4) % sizeof(FcpsEvent) != 0) { // version number + events
-			Msg("File appears to be the incorrect format (incorrect size).\n");
+		if (infileSize < 5) {
+			Msg("File is too small.\n");
 			return;
 		}
 		infile.seekg(0);
@@ -210,6 +214,10 @@ namespace fcps {
 		infile.read((char*)&version, 4);
 		if (version != FCPS_EVENT_VERSION) {
 			Msg("File does not appear to be the correct version, expected version %d but got %d.\n", FCPS_EVENT_VERSION, version);
+			return;
+		}
+		if ((infileSize - 4) % sizeof(FcpsEvent) != 0) { // version number + events
+			Msg("File appears to be the incorrect format (incorrect size).\n");
 			return;
 		}
 		stopFcpsAnimation();
