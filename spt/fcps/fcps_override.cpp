@@ -290,6 +290,7 @@ namespace fcps {
 		thisEvent.isHeldObject = pPhys && hacks::GetGameFlags(pPhys) & FVPHYSICS_PLAYER_HELD;
 		thisEvent.fMask = fMask;
 		thisEvent.collidingEntsCount = 0;
+		thisEvent.vIndecisivePush = vIndecisivePush;
 		std::unordered_set<int> collidedEnts;
 
 

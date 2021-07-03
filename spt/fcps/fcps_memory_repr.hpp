@@ -10,11 +10,13 @@
 // contains objects to store the FCPS algorithm in memory and read/write it from disk
 
 namespace fcps {
+
+	#define MAX_LOADED_EVENTS 200
 	
 	enum FcpsCaller;
 	
-	// if ANYTHING in these structs are changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 4
+	// if anything in these structs or file writing is changed, the event version must be updated
+	#define FCPS_EVENT_VERSION 5
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 10
@@ -67,21 +69,19 @@ namespace fcps {
 				trace_t trace[2];
 				float validationDelta[2];
 				float oldValidationVal[2];
-			};
+			} validationRayChecks[28];
 
 			int validationRayCheckCount;
-			ValidationRayCheck validationRayChecks[28];
 
 			float cornerValidation[8];
 			float totalValidation;
 			Vector newOriginDirection;
 			Vector newCenter, newMins, newMaxs; // new Extents
-		};
+		} loops[100];
 
 		// all of the loops
 		int loopStartCount;
 		int loopFinishCount;
-		FcpsLoop loops[100];
 		bool wasSuccess;
 		// in case of success
 		Vector newOrigin, newCenter;
@@ -90,7 +90,7 @@ namespace fcps {
 		FcpsEvent(int eventId);
 		~FcpsEvent() = default;
 		FcpsEvent(std::istream& infile);
-		void writeToDisk(std::ofstream* outBinFile, std::ofstream* outTextFile);
+		void writeTextToDisk(std::ofstream* outTextFile);
 		void print(); // should all fit on one line
 	};
 

@@ -2,6 +2,7 @@
 
 #include "fcps_memory_repr.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
+#include "..\miniz\miniz.h"
 #include <chrono>
 #include <thread>
 
@@ -9,7 +10,7 @@
 
 namespace fcps {
 
-	FixedFcpsQueue* RecordedFcpsQueue = new FixedFcpsQueue(200); // any new events are put here
+	FixedFcpsQueue* RecordedFcpsQueue = new FixedFcpsQueue(MAX_LOADED_EVENTS); // any new events are put here
 	FixedFcpsQueue* LoadedFcpsQueue = nullptr; // any events loaded from disk are put here
 
 	
@@ -75,7 +76,9 @@ namespace fcps {
 	// fcps event
 
 	
-	FcpsEvent::FcpsEvent(int eventId) : eventId(eventId) {}
+	FcpsEvent::FcpsEvent(int eventId) : FcpsEvent() {
+		this->eventId = eventId;
+	}
 
 
 	FcpsEvent::FcpsEvent(std::istream& infile) {
@@ -83,9 +86,7 @@ namespace fcps {
 	}
 
 
-	void FcpsEvent::writeToDisk(std::ofstream* outBinFile, std::ofstream* outTextFile) {
-		if (outBinFile)
-			outBinFile->write((char*)this, sizeof(FcpsEvent));
+	void FcpsEvent::writeTextToDisk(std::ofstream* outTextFile) {
 		if (outTextFile)
 			Warning("no implementation of text representation yet\n");
 	}
@@ -168,7 +169,7 @@ namespace fcps {
 
 	CON_COMMAND(un_save_fcps_events, "[file] [x]|[x:y] (no extesion) - saves the event with ID x and writes it to the given file, use x:y to save a range of events (inclusive)") {
 		if (args.ArgC() < 3) {
-			Msg("You must specify a file path and which events to save.\n");
+			Msg("You must specify a file path and which events to save.\n - %s\n", un_save_fcps_events_command.GetHelpText());
 			return;
 		}
 		// check arg 2
@@ -177,19 +178,23 @@ namespace fcps {
 			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values are recorded).\n", args.Arg(2));
 			return;
 		}
-		// check arg 1
-		std::string outpath = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
-		std::ofstream outfile(outpath, std::ios::binary | std::ios::out | std::ios::trunc);
+		std::string str = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
+		auto outpath = str.c_str();
+		remove(outpath);
+		char version_str[20];
+		int version_str_len = snprintf(version_str, 20, "version %d", FCPS_EVENT_VERSION);
 
-		if (!outfile.is_open()) {
-			Msg("could not create output file \"%s\"\n", outpath.c_str());
-			return;
+		for (auto id = lower; id <= upper; id++) {
+			char archive_name[20];
+			sprintf(archive_name, "event %d", id);
+			auto fcpsEvent = RecordedFcpsQueue->getEventWithId(id);
+			Assert(fcpsEvent);
+			mz_bool status = mz_zip_add_mem_to_archive_file_in_place(outpath, archive_name, fcpsEvent, sizeof(FcpsEvent), version_str, version_str_len, MZ_DEFAULT_LEVEL);
+			if (!status) {
+				Msg("Could not write to file \"%s\"\n", outpath);
+				return;
+			}
 		}
-		// now we can write the data
-		uint32_t version = FCPS_EVENT_VERSION;
-		outfile.write((char*)&version, 4);
-		for (int i = lower; i <= upper; i++)
-			RecordedFcpsQueue->getEventWithId(i)->writeToDisk(&outfile, nullptr);
 		Msg("Successfully wrote %d event%s to file.\n", upper - lower + 1, upper - lower == 0 ? "" : "s");
 	}
 
@@ -199,34 +204,48 @@ namespace fcps {
 			Msg("you must specify a .fcps file\n");
 			return;
 		}
-		std::ifstream infile(GetGameDir() + "\\" + args.Arg(1) + ".fcps", std::ios::binary | std::ios::ate | std::ios::in);
-		if (!infile.is_open()) {
-			Msg("Could not open file.\n");
-			return;
+		std::string str = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
+		auto inpath = str.c_str();
+		mz_zip_archive zip_archive;
+		memset(&zip_archive, 0, sizeof(zip_archive));
+
+		if (!mz_zip_reader_init_file(&zip_archive, inpath, 0)) {
+			Msg("Could not open file \"%s\", it may have an incorrect format.\n", inpath);
+			goto cleanup;
 		}
-		int infileSize = infile.tellg();
-		if (infileSize < 5) {
-			Msg("File is too small.\n");
-			return;
-		}
-		infile.seekg(0);
-		int32_t version;
-		infile.read((char*)&version, 4);
-		if (version != FCPS_EVENT_VERSION) {
-			Msg("File does not appear to be the correct version, expected version %d but got %d.\n", FCPS_EVENT_VERSION, version);
-			return;
-		}
-		if ((infileSize - 4) % sizeof(FcpsEvent) != 0) { // version number + events
-			Msg("File appears to be the incorrect format (incorrect size).\n");
-			return;
+		mz_uint32 archive_count = zip_archive.m_total_files;
+		if (archive_count > MAX_LOADED_EVENTS) {
+			Msg("File \"%s\" does not have the correct format.\n", inpath);
+			goto cleanup;
 		}
 		stopFcpsAnimation();
 		if (LoadedFcpsQueue)
 			delete LoadedFcpsQueue;
-		int numEvents = (infileSize - sizeof(int)) / sizeof(FcpsEvent);
-		LoadedFcpsQueue = new FixedFcpsQueue(numEvents);
-		for (int _ = 0; _ < numEvents; _++)
-			new (&LoadedFcpsQueue->beginNextEvent()) FcpsEvent(infile); // placement new
-		Msg("%d event%s loaded from file\n", numEvents, numEvents == 1 ? "" : "s");
+		LoadedFcpsQueue = new FixedFcpsQueue(archive_count);
+
+		for (mz_uint i = 0; i < archive_count; i++) {
+			mz_zip_archive_file_stat file_stat;
+			int version;
+			if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat)
+				|| file_stat.m_is_directory
+				|| !file_stat.m_is_supported
+				|| file_stat.m_uncomp_size != sizeof(FcpsEvent)
+				|| sscanf(file_stat.m_comment, "version %d", &version) != 1)
+			{
+				Msg("File \"%s\" does not have the correct format.\n", inpath);
+				delete LoadedFcpsQueue;
+				goto cleanup;
+			}
+			if (version != FCPS_EVENT_VERSION) {
+				Msg("File \"%s\" is not the correct version, expected %d but got %d.\n", FCPS_EVENT_VERSION, version);
+				delete LoadedFcpsQueue;
+				goto cleanup;
+			}
+			mz_zip_reader_extract_file_to_mem(&zip_archive, file_stat.m_filename, &LoadedFcpsQueue->beginNextEvent(), sizeof(FcpsEvent), 0);
+		}
+		Msg("Successfully loaded %d events from file.\n", archive_count);
+	cleanup:
+		mz_zip_reader_end(&zip_archive);
+		return;
 	}
 }
