@@ -138,9 +138,9 @@ namespace fcps {
 		if (curValidationRayIdx == -1) {
 			for (int i = 0; i < 8; i++) {
 				if (loopInfo.cornerValidation[i] <= 0)
-					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: 0.00", i); // if the validation is less than 0 it's ignored
+					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: 0.00", i + 1); // if the validation is less than 0 it's ignored
 				else
-					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i, loopInfo.cornerValidation[i]);
+					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i + 1, loopInfo.cornerValidation[i]);
 			}
 			return;
 		}
@@ -170,7 +170,7 @@ namespace fcps {
 		}
 		Vector testRayExtents;
 		for (int i = 0; i < 2; i++) {
-			// save the extends of whichever ray was traced
+			// save the extents of whichever ray was traced
 			if (!rayCheck.trace[i].startsolid)
 				testRayExtents = rayCheck.ray[i].m_Extents * 1.001; // prevent z-fighting
 			// draw trace up to impact
@@ -183,7 +183,7 @@ namespace fcps {
 			if (rayCheck.trace[i].startsolid)
 				vdo->AddTextOverlay(corner[i], duration, "0.00"); // even tho the validation is -100 it's treated as 0
 			else
-				vdo->AddTextOverlay(corner[i], duration, "%d: %.2f + %.2f", rayCheck.cornerIdx[i], rayCheck.oldValidationVal[i], rayCheck.validationDelta[i]);
+				vdo->AddTextOverlay(corner[i], duration, "%d: %.2f + %.2f", rayCheck.cornerIdx[i] + 1, rayCheck.oldValidationVal[i], rayCheck.validationDelta[i]);
 		}
 		// part of the trace after the impact
 		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
@@ -288,6 +288,7 @@ namespace fcps {
 					case AS_CornerValidation:
 						if (++cornerIdx >= 8) {
 							// After checking all corners for validity, FCPS fires rays. Check if there's any rays to fire.
+							// TODO don't check for start solid - draw all rays that were fired from inbounds
 							for (curValidationRayIdx = 0; curValidationRayIdx < curLoop.validationRayCheckCount; curValidationRayIdx++) {
 								auto& rayCheck = curLoop.validationRayChecks[curValidationRayIdx];
 								if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)

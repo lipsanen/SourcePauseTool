@@ -444,6 +444,7 @@ namespace fcps {
 			thisLoop.newCenter = ptEntityCenter;
 			thisLoop.newMins = vEntityMins;
 			thisLoop.newMaxs = vEntityMaxs;
+			thisLoop.newTestExtents = testRay.m_Extents;
 			thisEvent.loopFinishCount++;
 		}
 		thisEvent.wasSuccess = false;

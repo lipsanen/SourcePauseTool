@@ -16,7 +16,7 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if anything in these structs or file writing is changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 5
+	#define FCPS_EVENT_VERSION 6
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 10
@@ -46,7 +46,7 @@ namespace fcps {
 		
 		// pre-loop
 		EntInfo thisEnt; // the entity that fcps was called on
-		Vector origMins, origMaxs;
+		Vector origMins, origMaxs; // from center
 		Vector origCenter;
 		int collisionGroup;
 		Vector growSize;
@@ -76,7 +76,9 @@ namespace fcps {
 			float cornerValidation[8];
 			float totalValidation;
 			Vector newOriginDirection;
-			Vector newCenter, newMins, newMaxs; // new Extents
+			Vector newCenter, newMins, newMaxs; // new ent extents
+			Vector newTestExtents;
+			Vector newCornerRayExtents;
 		} loops[100];
 
 		// all of the loops
@@ -90,7 +92,7 @@ namespace fcps {
 		FcpsEvent(int eventId);
 		~FcpsEvent() = default;
 		FcpsEvent(std::istream& infile);
-		void writeTextToDisk(std::ofstream* outTextFile);
+		void writeTextToDisk(FILE* f);
 		void print(); // should all fit on one line
 	};
 

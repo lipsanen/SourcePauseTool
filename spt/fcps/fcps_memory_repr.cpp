@@ -13,6 +13,7 @@ namespace fcps {
 	FixedFcpsQueue* RecordedFcpsQueue = new FixedFcpsQueue(MAX_LOADED_EVENTS); // any new events are put here
 	FixedFcpsQueue* LoadedFcpsQueue = nullptr; // any events loaded from disk are put here
 
+	extern char* FcpsCallerNames[];
 	
 	// fixed queue
 
@@ -86,9 +87,86 @@ namespace fcps {
 	}
 
 
-	void FcpsEvent::writeTextToDisk(std::ofstream* outTextFile) {
-		if (outTextFile)
-			Warning("no implementation of text representation yet\n");
+	void FcpsEvent::writeTextToDisk(FILE* f) {
+		#define BOOL_STR(x) ((x) ? "true" : "false")
+		#define DECOMPOSE(v) v.x, v.y, v.z
+		#define FL_F "%.4f"
+		#define VEC_F "<" FL_F ", " FL_F ", " FL_F ">"
+		#define IND_1 "  "
+		#define IND_2 IND_1 IND_1
+		#define IND_3 IND_2 IND_1
+
+		fprintf(f, "******************** FCPS Event %d ********************\n", eventId);
+		fprintf(f, IND_1 "map: %s\n", mapName);
+		fprintf(f, IND_1 "time: %d ticks (%.3fs)\n", tickTime, curTime);
+		if (wasRunOnPlayer)
+			fprintf(f, IND_1 "run on: (%d) %s\n", thisEnt.entIdx, thisEnt.debugName);
+		else
+			fprintf(f, IND_1 "run on: (%d) %s %s, held: %s\n", thisEnt.entIdx, thisEnt.debugName, thisEnt.className, BOOL_STR(isHeldObject));
+		fprintf(f, IND_1 "mask: %d, collision group: %d\n", fMask, collisionGroup);
+		fprintf(f, IND_1 "called from: %s\n", FcpsCallerNames[caller]);
+		fprintf(f, IND_1 "vIndecisivePush: " VEC_F "\n", DECOMPOSE(vIndecisivePush));
+		fprintf(f, IND_1 "original entity center: " VEC_F "\n", DECOMPOSE(origCenter));
+		fprintf(f, IND_1 "entity extents (from center): " VEC_F "\n", DECOMPOSE(origMaxs));
+		fprintf(f, IND_1 "ray extents and grow size: " VEC_F "\n", DECOMPOSE(growSize));
+		for (int loopIdx = 0; loopIdx < loopStartCount; loopIdx++) {
+			FcpsLoop& loopInfo = loops[loopIdx];
+			fprintf(f, "ITERATION %d:\n", loopIdx + 1);
+			if (loopIdx != 0) {
+				float frac = loopInfo.entTrace.fraction;
+				Vector deltaVec = loopInfo.entRay.m_Delta;
+				float dist = (deltaVec * frac).Length();
+				fprintf(f, IND_1 "tracing fat ray from new position to original, fraction traced: " FL_F ", distance: " FL_F " / " FL_F "\n", frac, dist, deltaVec.Length());
+			}
+			if (!loopInfo.entTrace.startsolid) {
+				fprintf(f, "entity is no longer stuck, teleporting it to fat ray hit location\n");
+				fprintf(f, "final center: " VEC_F "\n", DECOMPOSE(newCenter));
+				fprintf(f, "final origin: " VEC_F "\n", DECOMPOSE(newOrigin));
+				return;
+			}
+			fprintf(f, IND_1 "entity is still stuck, determining which corners are inbounds\n");
+			bool anyInbounds = false;
+			for (int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
+				char locDescription[7];
+				#define GET_SIGN_BIT(n) (cornerIdx & (1 << n))
+				sprintf(locDescription, "%cx%cy%cz",  GET_SIGN_BIT(0) ? '+' : '-', GET_SIGN_BIT(1) ? '+' : '-',  GET_SIGN_BIT(2) ? '+' : '-');
+				bool cornerValid = !loopInfo.cornersOob[cornerIdx];
+				Vector actualLoc = loopInfo.entRay.m_Start;
+				actualLoc.x += GET_SIGN_BIT(0) ? origMaxs.x : origMins.x;
+				actualLoc.y += GET_SIGN_BIT(1) ? origMaxs.y : origMins.y;
+				actualLoc.z += GET_SIGN_BIT(2) ? origMaxs.z : origMins.z;
+				fprintf(f, IND_2 "corner %d (%s), inbounds: %s,%s location: " VEC_F ",  ray start: " VEC_F "\n", cornerIdx + 1, locDescription, BOOL_STR(cornerValid), cornerValid ? " " : "", DECOMPOSE(actualLoc), DECOMPOSE(loopInfo.corners[cornerIdx]));
+				anyInbounds |= !loopInfo.cornersOob[cornerIdx];
+			}
+			if (anyInbounds) {
+				fprintf(f, IND_1 "firing rays from every inbounds corner to every other corner\n");
+				for (int weightCheckIdx = 0; weightCheckIdx < loopInfo.validationRayCheckCount; weightCheckIdx++) {
+					for (int i = 0; i < 2; i++) {
+						auto& weightCheck = loopInfo.validationRayChecks[weightCheckIdx];
+						if (weightCheck.trace[i].startsolid)
+							continue;
+						float frac = weightCheck.trace[i].fraction;
+						Vector deltaVec = weightCheck.trace[i].endpos - weightCheck.trace[i].startpos;
+						float dist = (deltaVec * frac).Length();
+						fprintf(f, IND_2 "corner %d to %d, fraction: " FL_F ", distance: " FL_F " / " FL_F "\n", weightCheck.cornerIdx[i] + 1, weightCheck.cornerIdx[1 - i] + 1, frac, dist, deltaVec.Length());
+					}
+				}
+			}
+			if (loopInfo.totalValidation > 0) {
+				fprintf(f, IND_2 "total weights of each corner:\n");
+				for (int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
+					float weight = loopInfo.cornerValidation[cornerIdx];
+					fprintf(f, IND_3 "corner %d: " FL_F "\n", cornerIdx + 1, weight < 0 ? 0 : weight);
+				}
+				fprintf(f, "pushing entity towards most-inbounds corners and increasing ray extents\n");
+			} else {
+				fprintf(f, IND_1 "no corners are valid, pushing entity towards vIndecisivePush and resetting ray extents\n");
+			}
+			fprintf(f, IND_1 "new ray extents: " VEC_F "\n", DECOMPOSE(loopInfo.newTestExtents));
+			fprintf(f, IND_1 "entity nudged by: " VEC_F "\n", DECOMPOSE(loopInfo.newOriginDirection));
+			fprintf(f, IND_1 "new entity center: " VEC_F "\n", DECOMPOSE(loopInfo.newCenter));
+		}
+		fprintf(f, "100 iterations complete but entity is still stuck, reverting entity position to original location\n");
 	}
 
 
@@ -178,9 +256,14 @@ namespace fcps {
 			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values are recorded).\n", args.Arg(2));
 			return;
 		}
-		std::string str = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
-		auto outpath = str.c_str();
-		remove(outpath);
+		std::string binstr = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
+		std::string txtstr = GetGameDir() + "\\" + args.Arg(1) + ".txt";
+		remove(binstr.c_str());
+		FILE* txtfile = fopen(txtstr.c_str(), "w");
+		if (!txtfile) {
+			Msg("Could not write to file \"%s\"\n", txtstr.c_str());
+			return;
+		}
 		char version_str[20];
 		int version_str_len = snprintf(version_str, 20, "version %d", FCPS_EVENT_VERSION);
 
@@ -189,17 +272,26 @@ namespace fcps {
 			sprintf(archive_name, "event %d", id);
 			auto fcpsEvent = RecordedFcpsQueue->getEventWithId(id);
 			Assert(fcpsEvent);
-			mz_bool status = mz_zip_add_mem_to_archive_file_in_place(outpath, archive_name, fcpsEvent, sizeof(FcpsEvent), version_str, version_str_len, MZ_DEFAULT_LEVEL);
-			if (!status) {
-				Msg("Could not write to file \"%s\"\n", outpath);
+			if (!mz_zip_add_mem_to_archive_file_in_place(binstr.c_str(), archive_name, fcpsEvent, sizeof(FcpsEvent), version_str, version_str_len, MZ_DEFAULT_LEVEL)) {
+				Msg("Could not write to file \"%s\"\n", binstr.c_str());
+				fclose(txtfile);
 				return;
 			}
+			fcpsEvent->writeTextToDisk(txtfile);
+			if (id != upper)
+				fprintf(txtfile, "\n\n");
 		}
-		Msg("Successfully wrote %d event%s to file.\n", upper - lower + 1, upper - lower == 0 ? "" : "s");
+		fclose(txtfile);
+		Msg("Successfully saved %d event%s to file.\n", upper - lower + 1, upper - lower == 0 ? "" : "s");
 	}
 
 
 	CON_COMMAND(un_load_fcps_events, "loads the specified .fcps file (no extension)") {
+
+		#define CLEANUP {mz_zip_reader_end(&zip_archive); return;}
+		#define BAD_FORMAT_EXIT {Msg("File \"%s\" does not have the correct format.\n", inpath); CLEANUP}
+		#define DELETE_QUEUE_BAD_FORMAT {delete LoadedFcpsQueue; BAD_FORMAT_EXIT}
+
 		if (args.ArgC() < 2) {
 			Msg("you must specify a .fcps file\n");
 			return;
@@ -211,13 +303,11 @@ namespace fcps {
 
 		if (!mz_zip_reader_init_file(&zip_archive, inpath, 0)) {
 			Msg("Could not open file \"%s\", it may have an incorrect format.\n", inpath);
-			goto cleanup;
+			CLEANUP
 		}
 		mz_uint32 archive_count = zip_archive.m_total_files;
-		if (archive_count > MAX_LOADED_EVENTS) {
-			Msg("File \"%s\" does not have the correct format.\n", inpath);
-			goto cleanup;
-		}
+		if (archive_count > MAX_LOADED_EVENTS)
+			BAD_FORMAT_EXIT
 		stopFcpsAnimation();
 		if (LoadedFcpsQueue)
 			delete LoadedFcpsQueue;
@@ -231,23 +321,20 @@ namespace fcps {
 				|| !file_stat.m_is_supported
 				|| sscanf(file_stat.m_comment, "version %d", &version) != 1)
 			{
-			bad_format:
-				Msg("File \"%s\" does not have the correct format.\n", inpath);
-				delete LoadedFcpsQueue;
-				goto cleanup;
+				DELETE_QUEUE_BAD_FORMAT
 			}
 			if (version != FCPS_EVENT_VERSION) {
-				Msg("File \"%s\" is not the correct version, expected %d but got %d.\n", FCPS_EVENT_VERSION, version);
+				Msg("File \"%s\" is not the correct version, expected %d but got %d.\n", inpath, FCPS_EVENT_VERSION, version);
 				delete LoadedFcpsQueue;
-				goto cleanup;
+				CLEANUP
 			}
+			// check this after so that we get the correct error message
 			if (file_stat.m_uncomp_size != sizeof(FcpsEvent))
-				goto bad_format; // check this after so that we get the correct error message
-			mz_zip_reader_extract_file_to_mem(&zip_archive, file_stat.m_filename, &LoadedFcpsQueue->beginNextEvent(), sizeof(FcpsEvent), 0);
+				DELETE_QUEUE_BAD_FORMAT
+			if (!mz_zip_reader_extract_file_to_mem(&zip_archive, file_stat.m_filename, &LoadedFcpsQueue->beginNextEvent(), sizeof(FcpsEvent), 0))
+				DELETE_QUEUE_BAD_FORMAT
 		}
 		Msg("Successfully loaded %d events from file.\n", archive_count);
-	cleanup:
-		mz_zip_reader_end(&zip_archive);
-		return;
+		CLEANUP
 	}
 }
