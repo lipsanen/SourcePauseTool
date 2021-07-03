@@ -229,9 +229,9 @@ namespace fcps {
 			if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat)
 				|| file_stat.m_is_directory
 				|| !file_stat.m_is_supported
-				|| file_stat.m_uncomp_size != sizeof(FcpsEvent)
 				|| sscanf(file_stat.m_comment, "version %d", &version) != 1)
 			{
+			bad_format:
 				Msg("File \"%s\" does not have the correct format.\n", inpath);
 				delete LoadedFcpsQueue;
 				goto cleanup;
@@ -241,6 +241,8 @@ namespace fcps {
 				delete LoadedFcpsQueue;
 				goto cleanup;
 			}
+			if (file_stat.m_uncomp_size != sizeof(FcpsEvent))
+				goto bad_format; // check this after so that we get the correct error message
 			mz_zip_reader_extract_file_to_mem(&zip_archive, file_stat.m_filename, &LoadedFcpsQueue->beginNextEvent(), sizeof(FcpsEvent), 0);
 		}
 		Msg("Successfully loaded %d events from file.\n", archive_count);
