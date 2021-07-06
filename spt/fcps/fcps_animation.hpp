@@ -48,13 +48,13 @@ namespace fcps {
 		// substep animations vars
 		int curLoopIdx;
 		int cornerIdx;
-		int curValidationRayIdx;
+		int curTwcIdx;
 		Vector curCenter, curMins, curMaxs;
 		bool nextSubStepIsTrace;
 
 		void calcSubStepDurations(double seconds);
 		void drawRayTest(float duration);
-		void loadAnimationSettings();
+		// void loadAnimationSettings();
 
 
 	public:

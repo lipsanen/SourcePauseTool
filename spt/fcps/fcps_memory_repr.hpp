@@ -16,7 +16,7 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if anything in these structs or file writing is changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 6
+	#define FCPS_EVENT_VERSION 7
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 10
@@ -35,8 +35,8 @@ namespace fcps {
 		int eventId;
 		char mapName[MAP_NAME_LEN];
 		FcpsCaller caller;
+		float time;
 		int tickTime;
-		float curTime;
 		bool wasRunOnPlayer;
 		bool isHeldObject;
 		// if this wasn't run on the player, we probably want to see where the player was
@@ -44,13 +44,12 @@ namespace fcps {
 		Vector vIndecisivePush;
 		int fMask;
 		
-		// pre-loop
 		EntInfo thisEnt; // the entity that fcps was called on
+		Vector origCenter, origOrigin;
 		Vector origMins, origMaxs; // from center
-		Vector origCenter;
 		int collisionGroup;
 		Vector growSize;
-		Vector adjustedMins, adjustedMaxs;
+		Vector rayStartMins, rayStartMaxs; // extents of where rays are fired from
 
 		EntInfo collidingEnts[MAX_COLLIDING_ENTS]; // ents that get hit by rays from this event, only used for animation
 		int collidingEntsCount;
@@ -59,33 +58,35 @@ namespace fcps {
 			uint failCount;
 			Ray_t entRay;
 			trace_t entTrace;
-			// the rest of this is only valid in case of failure
-			Vector corners[8]; // the extents can get modified on every iteration so wee need to keep track of that
+			// the rest is only valid in case of ent trace failure
+			Vector corners[8]; // the extents can get modified on every iteration so we need to keep track of that
 			bool cornersOob[8];
 
-			struct ValidationRayCheck {
-				int cornerIdx[2];
-				Ray_t ray[2];
-				trace_t trace[2];
-				float validationDelta[2];
-				float oldValidationVal[2];
-			} validationRayChecks[28];
+			// the result of a ray fired from a->b and b->a
+			struct TwoWayRayCheck {
+				// the result of a ray fired from a->b
+				struct OneWayRayCheck {
+					int cornerIdx;
+					// the ray/trace is only valid if the corner is inbounds since rays are only fired then
+					// (the exception is that the startsolid flag of the trace is valid)
+					Ray_t ray;
+					trace_t trace;
+					float oldWeight;
+					float weightDelta;
+				} checks[2];
+			} twoWayRayChecks[28];
 
-			int validationRayCheckCount;
-
-			float cornerValidation[8];
-			float totalValidation;
+			float cornerWeights[8];
+			float totalWeight;
 			Vector newOriginDirection;
-			Vector newCenter, newMins, newMaxs; // new ent extents
-			Vector newTestExtents;
+			Vector newCenter, newMins, newMaxs; // new ent extents (from center)
 			Vector newCornerRayExtents;
 		} loops[100];
 
-		// all of the loops
 		int loopStartCount;
 		int loopFinishCount;
 		bool wasSuccess;
-		// in case of success
+		// success or failure
 		Vector newOrigin, newCenter;
 
 		FcpsEvent() = default;

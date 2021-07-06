@@ -281,7 +281,7 @@ namespace fcps {
 		strcpy_s(thisEvent.mapName, MAP_NAME_LEN, hacks::mapName());
 		thisEvent.caller = caller;
 		thisEvent.tickTime = hacks::tickCount();
-		thisEvent.curTime = hacks::curTime();
+		thisEvent.time = hacks::curTime();
 		thisEvent.wasRunOnPlayer = hacks::IsPlayer(pEntity);
 		populateEntInfo(thisEvent.thisEnt, pEntity);
 		if (!thisEvent.wasRunOnPlayer)
@@ -304,6 +304,7 @@ namespace fcps {
 		vEntityMaxs -= ptEntityCenter;
 		thisEvent.origMins = vEntityMins;
 		thisEvent.origMaxs = vEntityMaxs;
+		thisEvent.origOrigin = thisEvent.newOrigin = hacks::GetAbsOrigin(pEntity);
 
 		Vector ptExtents[8]; // ordering is going to be like 3 bits, where 0 is a min on the related axis, and 1 is a max on the same axis, axis order x y z
 		float fExtentsValidation[8]; // some points are more valid than others, and this is our measure
@@ -314,7 +315,6 @@ namespace fcps {
 		int iEntityCollisionGroup = pEntity->GetCollisionGroup();
 		thisEvent.collisionGroup = iEntityCollisionGroup;
 
-		trace_t traces[2];
 		Ray_t entRay;
 		entRay.m_Extents = vEntityMaxs;
 		entRay.m_IsRay = false;
@@ -327,8 +327,8 @@ namespace fcps {
 		vEntityMins += vGrowSize;
 
 		thisEvent.growSize = vGrowSize;
-		thisEvent.adjustedMins = vEntityMins;
-		thisEvent.adjustedMaxs = vEntityMaxs;
+		thisEvent.rayStartMins = vEntityMins;
+		thisEvent.rayStartMaxs = vEntityMaxs;
 		thisEvent.loopStartCount = thisEvent.loopFinishCount = 0;
 		
 		Ray_t testRay;
@@ -341,24 +341,23 @@ namespace fcps {
 		for(unsigned int iFailCount = 0; iFailCount != 100; ++iFailCount) {
 
 			thisEvent.loopStartCount++;
+			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[iFailCount];
 
 			entRay.m_Start = ptEntityCenter;
 			entRay.m_Delta = ptEntityOriginalCenter - ptEntityCenter;
 
-			hacks::UTIL_TraceRay(entRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
+			hacks::UTIL_TraceRay(entRay, fMask, pEntity, iEntityCollisionGroup, &thisLoop.entTrace);
 
-			FcpsEvent::FcpsLoop& thisLoop = thisEvent.loops[iFailCount];
 			thisLoop.failCount = iFailCount;
 			thisLoop.entRay = entRay;
-			thisLoop.entTrace = traces[0];
-			checkTraceForEntCollision(thisEvent, collidedEnts, traces[0]);
+			checkTraceForEntCollision(thisEvent, collidedEnts, thisLoop.entTrace);
 
-			if( traces[0].startsolid == false ) {
-				Vector vNewPos = traces[0].endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
+			if(thisLoop.entTrace.startsolid == false) {
+				Vector vNewPos = thisLoop.entTrace.endpos + (hacks::GetAbsOrigin(pEntity) - ptEntityOriginalCenter);
 				hacks::Teleport(pEntity, &vNewPos, nullptr, nullptr);
 				thisEvent.wasSuccess = true; // current placement worked
 				thisEvent.newOrigin = vNewPos;
-				thisEvent.newCenter = traces[0].endpos;
+				thisEvent.newCenter = thisLoop.entTrace.endpos;
 				return FCPS_Success;
 			}
 
@@ -374,62 +373,48 @@ namespace fcps {
 				thisLoop.corners[i] = ptExtents[i];
 				thisLoop.cornersOob[i] = bExtentInvalid[i];
 			}
-			thisLoop.validationRayCheckCount = 0;
+			int i = 0;
 
 			for(unsigned int counter = 0; counter != 7; ++counter) {
 				for(unsigned int counter2 = counter + 1; counter2 != 8; ++counter2) {
 
-					auto& thisValidationCheck = thisLoop.validationRayChecks[thisLoop.validationRayCheckCount++]; // this'll just go up to its max
-					thisValidationCheck.cornerIdx[0] = counter;
-					thisValidationCheck.cornerIdx[1] = counter2;
+					// fire a ray counter->counter2 and counter2->counter
+					auto& twc = thisLoop.twoWayRayChecks[i++];
 
-					testRay.m_Delta = ptExtents[counter2] - ptExtents[counter];
-					if(bExtentInvalid[counter]) {
-						traces[0].startsolid = true;
-					} else {
-						testRay.m_Start = ptExtents[counter];
-						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[0]);
-						thisValidationCheck.ray[0] = testRay;
-						checkTraceForEntCollision(thisEvent, collidedEnts, traces[0]);
-					}
-					thisValidationCheck.trace[0] = traces[0];
+					for (int i = 0; i < 2; i++) {
+						int from = i == 0 ? counter : counter2;
+						int to = i == 1 ? counter : counter2;
+						auto& owc = twc.checks[i];
+						owc.cornerIdx = from;
 
-					if(bExtentInvalid[counter2]) {
-						traces[1].startsolid = true;
-					} else {
-						testRay.m_Start = ptExtents[counter2];
-						testRay.m_Delta = -testRay.m_Delta;
-						hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &traces[1]);
-						thisValidationCheck.ray[1] = testRay;
-						checkTraceForEntCollision(thisEvent, collidedEnts, traces[1]);
-					}
-					thisValidationCheck.trace[1] = traces[1];
+						if (bExtentInvalid[from]) {
+							owc.trace.startsolid = true;
+						} else {
+							testRay.m_Start = ptExtents[from];
+							testRay.m_Delta = ptExtents[to] - ptExtents[from];
+							hacks::UTIL_TraceRay(testRay, fMask, pEntity, iEntityCollisionGroup, &owc.trace);
+							owc.ray = testRay;
+							checkTraceForEntCollision(thisEvent, collidedEnts, owc.trace);
+						}
 
-					float fDistance = testRay.m_Delta.Length();
-
-					for(int i = 0; i != 2; ++i) {
-						int iExtent = i == 0 ? counter : counter2;
-						float validationDelta = traces[i].startsolid ? -100.0f : traces[i].fraction * fDistance;
-						thisValidationCheck.oldValidationVal[i] = fExtentsValidation[iExtent];
-						thisValidationCheck.validationDelta[i] = validationDelta;
-						fExtentsValidation[iExtent] += validationDelta;
+						owc.oldWeight = fExtentsValidation[from];
+						float validationDelta = owc.trace.startsolid ? 0 : owc.trace.fraction * testRay.m_Delta.Length();
+						owc.weightDelta = validationDelta;
+						fExtentsValidation[from] += validationDelta;
 					}
 				}
 			}
 
-			Vector vNewOriginDirection( 0.0f, 0.0f, 0.0f );
-			float fTotalValidation = 0.0f;
-			for(unsigned int counter = 0; counter != 8; ++counter) {
-				if(fExtentsValidation[counter] > 0.0f) {
-					vNewOriginDirection += (ptExtents[counter] - ptEntityCenter) * fExtentsValidation[counter];
-					fTotalValidation += fExtentsValidation[counter];
-				}
-				thisLoop.cornerValidation[counter] = fExtentsValidation[counter];
+			Vector newDir(0.0f, 0.0f, 0.0f);
+			thisLoop.totalWeight = 0.0f;
+			for(unsigned int c = 0; c != 8; ++c) {
+				newDir += (ptExtents[c] - ptEntityCenter) * fExtentsValidation[c];
+				thisLoop.totalWeight += fExtentsValidation[c];
+				thisLoop.cornerWeights[c] = fExtentsValidation[c];
 			}
-			thisLoop.totalValidation = fTotalValidation;
 
-			if(fTotalValidation != 0.0f) {
-				ptEntityCenter += thisLoop.newOriginDirection = vNewOriginDirection / fTotalValidation;
+			if(thisLoop.totalWeight != 0.0f) {
+				ptEntityCenter += thisLoop.newOriginDirection = newDir / thisLoop.totalWeight;
 				// increase sizing
 				testRay.m_Extents += vGrowSize;
 				vEntityMaxs -= vGrowSize;
@@ -444,7 +429,7 @@ namespace fcps {
 			thisLoop.newCenter = ptEntityCenter;
 			thisLoop.newMins = vEntityMins;
 			thisLoop.newMaxs = vEntityMaxs;
-			thisLoop.newTestExtents = testRay.m_Extents;
+			thisLoop.newCornerRayExtents = testRay.m_Extents;
 			thisEvent.loopFinishCount++;
 		}
 		thisEvent.wasSuccess = false;

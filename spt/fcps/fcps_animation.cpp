@@ -23,7 +23,6 @@ namespace fcps {
 
 	void FcpsAnimator::stopAnimation() {
 		isAnimating = false;
-		// TODO also other stuff
 	}
 
 
@@ -43,11 +42,11 @@ namespace fcps {
 		// substep specific vars
 		curLoopIdx = 0;
 		cornerIdx = 0;
-		curValidationRayIdx = 0;
+		curTwcIdx = 0;
 		FcpsEvent* nextEvent = curQueue->getEventWithId(from);
 		curCenter = nextEvent->origCenter;
-		curMins = nextEvent->adjustedMins;
-		curMaxs = nextEvent->adjustedMaxs;
+		curMins = nextEvent->rayStartMins;
+		curMaxs = nextEvent->rayStartMaxs;
 		// TODO, don't forget to check map name
 	}
 
@@ -135,19 +134,16 @@ namespace fcps {
 		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoopIdx];
 
 		// last substep - don't draw rays, just draw the total validation values
-		if (curValidationRayIdx == -1) {
-			for (int i = 0; i < 8; i++) {
-				if (loopInfo.cornerValidation[i] <= 0)
-					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: 0.00", i + 1); // if the validation is less than 0 it's ignored
-				else
-					vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i + 1, loopInfo.cornerValidation[i]);
-			}
+		if (curTwcIdx == 28) {
+			for (int i = 0; i < 8; i++)
+				vdo->AddTextOverlay(loopInfo.corners[i], duration, "%d: %.2f", i + 1, loopInfo.cornerWeights[i]);
 			return;
 		}
 
-		auto& rayCheck = loopInfo.validationRayChecks[curValidationRayIdx];
+		auto& twc = loopInfo.twoWayRayChecks[curTwcIdx];
 
-		Assert(!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid); // at least one ray should have been fired
+		// at least one ray should have been fired
+		Assert(!loopInfo.cornersOob[twc.checks[0].cornerIdx] || !loopInfo.cornersOob[twc.checks[1].cornerIdx]);
 		Vector corner[2];
 		Vector impact[2];
 		bool exceededThresholdFromStart[2];
@@ -159,8 +155,8 @@ namespace fcps {
 		const bool drawProperExtentsWithImpact = true;
 
 		for (int i = 0; i < 2; i++) {
-			corner[i] = loopInfo.corners[rayCheck.cornerIdx[i]];
-			impact[i] = rayCheck.trace[i].startsolid ? corner[i] : rayCheck.trace[i].endpos;
+			corner[i] = loopInfo.corners[twc.checks[i].cornerIdx];
+			impact[i] = twc.checks[i].trace.startsolid ? corner[i] : twc.checks[i].trace.endpos;
 		}
 
 		// check if the ray travelled at least a tiny bit (and didn't get all the way to the other corner)
@@ -171,8 +167,8 @@ namespace fcps {
 		Vector testRayExtents;
 		for (int i = 0; i < 2; i++) {
 			// save the extents of whichever ray was traced
-			if (!rayCheck.trace[i].startsolid)
-				testRayExtents = rayCheck.ray[i].m_Extents * 1.001; // prevent z-fighting
+			if (!twc.checks[i].trace.startsolid)
+				testRayExtents = twc.checks[i].ray.m_Extents * 1.001; // prevent z-fighting
 			// draw trace up to impact
 			if (exceededThresholdFromStart[i]) {
 				vdo->AddSweptBoxOverlay(corner[i], impact[i], -raySuccessMaxs, raySuccessMaxs, vec3_angle, 0, 255, 0, 100, duration);
@@ -180,10 +176,10 @@ namespace fcps {
 					vdo->AddSweptBoxOverlay(corner[i], impact[i], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 			}
 			// draw weight for both corners
-			if (rayCheck.trace[i].startsolid)
-				vdo->AddTextOverlay(corner[i], duration, "0.00"); // even tho the validation is -100 it's treated as 0
+			if (twc.checks[i].weightDelta > 0)
+				vdo->AddTextOverlay(corner[i], duration, "%d: %.2f + %.2f", twc.checks[i].cornerIdx + 1, twc.checks[i].oldWeight, twc.checks[i].weightDelta);
 			else
-				vdo->AddTextOverlay(corner[i], duration, "%d: %.2f + %.2f", rayCheck.cornerIdx[i] + 1, rayCheck.oldValidationVal[i], rayCheck.validationDelta[i]);
+				vdo->AddTextOverlay(corner[i], duration, "%d: 0.00", twc.checks[i].cornerIdx + 1);
 		}
 		// part of the trace after the impact
 		if (exceededThresholdFromEnd[0] || exceededThresholdFromEnd[1]) {
@@ -286,30 +282,16 @@ namespace fcps {
 						}
 						break;
 					case AS_CornerValidation:
-						if (++cornerIdx >= 8) {
-							// After checking all corners for validity, FCPS fires rays. Check if there's any rays to fire.
-							// TODO don't check for start solid - draw all rays that were fired from inbounds
-							for (curValidationRayIdx = 0; curValidationRayIdx < curLoop.validationRayCheckCount; curValidationRayIdx++) {
-								auto& rayCheck = curLoop.validationRayChecks[curValidationRayIdx];
-								if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)
-									break;
-							}
-							curStep = AS_CornerRays;
-							if (curValidationRayIdx == curLoop.validationRayCheckCount)
-								curValidationRayIdx = -1; // just show weights, no rays to fire
-						}
-						break;
+						if (++cornerIdx < 8)
+							break;
+						curStep = AS_CornerRays;
+						curTwcIdx = -1; // fall through
 					case AS_CornerRays:
-						if (curValidationRayIdx != -1) {
-							for (;;) {
-								if (++curValidationRayIdx == curLoop.validationRayCheckCount) {
-									curValidationRayIdx = -1;
+						if (curTwcIdx < 28) {
+							while (++curTwcIdx < 28) {
+								auto& twc = curLoop.twoWayRayChecks[curTwcIdx];
+								if (!curLoop.cornersOob[twc.checks[0].cornerIdx] || !curLoop.cornersOob[twc.checks[1].cornerIdx])
 									break;
-								} else {
-									auto& rayCheck = curLoop.validationRayChecks[curValidationRayIdx];
-									if (!rayCheck.trace[0].startsolid || !rayCheck.trace[1].startsolid)
-										break;
-								}
 							}
 							break;
 						}
@@ -327,8 +309,8 @@ namespace fcps {
 							curMins = fe->loops[curLoopIdx - 1].newMins;
 							curMaxs = fe->loops[curLoopIdx - 1].newMaxs;
 							nextSubStepIsTrace = true;
-							if (curCenter.DistToSqr(oldCenter) > 10)
-								hasDrawnBBoxThisFrame = false; // allow redrawning of bbox if it won't be exactly in the same spot
+							if (curCenter.DistToSqr(oldCenter) > 1)
+								hasDrawnBBoxThisFrame = false; // allow redrawning of bbox on this frame if it's in a slightly different location
 						}
 						break;
 					case AS_Success:
@@ -340,8 +322,8 @@ namespace fcps {
 							curStep = AS_DrawBBox;
 							FcpsEvent* nextEvent = curQueue->getEventWithId(curId);
 							curCenter = nextEvent->origCenter;
-							curMins = nextEvent->adjustedMins;
-							curMaxs = nextEvent->adjustedMaxs;
+							curMins = nextEvent->rayStartMins;
+							curMaxs = nextEvent->rayStartMaxs;
 							hasDrawnBBoxThisFrame = false;
 						}
 						break;

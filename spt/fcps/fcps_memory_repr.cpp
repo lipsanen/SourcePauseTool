@@ -98,7 +98,7 @@ namespace fcps {
 
 		fprintf(f, "******************** FCPS Event %d ********************\n", eventId);
 		fprintf(f, IND_1 "map: %s\n", mapName);
-		fprintf(f, IND_1 "time: %d ticks (%.3fs)\n", tickTime, curTime);
+		fprintf(f, IND_1 "time: %d ticks (%.3fs)\n", tickTime, time);
 		if (wasRunOnPlayer)
 			fprintf(f, IND_1 "run on: (%d) %s\n", thisEnt.entIdx, thisEnt.debugName);
 		else
@@ -140,29 +140,30 @@ namespace fcps {
 			}
 			if (anyInbounds) {
 				fprintf(f, IND_1 "firing rays from every inbounds corner to every other corner\n");
-				for (int weightCheckIdx = 0; weightCheckIdx < loopInfo.validationRayCheckCount; weightCheckIdx++) {
+				for (int twcIdx = 0; twcIdx < 28; twcIdx++) {
+					auto& twc = loopInfo.twoWayRayChecks[twcIdx];
 					for (int i = 0; i < 2; i++) {
-						auto& weightCheck = loopInfo.validationRayChecks[weightCheckIdx];
-						if (weightCheck.trace[i].startsolid)
+						auto& owc = twc.checks[i];
+						if (owc.trace.startsolid)
 							continue;
-						float frac = weightCheck.trace[i].fraction;
-						Vector deltaVec = weightCheck.trace[i].endpos - weightCheck.trace[i].startpos;
+						float frac = owc.trace.fraction;
+						Vector deltaVec = owc.trace.endpos - owc.trace.startpos;
 						float dist = (deltaVec * frac).Length();
-						fprintf(f, IND_2 "corner %d to %d, fraction: " FL_F ", distance: " FL_F " / " FL_F "\n", weightCheck.cornerIdx[i] + 1, weightCheck.cornerIdx[1 - i] + 1, frac, dist, deltaVec.Length());
+						fprintf(f, IND_2 "corner %d to %d, fraction: " FL_F ", distance: " FL_F " / " FL_F "\n",twc.checks[i].cornerIdx + 1, twc.checks[1 - i].cornerIdx + 1, frac, dist, deltaVec.Length());
 					}
 				}
 			}
-			if (loopInfo.totalValidation > 0) {
+			if (loopInfo.totalWeight > 0) {
 				fprintf(f, IND_2 "total weights of each corner:\n");
 				for (int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
-					float weight = loopInfo.cornerValidation[cornerIdx];
+					float weight = loopInfo.cornerWeights[cornerIdx];
 					fprintf(f, IND_3 "corner %d: " FL_F "\n", cornerIdx + 1, weight < 0 ? 0 : weight);
 				}
 				fprintf(f, "pushing entity towards most-inbounds corners and increasing ray extents\n");
 			} else {
 				fprintf(f, IND_1 "no corners are valid, pushing entity towards vIndecisivePush and resetting ray extents\n");
 			}
-			fprintf(f, IND_1 "new ray extents: " VEC_F "\n", DECOMPOSE(loopInfo.newTestExtents));
+			fprintf(f, IND_1 "new ray extents: " VEC_F "\n", DECOMPOSE(loopInfo.newCornerRayExtents));
 			fprintf(f, IND_1 "entity nudged by: " VEC_F "\n", DECOMPOSE(loopInfo.newOriginDirection));
 			fprintf(f, IND_1 "new entity center: " VEC_F "\n", DECOMPOSE(loopInfo.newCenter));
 		}
@@ -176,7 +177,7 @@ namespace fcps {
 		Msg("ID: %d, map: %s, time: %4.3f, %d iteration%s (%s), called from %s, run on (%d) Name: %s (%s)\n",
 			eventId,
 			mapName,
-			curTime,
+			time,
 			loopFinishCount,
 			loopFinishCount == 1 ? "" : "s",
 			wasSuccess ? "SUCCEEDED" : "FAILED",
