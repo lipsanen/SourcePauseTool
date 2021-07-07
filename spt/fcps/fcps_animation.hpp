@@ -41,7 +41,7 @@ namespace fcps {
 		// For any given step, each substep is gonna take the same amount of time e.g. all rays fired during the CornerRays step will all take the same amount of time.
 		double subStepDurations[AS_Count];
 		// the relative lengths of the substeps
-		double relativeSubstepTimes[AS_Count] = {5, 1, 1, 1, 1, 5, 5};
+		double relativeSubstepTimes[AS_Count] = {5, 1.5f, 1, 1, 1, 5, 5};
 		// which steps do we draw?
 		bool shouldDrawStep[AS_Count] = {1, 1, 1, 1, 1, 1, 1};
 
@@ -49,7 +49,7 @@ namespace fcps {
 		int curLoopIdx;
 		int cornerIdx;
 		int curTwcIdx;
-		Vector curCenter, curMins, curMaxs;
+		Vector curCenter;
 		bool nextSubStepIsTrace;
 
 		void calcSubStepDurations(double seconds);

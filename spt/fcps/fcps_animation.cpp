@@ -45,8 +45,6 @@ namespace fcps {
 		curTwcIdx = 0;
 		FcpsEvent* nextEvent = curQueue->getEventWithId(from);
 		curCenter = nextEvent->origCenter;
-		curMins = nextEvent->rayStartMins;
-		curMaxs = nextEvent->rayStartMaxs;
 		// TODO, don't forget to check map name
 	}
 
@@ -224,8 +222,8 @@ namespace fcps {
 			// draw current substep
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
-					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 255, 0, 25, dur); // original bounds
-					// vdo->AddBoxOverlay(curCenter, curMins, curMaxs, vec3_angle, 255, 255, 0, 25, dur); // shrunk bounds
+					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 200, 25, 35, dur); // bounds that the alg uses
+					vdo->AddBoxOverlay(curCenter, -fe->thisEnt.extents, fe->thisEnt.extents, fe->thisEnt.angles, 200, 200, 200, 10, dur); // actual entity bbox
 					hasDrawnBBoxThisFrame = true;
 				}
 				if (!hasDrawnCollidedEntsThisFrame) {
@@ -306,8 +304,6 @@ namespace fcps {
 							curLoopIdx++;
 							Vector oldCenter = curCenter;
 							curCenter = fe->loops[curLoopIdx - 1].newCenter;
-							curMins = fe->loops[curLoopIdx - 1].newMins;
-							curMaxs = fe->loops[curLoopIdx - 1].newMaxs;
 							nextSubStepIsTrace = true;
 							if (curCenter.DistToSqr(oldCenter) > 1)
 								hasDrawnBBoxThisFrame = false; // allow redrawning of bbox on this frame if it's in a slightly different location
@@ -322,8 +318,6 @@ namespace fcps {
 							curStep = AS_DrawBBox;
 							FcpsEvent* nextEvent = curQueue->getEventWithId(curId);
 							curCenter = nextEvent->origCenter;
-							curMins = nextEvent->rayStartMins;
-							curMaxs = nextEvent->rayStartMaxs;
 							hasDrawnBBoxThisFrame = false;
 						}
 						break;

@@ -293,7 +293,6 @@ namespace fcps {
 		thisEvent.vIndecisivePush = vIndecisivePush;
 		std::unordered_set<int> collidedEnts;
 
-
 		Vector vEntityMaxs;
 		Vector vEntityMins;
 		CCollisionProperty* pEntityCollision = hacks::CollisionProp(pEntity);
@@ -373,13 +372,13 @@ namespace fcps {
 				thisLoop.corners[i] = ptExtents[i];
 				thisLoop.cornersOob[i] = bExtentInvalid[i];
 			}
-			int i = 0;
 
+			int twcIdx = 0;
 			for(unsigned int counter = 0; counter != 7; ++counter) {
 				for(unsigned int counter2 = counter + 1; counter2 != 8; ++counter2) {
 
 					// fire a ray counter->counter2 and counter2->counter
-					auto& twc = thisLoop.twoWayRayChecks[i++];
+					auto& twc = thisLoop.twoWayRayChecks[twcIdx++];
 
 					for (int i = 0; i < 2; i++) {
 						int from = i == 0 ? counter : counter2;

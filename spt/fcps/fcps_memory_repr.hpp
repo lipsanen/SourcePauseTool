@@ -16,7 +16,7 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if anything in these structs or file writing is changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 7
+	#define FCPS_EVENT_VERSION 8
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 10
@@ -25,7 +25,7 @@ namespace fcps {
 		int entIdx;
 		char debugName[256];
 		char className[256];
-		Vector center, extents; // not axis-aligned
+		Vector center, extents; // extents are from cetner, not axis-aligned
 		QAngle angles;
 	};
 
