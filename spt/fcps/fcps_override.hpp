@@ -51,7 +51,7 @@ namespace fcps {
 
 
 	// regular fcps implemented in spt for debugging
-	FcpsCallResult FcpsOverride(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
+	FcpsCallResult FcpsOverrideFunc(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask);
 
-	FcpsCallResult FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
+	FcpsCallResult FcpsOverrideFuncAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller);
 }

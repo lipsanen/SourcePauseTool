@@ -1062,11 +1062,11 @@ int ServerDLL::GetEnviromentPortalHandle() const
 
 // clang-format off
 
-ConVar un_override_fcps("un_override_fcps", "0", FCVAR_CHEAT, "FCPS override types:\n\t1 - overrides the default FCPS implementation with one that records the steps of the algorithm\
+ConVar fcps_override("fcps_override", "0", FCVAR_CHEAT, "override types:\n\t1 - overrides the default FCPS implementation with one that records the steps of the algorithm\
 \n\t2 - overrides the default FCPS implementation but does not record events (for debugging)");
 
 bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask, void* retAddress) {
-	if (un_override_fcps.GetInt() > 0) {
+	if (fcps_override.GetInt() > 0) {
 		using namespace fcps;
 		FcpsCaller caller;
 		switch ((uint32_t)retAddress - (uint32_t)serverDLL.m_Base) {
@@ -1094,14 +1094,14 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 		}
 		auto start = high_resolution_clock::now();
 		bool returnVal, showTimeStats;
-		FcpsCallResult eventResult = un_override_fcps.GetInt() == 1
-			? FcpsOverrideAndRecord(pEntity, vIndecisivePush, fMask, caller)
-			: FcpsOverride(pEntity, vIndecisivePush, fMask);
+		FcpsCallResult eventResult = fcps_override.GetInt() == 1
+			? FcpsOverrideFuncAndRecord(pEntity, vIndecisivePush, fMask, caller)
+			: FcpsOverrideFunc(pEntity, vIndecisivePush, fMask);
 
 		returnVal = eventResult == FCPS_Success || eventResult == FCPS_NotRun;
 		showTimeStats = eventResult == FCPS_Success || eventResult == FCPS_Fail;
 
-		if (eventResult != FCPS_NotRun && un_override_fcps.GetInt() == 1) {
+		if (eventResult != FCPS_NotRun && fcps_override.GetInt() == 1) {
 			auto e = fcps::RecordedFcpsQueue->getLastEvent();
 			Assert(e);
 			Msg("spt: recorded FCPS event - ");

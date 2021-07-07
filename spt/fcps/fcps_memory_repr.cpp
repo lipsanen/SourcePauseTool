@@ -201,21 +201,21 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(un_show_recorded_fcps_events, "Prints all recorded FCPS events.") {
+	CON_COMMAND(fcps_show_recorded_events, "Prints all recorded FCPS events.") {
 		showStoredEvents(RecordedFcpsQueue, "recorded");
 	}
 
 
-	CON_COMMAND(un_show_loaded_fcps_events, "Prints all recorded loaded events.") {
+	CON_COMMAND(fcps_show_loaded_events, "Prints all recorded loaded events.") {
 		showStoredEvents(LoadedFcpsQueue, "loaded");
 	}
 
 
-	// converts arg to a range, if arg is an int then lower = upper = int, if arg has the format int1:int2 then lower = int1 & upper = int2
+	// converts arg to a range, if arg is an int then lower = upper = int, if arg has the format int1-int2 then lower = int1 & upper = int2
 	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue) {
-		// I tried scanf %d:%d and that didn't work so maybe idk how scanf works, hail my glorious parsing code
+		// had trouble with scanf, hail my glorious parsing code
 		char* end;
-		upper = lower = strtol(arg, &end, 10);
+		upper = lower = strtoul(arg, &end, 10);
 		if (end == arg) // check if lower number parsed at all
 			return false;
 		// now scan to see if upper exists
@@ -223,15 +223,15 @@ namespace fcps {
 		bool upperParsed = false;
 		char* curPtr = end; // curPtr is now after the first num
 		while (*curPtr) {
-			if (*curPtr == ':') {
+			if (*curPtr == '-') {
 				if (isRange)
-					return false; // we already parsed a separator, this tells us there's a second one "x:y:..."
+					return false; // we already parsed a separator, this tells us there's a second one "x-y-..."
 				isRange = true;
 				curPtr++;
 			} else if (isdigit(*curPtr)) {
 				if (upperParsed || !isRange)
 					return false;
-				upper = strtol(curPtr, &curPtr, 10);
+				upper = strtoul(curPtr, &curPtr, 10);
 				upperParsed = true;
 			} else if (isspace(*curPtr)) {
 				curPtr++;
@@ -246,9 +246,9 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(un_save_fcps_events, "[file] [x]|[x:y] (no extesion) - saves the event with ID x and writes it to the given file, use x:y to save a range of events (inclusive)") {
+	CON_COMMAND(fcps_save_events, "[file] [x]|[x-y] (no extesion) - saves the event with ID x and writes it to the given file, use x-y to save a range of events (inclusive)") {
 		if (args.ArgC() < 3) {
-			Msg("You must specify a file path and which events to save.\n - %s\n", un_save_fcps_events_command.GetHelpText());
+			Msg(" - %s\n", fcps_save_events_command.GetHelpText());
 			return;
 		}
 		// check arg 2
@@ -287,14 +287,14 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(un_load_fcps_events, "loads the specified .fcps file (no extension)") {
+	CON_COMMAND(fcps_load_events, "loads the specified .fcps file (no extension)") {
 
 		#define CLEANUP {mz_zip_reader_end(&zip_archive); return;}
 		#define BAD_FORMAT_EXIT {Msg("File \"%s\" does not have the correct format.\n", inpath); CLEANUP}
 		#define DELETE_QUEUE_BAD_FORMAT {delete LoadedFcpsQueue; BAD_FORMAT_EXIT}
 
 		if (args.ArgC() < 2) {
-			Msg("you must specify a .fcps file\n");
+			Msg("- %s\n", fcps_load_events_command.GetHelpText());
 			return;
 		}
 		std::string str = GetGameDir() + "\\" + args.Arg(1) + ".fcps";

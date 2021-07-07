@@ -131,7 +131,7 @@ namespace fcps {
 
 
 	// a ripoff of the regular fcps for debugging
-	FcpsCallResult FcpsOverride(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
+	FcpsCallResult FcpsOverrideFunc(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask) {
 
 		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool()) {
 			DevMsg("FCPS override not run, sv_use_find_closest_passable_space is set to 0\n");
@@ -260,7 +260,7 @@ namespace fcps {
 
 
 	// in this version we record the process of the algorithm as an fcps event
-	FcpsCallResult FcpsOverrideAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller) {
+	FcpsCallResult FcpsOverrideFuncAndRecord(CBaseEntity *pEntity, const Vector &vIndecisivePush, unsigned int fMask, FcpsCaller caller) {
 
 		if (!g_pCVar->FindVar("sv_use_find_closest_passable_space")->GetBool()) {
 			DevMsg("FCPS override not run, sv_use_find_closest_passable_space is set to 0\n");

@@ -111,10 +111,12 @@ namespace fcps {
 
 
 	void FcpsAnimator::stepAnimation() {
-		if (!isAnimating)
+		if (!isAnimating || curStep == AS_Finished) {
+			Msg("No animation in progress.\n");
 			return;
+		}
 		if (!isSetToManualStep) {
-			Msg("Current animation is not in step mode\n");
+			Msg("Current animation is not in step mode.\n");
 			return;
 		}
 		curSubStepTime += MANUAL_STEP_DURATION;
@@ -223,7 +225,7 @@ namespace fcps {
 			if (shouldDrawStep[curStep]) {
 				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
 					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 200, 25, 35, dur); // bounds that the alg uses
-					vdo->AddBoxOverlay(curCenter, -fe->thisEnt.extents, fe->thisEnt.extents, fe->thisEnt.angles, 200, 200, 200, 10, dur); // actual entity bbox
+					vdo->AddBoxOverlay(curCenter, -fe->thisEnt.extents * 0.999f, fe->thisEnt.extents * 0.999f, fe->thisEnt.angles, 200, 200, 200, 10, dur); // actual entity bbox
 					hasDrawnBBoxThisFrame = true;
 				}
 				if (!hasDrawnCollidedEntsThisFrame) {
@@ -332,14 +334,14 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(un_stop_fcps_animation, "Stops any in-progress FCPS animation.") {
+	CON_COMMAND(fcps_stop_animation, "Stops any in-progress FCPS animation.") {
 		stopFcpsAnimation();
 	}
 
 
-	void CC_Animate_Events(const CCommand& args, fcps::FixedFcpsQueue* fcpsQueue) {
+	void CC_Animate_Events(const ConCommand& cmd, const CCommand& args, fcps::FixedFcpsQueue* fcpsQueue) {
 		if (args.ArgC() < 2) {
-			Msg("you must specify event IDs to animate\n");
+			Msg(" - %s\n", cmd.GetHelpText());
 			return;
 		}
 		unsigned long lower, upper;
@@ -347,32 +349,32 @@ namespace fcps {
 			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values exist)\n", args.Arg(1));
 			return;
 		}
-		fcpsAnimator.beginAnimation(lower, upper, un_fcps_animation_speed.GetFloat(), fcpsQueue);
+		fcpsAnimator.beginAnimation(lower, upper, fcps_animation_speed.GetFloat(), fcpsQueue);
 	}
 
 
-	CON_COMMAND(un_animate_recorded_fcps_events, "[x]|[x:y] - animates the FCPS events with the given ID or range of IDs, use un_fcps_animation_speed to specify the animation speed.") {
-		CC_Animate_Events(args, RecordedFcpsQueue);
+	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the animation speed.") {
+		CC_Animate_Events(fcps_animate_recorded_events_command, args, RecordedFcpsQueue);
 	}
 
 
-	CON_COMMAND(un_animate_loaded_fcps_events, "[x]|[x:y] - animates the FCPS events with the given ID or range of IDs, use un_fcps_animation_speed to specify the animation speed.") {
-		CC_Animate_Events(args, LoadedFcpsQueue);
+	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the animation speed.") {
+		CC_Animate_Events(fcps_animate_loaded_events_command, args, LoadedFcpsQueue);
 	}
 
 
-	CON_COMMAND(un_step_fcps_animation, "Sets the current FCPS animation to the next step.") {
+	CON_COMMAND(fcps_step_animation, "Sets the current FCPS animation to the next step.") {
 		fcpsAnimator.stepAnimation();
 	}
 
 	void animation_speed_callback(IConVar* var, const char* pOldValue, float flOldValue) {
-		if (un_fcps_animation_speed.GetFloat() < 0) {
+		if (fcps_animation_speed.GetFloat() < 0) {
 			Msg("animation speed must be greater than or equal to 0\n");
-			un_fcps_animation_speed.SetValue(pOldValue);
+			fcps_animation_speed.SetValue(pOldValue);
 			return;
 		}
-		fcpsAnimator.adjustAnimationSpeed(un_fcps_animation_speed.GetFloat());
+		fcpsAnimator.adjustAnimationSpeed(fcps_animation_speed.GetFloat());
 	}
 
-	ConVar un_fcps_animation_speed("un_fcps_animation_speed", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
+	ConVar fcps_animation_speed("fcps_animation_speed", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
 }

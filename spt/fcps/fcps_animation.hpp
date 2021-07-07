@@ -70,7 +70,7 @@ namespace fcps {
 
 	extern FcpsAnimator fcpsAnimator;
 
-	extern ConVar un_fcps_animation_speed;
+	extern ConVar fcps_animation_speed;
 
 
 	inline void drawAnimationFrame() {
