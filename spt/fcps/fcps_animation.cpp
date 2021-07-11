@@ -353,19 +353,30 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the animation speed.") {
+	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the length of the animation.") {
 		CC_Animate_Events(fcps_animate_recorded_events_command, args, RecordedFcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the animation speed.") {
+	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the length of the animation.") {
 		CC_Animate_Events(fcps_animate_loaded_events_command, args, LoadedFcpsQueue);
+	}
+
+
+	CON_COMMAND(fcps_animate_last_recorded_event, "Animates the last recorded event, use fcps_animation_speed to specify the length of the animation.") {
+		if (!RecordedFcpsQueue || !RecordedFcpsQueue->getLastEvent()) {
+			Msg("No recorded events!\n");
+			return;
+		}
+		int id = RecordedFcpsQueue->getLastEvent()->eventId;
+		fcpsAnimator.beginAnimation(id, id, fcps_animation_speed.GetFloat(), RecordedFcpsQueue);
 	}
 
 
 	CON_COMMAND(fcps_step_animation, "Sets the current FCPS animation to the next step.") {
 		fcpsAnimator.stepAnimation();
 	}
+
 
 	void animation_speed_callback(IConVar* var, const char* pOldValue, float flOldValue) {
 		if (fcps_animation_speed.GetFloat() < 0) {
