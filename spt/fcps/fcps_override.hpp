@@ -9,14 +9,15 @@
 
 namespace fcps {
 
-	// these were originally only used for the override but there might be some useful util functions here
+	// these were originally only used for the override but some are used in other spots
 	namespace hacks {
+		int tickCount();
 		float curTime();
 		int frameCount();
 		const char* GetDebugName(CBaseEntity* pEntity);
 	}
 
-	enum FcpsCaller : int {
+	enum FcpsCaller {
 		// happens when the player is in a portal environment and a bunch of other conditions
 		// vIndecisivePush: newPosition - GetAbsOrigin()
 		VPhysicsShadowUpdate,

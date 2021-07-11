@@ -38,6 +38,7 @@ namespace fcps {
 		curStep = AS_DrawBBox;
 		lastDrawTime = hacks::curTime();
 		lastDrawFrame = hacks::frameCount();
+		lastDrawTick = hacks::tickCount();
 
 		// substep specific vars
 		curLoopIdx = 0;
@@ -110,16 +111,35 @@ namespace fcps {
 	}
 
 
-	void FcpsAnimator::stepAnimation() {
+	bool FcpsAnimator::canManualStep() {
 		if (!isAnimating || curStep == AS_Finished) {
 			Msg("No animation in progress.\n");
-			return;
+			return false;
 		}
 		if (!isSetToManualStep) {
 			Msg("Current animation is not in step mode.\n");
-			return;
+			return false;
 		}
-		curSubStepTime += MANUAL_STEP_DURATION;
+		return true;
+	}
+
+
+	void FcpsAnimator::stepAnimation() {
+		if (canManualStep()) {
+			// keep the substep time at the end of the substep in manual step mode
+			if (curSubStepTime == 0)
+				curSubStepTime = MANUAL_STEP_DURATION;
+			else
+				curSubStepTime = 2 * MANUAL_STEP_DURATION;
+		}
+	}
+
+
+	void FcpsAnimator::setHeldStepButton(bool pressed) {
+		if (stepButtonHeld = pressed) {
+			stepAnimation();
+			secondsSinceLastHeldStep = 0;
+		}
 	}
 
 
@@ -128,7 +148,7 @@ namespace fcps {
 	}
 
 
-	void FcpsAnimator::drawRayTest(float duration) {
+	void FcpsAnimator::drawRaysFromCorners(float duration) {
 
 		auto vdo = GetDebugOverlay();
 		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoopIdx];
@@ -194,19 +214,29 @@ namespace fcps {
 	}
 
 
+	// this should be called at least every frame (no drawing is done again if this is called twice in a frame)
 	void FcpsAnimator::draw() {
 		if (!isAnimating || curStep == AS_Finished)
 			return;
-		if (hacks::frameCount() == lastDrawFrame)
+		// XXX This should work if we call this method every frame but for some reason drawn stuff will bleed to the next call.
+		// It would be nice if this worked because there is some occasional flickering and I think drawing every frame might fix that.
+		if (hacks::frameCount() == lastDrawFrame || hacks::tickCount() == lastDrawTick)
 			return;
 		lastDrawFrame = hacks::frameCount();
+		lastDrawTick = hacks::tickCount();
 		auto vdo = GetDebugOverlay();
 		if (!vdo)
 			return;
-		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER;
-		if (!isSetToManualStep) {
-			// TODO now that I'm drawing once per frame this gets updated by like 0.1s every draw() call, not sure why
-			curSubStepTime += std::fmax(0, hacks::curTime() - lastDrawTime); // prevents saveloads from messing up the animation
+		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER; // negative duration should make this only draw for one frame but it seem to work
+		// at least 0 to prevent saveloads from messing up the animation
+		float timeSinceLastDrawCall = std::fmax(0, hacks::curTime() - lastDrawTime);
+		if (isSetToManualStep) {
+			if (stepButtonHeld && (secondsSinceLastHeldStep += timeSinceLastDrawCall) > secondsPerHeldStep) {
+				stepAnimation();
+				secondsSinceLastHeldStep = fmodf(secondsSinceLastHeldStep, timeSinceLastDrawCall);
+			}
+		} else {
+			curSubStepTime += timeSinceLastDrawCall;
 		}
 		lastDrawTime = hacks::curTime();
 		//double subStepFrac = std::fmin(1, curSubStepTime / subStepDurations[curStep]); // how far are we into the current substep, 0..1 range
@@ -223,8 +253,9 @@ namespace fcps {
 			auto& curLoop = fe->loops[curLoopIdx];
 			// draw current substep
 			if (shouldDrawStep[curStep]) {
-				if (!hasDrawnBBoxThisFrame && curStep != AS_Revert && curStep != AS_Success) {
-					vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 200, 25, 35, dur); // bounds that the alg uses
+				if (!hasDrawnBBoxThisFrame) {
+					if (curStep != AS_Revert && curStep != AS_Success)
+						vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 200, 25, 35, dur); // bounds that the alg uses
 					vdo->AddBoxOverlay(curCenter, -fe->thisEnt.extents * 0.999f, fe->thisEnt.extents * 0.999f, fe->thisEnt.angles, 200, 200, 200, 10, dur); // actual entity bbox
 					hasDrawnBBoxThisFrame = true;
 				}
@@ -251,7 +282,7 @@ namespace fcps {
 							vdo->AddTextOverlay(curLoop.corners[i], dur, "%d: %s", i + 1, curLoop.cornersOob[i] ? "OOB" : "INBOUNDS");
 						break;
 					case AS_CornerRays:
-						drawRayTest(dur);
+						drawRaysFromCorners(dur);
 						break;
 					case AS_Revert:
 						vdo->AddBoxOverlay(fe->origCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 0, 0, 50, dur);
@@ -275,6 +306,8 @@ namespace fcps {
 					case AS_TestTrace:
 						// after the trace, FCPS either succeeds or goes on to the rest of the loop
 						if (fe->wasSuccess && curLoopIdx == fe->loopStartCount - 1) {
+							hasDrawnBBoxThisFrame = true;
+							curCenter = fe->newCenter;
 							curStep = AS_Success;
 						} else {
 							curStep = AS_CornerValidation;
@@ -301,6 +334,8 @@ namespace fcps {
 						if (nextSubStepIsTrace) {
 							curStep = AS_TestTrace;
 						} else if (curLoopIdx == 99) {
+							hasDrawnBBoxThisFrame = true;
+							curCenter = fe->origCenter;
 							curStep = AS_Revert;
 						} else {
 							curLoopIdx++;
@@ -349,27 +384,27 @@ namespace fcps {
 			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values exist)\n", args.Arg(1));
 			return;
 		}
-		fcpsAnimator.beginAnimation(lower, upper, fcps_animation_speed.GetFloat(), fcpsQueue);
+		fcpsAnimator.beginAnimation(lower, upper, fcps_animation_time.GetFloat(), fcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the length of the animation.") {
+	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.") {
 		CC_Animate_Events(fcps_animate_recorded_events_command, args, RecordedFcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_speed to specify the length of the animation.") {
+	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.") {
 		CC_Animate_Events(fcps_animate_loaded_events_command, args, LoadedFcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_last_recorded_event, "Animates the last recorded event, use fcps_animation_speed to specify the length of the animation.") {
+	CON_COMMAND(fcps_animate_last_recorded_event, "Animates the last recorded event, use fcps_animation_time to specify the length of the animation.") {
 		if (!RecordedFcpsQueue || !RecordedFcpsQueue->getLastEvent()) {
 			Msg("No recorded events!\n");
 			return;
 		}
 		int id = RecordedFcpsQueue->getLastEvent()->eventId;
-		fcpsAnimator.beginAnimation(id, id, fcps_animation_speed.GetFloat(), RecordedFcpsQueue);
+		fcpsAnimator.beginAnimation(id, id, fcps_animation_time.GetFloat(), RecordedFcpsQueue);
 	}
 
 
@@ -378,14 +413,18 @@ namespace fcps {
 	}
 
 
+	ConCommand fcps_step_press_command("+fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(true);}, "Bind +fcps_step_animation to step while holding a key.");
+	ConCommand fcps_step_release_command("-fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(false);}, "Bind +fcps_step_animation to step while holding a key.");
+
+
 	void animation_speed_callback(IConVar* var, const char* pOldValue, float flOldValue) {
-		if (fcps_animation_speed.GetFloat() < 0) {
+		if (fcps_animation_time.GetFloat() < 0) {
 			Msg("animation speed must be greater than or equal to 0\n");
-			fcps_animation_speed.SetValue(pOldValue);
+			fcps_animation_time.SetValue(pOldValue);
 			return;
 		}
-		fcpsAnimator.adjustAnimationSpeed(fcps_animation_speed.GetFloat());
+		fcpsAnimator.adjustAnimationSpeed(fcps_animation_time.GetFloat());
 	}
 
-	ConVar fcps_animation_speed("fcps_animation_speed", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
+	ConVar fcps_animation_time("fcps_animation_time", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
 }

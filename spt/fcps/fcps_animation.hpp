@@ -26,9 +26,6 @@ namespace fcps {
 			AS_Count = AS_Finished
 		};
 
-		/*template<typename T>
-		T easeInterp(T t1, T t2, float frac); // x^2 * (3 - 2x)*/
-
 		// general info
 		bool isAnimating, isSetToManualStep;
 		double curSubStepTime; // how many seconds are we into the current substep?
@@ -36,7 +33,10 @@ namespace fcps {
 		int fromId, curId, toId; // event IDs
 		FixedFcpsQueue* curQueue;
 		double lastDrawTime;
-		int lastDrawFrame;
+		int lastDrawFrame, lastDrawTick;
+		bool stepButtonHeld;
+		float secondsSinceLastHeldStep; // how many seconds since we last incremented the substep (while holding +fcps_step_animation)
+		const float secondsPerHeldStep = 0.25f; // won't work properly if the value is too small (e.g. 3 ticks)
 
 		// For any given step, each substep is gonna take the same amount of time e.g. all rays fired during the CornerRays step will all take the same amount of time.
 		double subStepDurations[AS_Count];
@@ -53,9 +53,8 @@ namespace fcps {
 		bool nextSubStepIsTrace;
 
 		void calcSubStepDurations(double seconds);
-		void drawRayTest(float duration);
-		// void loadAnimationSettings();
-
+		void drawRaysFromCorners(float duration);
+		bool canManualStep();
 
 	public:
 		FcpsAnimator();
@@ -65,12 +64,13 @@ namespace fcps {
 		void stepAnimation();
 		void draw();
 		void adjustAnimationSpeed(double seconds);
+		void setHeldStepButton(bool pressed);
 	};
 
 
 	extern FcpsAnimator fcpsAnimator;
 
-	extern ConVar fcps_animation_speed;
+	extern ConVar fcps_animation_time;
 
 
 	inline void drawAnimationFrame() {
