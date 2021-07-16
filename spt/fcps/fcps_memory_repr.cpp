@@ -106,6 +106,7 @@ namespace fcps {
 		fprintf(f, IND_1 "mask: %d, collision group: %d\n", fMask, collisionGroup);
 		fprintf(f, IND_1 "called from: %s\n", FcpsCallerNames[caller]);
 		fprintf(f, IND_1 "vIndecisivePush: " VEC_F "\n", DECOMPOSE(vIndecisivePush));
+		fprintf(f, IND_1 "original entity origin: " VEC_F "\n", DECOMPOSE(origOrigin));
 		fprintf(f, IND_1 "original entity center: " VEC_F "\n", DECOMPOSE(origCenter));
 		fprintf(f, IND_1 "entity extents (from center): " VEC_F "\n", DECOMPOSE(origMaxs));
 		fprintf(f, IND_1 "ray extents and grow size: " VEC_F "\n", DECOMPOSE(growSize));
