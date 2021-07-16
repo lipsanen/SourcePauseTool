@@ -53,7 +53,7 @@ namespace fcps {
 	FcpsEvent* FixedFcpsQueue::getEventWithId(unsigned long id) {
 		if (id < 1 || size == 0)
 			return nullptr;
-		int smallestId = arr[start].eventId;
+		unsigned long smallestId = arr[start].eventId;
 		if (id < smallestId || id >= smallestId + size)
 			return nullptr;
 		return &arr[(start + id - smallestId) % arrSize];
