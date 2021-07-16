@@ -201,12 +201,12 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_show_recorded_events, "Prints all recorded FCPS events.") {
+	CON_COMMAND_F(fcps_show_recorded_events, "Prints all recorded FCPS events.", FCVAR_DONTRECORD) {
 		showStoredEvents(RecordedFcpsQueue, "recorded");
 	}
 
 
-	CON_COMMAND(fcps_show_loaded_events, "Prints all recorded loaded events.") {
+	CON_COMMAND_F(fcps_show_loaded_events, "Prints all recorded loaded events.", FCVAR_DONTRECORD) {
 		showStoredEvents(LoadedFcpsQueue, "loaded");
 	}
 
@@ -246,7 +246,7 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_save_events, "[file] [x]|[x-y] (no extesion) - saves the event with ID x and writes it to the given file, use x-y to save a range of events (inclusive)") {
+	CON_COMMAND_F(fcps_save_events, "[file] [x]|[x-y] (no extesion) - saves the event with ID x and writes it to the given file, use x-y to save a range of events (inclusive)", FCVAR_DONTRECORD) {
 		if (args.ArgC() < 3) {
 			Msg(" - %s\n", fcps_save_events_command.GetHelpText());
 			return;
@@ -287,7 +287,7 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_load_events, "loads the specified .fcps file (no extension)") {
+	CON_COMMAND_F(fcps_load_events, "loads the specified .fcps file (no extension)", FCVAR_DONTRECORD) {
 
 		#define CLEANUP {mz_zip_reader_end(&zip_archive); return;}
 		#define BAD_FORMAT_EXIT {Msg("File \"%s\" does not have the correct format.\n", inpath); CLEANUP}

@@ -1062,7 +1062,7 @@ int ServerDLL::GetEnviromentPortalHandle() const
 
 // clang-format off
 
-ConVar fcps_override("fcps_override", "0", FCVAR_CHEAT, "override types:\n\t1 - overrides the default FCPS implementation with one that records the steps of the algorithm\
+ConVar fcps_override("fcps_override", "0", FCVAR_CHEAT | FCVAR_DONTRECORD, "override types:\n\t1 - overrides the default FCPS implementation with one that records the steps of the algorithm\
 \n\t2 - overrides the default FCPS implementation but does not record events (for debugging)");
 
 bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntity, const Vector& vIndecisivePush, unsigned int fMask, void* retAddress) {

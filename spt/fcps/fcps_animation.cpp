@@ -430,7 +430,7 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_stop_animation, "Stops any in-progress FCPS animation.") {
+	CON_COMMAND_F(fcps_stop_animation, "Stops any in-progress FCPS animation.", FCVAR_DONTRECORD) {
 		stopFcpsAnimation();
 	}
 
@@ -449,17 +449,17 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.") {
+	CON_COMMAND_F(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
 		CC_Animate_Events(fcps_animate_recorded_events_command, args, RecordedFcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.") {
+	CON_COMMAND_F(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
 		CC_Animate_Events(fcps_animate_loaded_events_command, args, LoadedFcpsQueue);
 	}
 
 
-	CON_COMMAND(fcps_animate_last_recorded_event, "Animates the last recorded event, use fcps_animation_time to specify the length of the animation.") {
+	CON_COMMAND_F(fcps_animate_last_recorded_event, "Animates the last recorded event, use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
 		if (!RecordedFcpsQueue || !RecordedFcpsQueue->getLastEvent()) {
 			Msg("No recorded events!\n");
 			return;
@@ -469,18 +469,18 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND(fcps_skip_current_step_type, "Fast-forwards the animation to the next step type.") {
+	CON_COMMAND_F(fcps_skip_current_step_type, "Fast-forwards the animation to the next step type.", FCVAR_DONTRECORD) {
 		fcpsAnimator.skipStepType();
 	}
 
 
-	CON_COMMAND(fcps_step_animation, "Sets the current FCPS animation to the next step.") {
+	CON_COMMAND_F(fcps_step_animation, "Sets the current FCPS animation to the next step.", FCVAR_DONTRECORD) {
 		fcpsAnimator.stepAnimation();
 	}
 
 
-	ConCommand fcps_step_press_command("+fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(true);}, "Bind +fcps_step_animation to step while holding a key.");
-	ConCommand fcps_step_release_command("-fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(false);}, "Bind +fcps_step_animation to step while holding a key.");
+	ConCommand fcps_step_press_command("+fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(true);}, "Bind +fcps_step_animation to step while holding a key.", FCVAR_DONTRECORD);
+	ConCommand fcps_step_release_command("-fcps_step_animation", [](const CCommand&) {fcpsAnimator.setHeldStepButton(false);}, "Bind +fcps_step_animation to step while holding a key.", FCVAR_DONTRECORD);
 
 
 	void animation_speed_callback(IConVar* var, const char* pOldValue, float flOldValue) {
@@ -492,8 +492,8 @@ namespace fcps {
 		fcpsAnimator.adjustAnimationSpeed(fcps_animation_time.GetFloat());
 	}
 
-	ConVar fcps_animation_time("fcps_animation_time", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
+	ConVar fcps_animation_time("fcps_animation_time", "20", FCVAR_DONTRECORD, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
 
 
-	ConVar fcps_hud_progress("fcps_hud_progress", "0", FCVAR_NONE, "If enabled, displays the state of the current playing FCPS animation.");
+	ConVar fcps_hud_progress("fcps_hud_progress", "0", FCVAR_DONTRECORD, "If enabled, displays the state of the current playing FCPS animation.");
 }
