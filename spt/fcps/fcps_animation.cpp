@@ -47,7 +47,6 @@ namespace fcps {
 		curTwcIdx = 0;
 		FcpsEvent* nextEvent = curQueue->getEventWithId(from);
 		curCenter = nextEvent->origCenter;
-		// TODO, don't forget to check map name
 	}
 
 
@@ -135,6 +134,12 @@ namespace fcps {
 			else
 				curSubStepTime = 2 * MANUAL_STEP_DURATION;
 		}
+	}
+
+
+	void FcpsAnimator::skipStepType() {
+		if (canManualStep())
+			skipUntilNextStep = true;
 	}
 
 
@@ -245,6 +250,8 @@ namespace fcps {
 		//double subStepFrac = std::fmin(1, curSubStepTime / subStepDurations[curStep]); // how far are we into the current substep, 0..1 range
 		//Assert(subStepFrac >= 0);
 
+		AnimationStep origStep = curStep;
+
 		// If we have a fast enough animation speed it's possible to draw several substeps on the same frame.
 		// This is a problem since the bbox of the ents get drawn every time (and have an alpha component), so just keep track if we've done that already.
 		bool hasDrawnBBoxThisFrame = false;
@@ -254,8 +261,9 @@ namespace fcps {
 			FcpsEvent* fe = curQueue->getEventWithId(curId);
 			Assert(fe);
 			auto& curLoop = fe->loops[curLoopIdx];
+
 			// draw current substep
-			if (shouldDrawStep[curStep]) {
+			if (shouldDrawStep[curStep] && !skipUntilNextStep) {
 				if (!hasDrawnBBoxThisFrame) {
 					if (curStep != AS_Revert && curStep != AS_Success)
 						vdo->AddBoxOverlay(curCenter, fe->origMins, fe->origMaxs, vec3_angle, 255, 200, 25, 35, dur); // bounds that the alg uses
@@ -297,8 +305,9 @@ namespace fcps {
 			}
 
 			// go to next substep if it's time
-			if (curSubStepTime - subStepDurations[curStep] > 0 || !shouldDrawStep[curStep]) { // this is > instead of >= to make the sure manual step doesn't draw 2 steps on the first draw
-				if (shouldDrawStep[curStep])
+			// this is > instead of >= to make the sure manual step doesn't draw 2 steps on the first draw
+			if (curSubStepTime - subStepDurations[curStep] > 0 || !shouldDrawStep[curStep] || skipUntilNextStep) {
+				if (shouldDrawStep[curStep] && !skipUntilNextStep)
 					curSubStepTime -= subStepDurations[curStep];
 				// Update any animations vars for the next draw. The draw will assume any relevant vars are valid (e.g. corner2 is the index of a valid inbounds corner).
 				// We must skip over substeps that won't be drawn here, because the if check ^ means that we assume the first half of the loop is guaranteed to draw
@@ -355,6 +364,7 @@ namespace fcps {
 					case AS_Revert:
 						if (++curId > toId) {
 							curStep = AS_Finished;
+							skipUntilNextStep = false;
 							return;
 						} else {
 							curStep = AS_DrawBBox;
@@ -364,8 +374,10 @@ namespace fcps {
 						}
 						break;
 				}
+				if (curStep != origStep)
+					skipUntilNextStep = false;
 				// don't subtract time if we shouldn't be drawing this step
-				if (!shouldDrawStep[curStep])
+				if (!shouldDrawStep[curStep] && !skipUntilNextStep)
 					curSubStepTime += subStepDurations[curStep];
 			} else {
 				break;
@@ -454,6 +466,11 @@ namespace fcps {
 		}
 		int id = RecordedFcpsQueue->getLastEvent()->eventId;
 		fcpsAnimator.beginAnimation(id, id, fcps_animation_time.GetFloat(), RecordedFcpsQueue);
+	}
+
+
+	CON_COMMAND(fcps_skip_current_step_type, "Fast-forwards the animation to the next step type.") {
+		fcpsAnimator.skipStepType();
 	}
 
 

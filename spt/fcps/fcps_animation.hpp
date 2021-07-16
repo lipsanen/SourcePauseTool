@@ -35,6 +35,7 @@ namespace fcps {
 		double lastDrawTime;
 		int lastDrawFrame, lastDrawTick;
 		bool stepButtonHeld;
+		bool skipUntilNextStep;
 		float secondsSinceLastHeldStep; // how many seconds since we last incremented the substep (while holding +fcps_step_animation)
 		const float secondsPerHeldStep = 0.15f; // won't work properly if the value is too small (e.g. 3 ticks)
 
@@ -63,6 +64,7 @@ namespace fcps {
 		void stopAnimation();
 		void beginAnimation(int from, int to, double seconds, FixedFcpsQueue* fcpsQueue);
 		void stepAnimation();
+		void skipStepType();
 		void draw();
 		void adjustAnimationSpeed(double seconds);
 		void setHeldStepButton(bool pressed);
