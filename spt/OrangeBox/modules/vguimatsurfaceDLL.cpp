@@ -20,6 +20,7 @@
 #include "Color.h"
 #include "const.h"
 #include "vgui_controls\controls.h"
+#include "..\..\fcps\fcps_animation.hpp"
 
 #undef max
 #undef min
@@ -169,7 +170,8 @@ void VGui_MatSurfaceDLL::DrawHUD(vrect_t* screen)
 		    || y_spt_hud_script_length.GetBool() || y_spt_hud_accel.GetBool() || y_spt_hud_vars.GetBool()
 		    || y_spt_hud_portal_bubble.GetBool() || y_spt_hud_ag_sg_tester.GetBool()
 		    || !whiteSpacesOnly(y_spt_hud_ent_info.GetString()) || y_spt_hud_oob.GetBool()
-		    || y_spt_hud_velocity_angles.GetBool() || y_spt_hud_isg.GetBool())
+		    || y_spt_hud_velocity_angles.GetBool() || y_spt_hud_isg.GetBool()
+		    || fcps::fcps_hud_progress.GetBool())
 		{
 			DrawTopHUD(screen, scheme, surface);
 		}
@@ -526,6 +528,16 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 		DRAW_INT(L"isg", *(vphysicsDLL.isgFlagPtr));
 	}
 #endif
+
+	if (fcps::fcps_hud_progress.GetBool())
+	{
+		std::wstring pStr = fcps::fcpsAnimator.getProgressString();
+		if (!pStr.empty())
+		{
+			swprintf_s(buffer, BUFFER_SIZE, L"%s", pStr.c_str());
+			DRAW();
+		}
+	}
 }
 
 void VGui_MatSurfaceDLL::DrawFlagsHud(bool mutuallyExclusiveFlags,

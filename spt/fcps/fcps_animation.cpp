@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <string>
 #include "fcps_animation.hpp"
 #include "fcps_override.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
@@ -77,12 +78,14 @@ namespace fcps {
 			subStepCounts[AS_TestTrace] += fe->loopStartCount - 1; // first trace does nothing so -1
 			subStepCounts[AS_CornerValidation] += fe->loopFinishCount * 8 + (i ? 1 : 0); // +1 for one substep without any info (except for the first time)
 			
-			for (int loop = 0; loop < fe->loopFinishCount; loop++) {
-				int inboundsCorners = 0;
-				for (int c = 0; c < 8; c++)
-					inboundsCorners += !fe->loops[loop].cornersOob[c];
-				// a ray from each inbounds corner to every other corner
-				subStepCounts[AS_CornerRays] += inboundsCorners * 7 + 1; // +1 for one substep to show all validations
+			for (int loopIdx = 0; loopIdx < fe->loopFinishCount; loopIdx++) {
+				auto& loop = fe->loops[loopIdx];
+				for (int twcIdx = 0; twcIdx < 28; twcIdx++) {
+					auto& twc = loop.twoWayRayChecks[twcIdx];
+					if (!loop.cornersOob[twc.checks[0].cornerIdx] || !loop.cornersOob[twc.checks[1].cornerIdx])
+						subStepCounts[AS_CornerRays]++; // one/two-way ray check substep from every inbounds corner
+				}
+				subStepCounts[AS_CornerRays]++; // +1 for one substep to show all validations
 			}
 
 			subStepCounts[AS_NudgeAndAdjust] += fe->loopFinishCount;
@@ -311,7 +314,7 @@ namespace fcps {
 							curStep = AS_Success;
 						} else {
 							curStep = AS_CornerValidation;
-							cornerIdx = curLoopIdx == 0 ? 0 : -1; // don't draw any traces on the first substep (but do the first loop)
+							cornerIdx = curLoopIdx == 0 ? 0 : -1; // don't draw any traces on the first substep (but do on the first loop)
 						}
 						break;
 					case AS_CornerValidation:
@@ -319,8 +322,10 @@ namespace fcps {
 							break;
 						curStep = AS_CornerRays;
 						curTwcIdx = -1; // fall through
+						curTwcCount = 0;
 					case AS_CornerRays:
 						if (curTwcIdx < 28) {
+							curTwcCount++;
 							while (++curTwcIdx < 28) {
 								auto& twc = curLoop.twoWayRayChecks[curTwcIdx];
 								if (!curLoop.cornersOob[twc.checks[0].cornerIdx] || !curLoop.cornersOob[twc.checks[1].cornerIdx])
@@ -366,6 +371,50 @@ namespace fcps {
 				break;
 			}
 		}
+	}
+
+	std::wstring FcpsAnimator::getProgressString() {
+		if (!isAnimating || curStep == AS_Finished)
+			return L"no FCPS animation in progress";
+		std::wstring pStr = L"event " + std::to_wstring(curId);
+		if (fromId != toId)
+			pStr += L" (" + std::to_wstring(curId - fromId + 1) + L"/" + std::to_wstring(toId - fromId + 1) + L")";
+		pStr += L": loop " + std::to_wstring(curLoopIdx + 1);
+		if (curStep != AS_DrawBBox && curStep != AS_CornerValidation)
+			pStr += L", ";
+		switch (curStep) {
+			case AS_TestTrace:
+				pStr += L"new pos -> start pos ray";
+				break;
+			case AS_CornerValidation:
+				if (cornerIdx != -1)
+					pStr += L", is corner " + std::to_wstring(cornerIdx + 1) + L" inbounds?";
+				break;
+			case AS_CornerRays:
+				if (curTwcIdx != 28) {
+					auto& curLoop = curQueue->getEventWithId(curId)->loops[curLoopIdx];
+					int twcCount = 0;
+					for (int i = 0; i < 28; i++) {
+						auto& twc = curLoop.twoWayRayChecks[i];
+						if (!curLoop.cornersOob[twc.checks[0].cornerIdx] || !curLoop.cornersOob[twc.checks[1].cornerIdx])
+							twcCount++;
+					}
+					pStr += L"tracing rays " + std::to_wstring(curTwcCount) + L"/" + std::to_wstring(twcCount);
+				} else {
+					pStr += L"showing corner weights";
+				}
+				break;
+			case AS_NudgeAndAdjust:
+				pStr += L"nudging entity";
+				break;
+			case AS_Success:
+				pStr += L"FCPS success";
+				break;
+			case AS_Revert:
+				pStr += L"FCPS fail";
+				break;
+		}
+		return pStr;
 	}
 
 
@@ -427,4 +476,7 @@ namespace fcps {
 	}
 
 	ConVar fcps_animation_time("fcps_animation_time", "20", FCVAR_NONE, "Sets the FCPS animation speed so that the total animation length lasts this many seconds, use 0 for manual step mode.", &animation_speed_callback);
+
+
+	ConVar fcps_hud_progress("fcps_hud_progress", "0", FCVAR_NONE, "If enabled, displays the state of the current playing FCPS animation.");
 }

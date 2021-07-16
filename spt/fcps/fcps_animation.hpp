@@ -36,7 +36,7 @@ namespace fcps {
 		int lastDrawFrame, lastDrawTick;
 		bool stepButtonHeld;
 		float secondsSinceLastHeldStep; // how many seconds since we last incremented the substep (while holding +fcps_step_animation)
-		const float secondsPerHeldStep = 0.25f; // won't work properly if the value is too small (e.g. 3 ticks)
+		const float secondsPerHeldStep = 0.15f; // won't work properly if the value is too small (e.g. 3 ticks)
 
 		// For any given step, each substep is gonna take the same amount of time e.g. all rays fired during the CornerRays step will all take the same amount of time.
 		double subStepDurations[AS_Count];
@@ -48,7 +48,8 @@ namespace fcps {
 		// substep animations vars
 		int curLoopIdx;
 		int cornerIdx;
-		int curTwcIdx;
+		int curTwcIdx; // which twc are we animating?
+		int curTwcCount; // how many have we animated so far? (only used for hud progress)
 		Vector curCenter;
 		bool nextSubStepIsTrace;
 
@@ -65,12 +66,15 @@ namespace fcps {
 		void draw();
 		void adjustAnimationSpeed(double seconds);
 		void setHeldStepButton(bool pressed);
+		std::wstring getProgressString();
 	};
 
 
 	extern FcpsAnimator fcpsAnimator;
 
 	extern ConVar fcps_animation_time;
+
+	extern ConVar fcps_hud_progress;
 
 
 	inline void drawAnimationFrame() {
