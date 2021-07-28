@@ -16,14 +16,14 @@ namespace fcps {
 	FcpsAnimator fcpsAnimator = FcpsAnimator(); // global animator object
 
 
-	FcpsAnimator::FcpsAnimator() : isAnimating(false) {}
+	FcpsAnimator::FcpsAnimator() : curStep(AS_NotAnimating) {}
 
 
 	FcpsAnimator::~FcpsAnimator() {}
 
 
 	void FcpsAnimator::stopAnimation() {
-		isAnimating = false;
+		curStep = AS_NotAnimating;
 	}
 
 
@@ -35,7 +35,6 @@ namespace fcps {
 		toId = to;
 		curQueue = fcpsQueue;
 		calcSubStepDurations(seconds);
-		isAnimating = true;
 		curStep = AS_DrawBBox;
 		lastDrawTime = hacks::curTime();
 		lastDrawFrame = hacks::frameCount();
@@ -104,17 +103,19 @@ namespace fcps {
 
 	void FcpsAnimator::adjustAnimationSpeed(double seconds) {
 		isSetToManualStep = seconds == 0;
-		double curSubStepFrac = (isAnimating && curStep != AS_Finished) ? curSubStepTime / subStepDurations[curStep] : 0;
+		if (!isAnimating())
+			return;
+		double oldSubStepFrac = curSubStepTime / subStepDurations[curStep];
 		calcSubStepDurations(seconds);
 		if (isSetToManualStep)
 			curSubStepTime = MANUAL_STEP_DURATION;
 		else
-			curSubStepTime = (isAnimating && curStep != AS_Finished) ? curSubStepFrac * subStepDurations[curStep] : 0;
+			curSubStepTime = oldSubStepFrac * subStepDurations[curStep];
 	}
 
 
 	bool FcpsAnimator::canManualStep() const {
-		if (!isAnimating || curStep == AS_Finished) {
+		if (!isAnimating()) {
 			Msg("No animation in progress.\n");
 			return false;
 		}
@@ -151,8 +152,23 @@ namespace fcps {
 	}
 
 
+	bool FcpsAnimator::isEventCurrentlyAnimated(int eventId) const {
+		return isAnimating() && eventId == curId;
+	}
+
+
+	bool FcpsAnimator::isAnimating() const {
+		return curStep != AS_NotAnimating;
+	}
+
+
 	void stopFcpsAnimation() {
 		fcpsAnimator.stopAnimation();
+	}
+
+
+	bool isFcpsEventCurrentlyAnimated(int eventId) {
+		return fcpsAnimator.isEventCurrentlyAnimated(eventId);
 	}
 
 
@@ -224,7 +240,7 @@ namespace fcps {
 
 	// this should be called at least every frame (no drawing is done again if this is called twice in a frame)
 	void FcpsAnimator::draw() {
-		if (!isAnimating || curStep == AS_Finished)
+		if (!isAnimating())
 			return;
 		// XXX This should work if we call this method every frame but for some reason drawn stuff will bleed to the next call.
 		// It would be nice if this worked because there is some occasional flickering and I think drawing every frame might fix that.
@@ -363,7 +379,7 @@ namespace fcps {
 					case AS_Success:
 					case AS_Revert:
 						if (++curId > toId) {
-							curStep = AS_Finished;
+							curStep = AS_NotAnimating;
 							skipUntilNextStep = false;
 							return;
 						} else {
@@ -386,7 +402,7 @@ namespace fcps {
 	}
 
 	std::wstring FcpsAnimator::getProgressString() const {
-		if (!isAnimating || curStep == AS_Finished)
+		if (!isAnimating())
 			return L"no FCPS animation in progress";
 		std::wstring pStr = L"event " + std::to_wstring(curId);
 		if (fromId != toId)

@@ -34,6 +34,10 @@ namespace fcps {
 
 	FcpsEvent& FixedFcpsQueue::beginNextEvent() {
 		FcpsEvent& nextEvent = arr[(start + size) % arrSize];
+		if (size == arrSize && isFcpsEventCurrentlyAnimated(arr[start].eventId)) {
+			stopFcpsAnimation();
+			DevMsg("spt: Stopping FCPS animation to prevent overriding currently animated event.\n");
+		}
 		new (&nextEvent) FcpsEvent(++pushCount); // placement new; smallest ID is 1, increments from then on
 		if (size == arrSize)
 			start = (start + 1) % arrSize;

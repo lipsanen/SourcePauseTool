@@ -22,12 +22,12 @@ namespace fcps {
 			AS_NudgeAndAdjust,   // nudges the entity and adjusts the mins/maxs
 			AS_Success,          // in case of FCPS success the entity position is changed
 			AS_Revert,           // in case of FCPS failure the entity position is reverted
-			AS_Finished,
-			AS_Count = AS_Finished
+			AS_NotAnimating,
+			AS_Count = AS_NotAnimating
 		};
 
 		// general info
-		bool isAnimating, isSetToManualStep;
+		bool isSetToManualStep;
 		double curSubStepTime; // how many seconds are we into the current substep?
 		AnimationStep curStep;
 		int fromId, curId, toId; // event IDs
@@ -69,6 +69,8 @@ namespace fcps {
 		void adjustAnimationSpeed(double seconds);
 		void setHeldStepButton(bool pressed);
 		std::wstring getProgressString() const;
+		bool isEventCurrentlyAnimated(int eventId) const;
+		bool isAnimating() const;
 	};
 
 

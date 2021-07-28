@@ -129,5 +129,6 @@ namespace fcps {
 	#define RANGE_HELP_STR "use x" RANGE_SEP_STR "y to specify a range of events (inclusive). Negative values for x or y are relative from the end of the list."
 
 	extern void stopFcpsAnimation();
+	extern bool isFcpsEventCurrentlyAnimated(int eventId);
 	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue); // parses "x" or "x^y" into a range, returns true on success
 }
