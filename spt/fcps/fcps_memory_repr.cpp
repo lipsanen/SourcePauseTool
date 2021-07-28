@@ -211,11 +211,17 @@ namespace fcps {
 		showStoredEvents(LoadedFcpsQueue, "loaded");
 	}
 
-
-	// converts arg to a range, if arg is an int then lower = upper = int, if arg has the format int1-int2 then lower = int1 & upper = int2
+	// converts arg to a range, if arg is an int then lower = upper = int, if arg has the format int1^int2 then lower = int1 & upper = int2
 	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue) {
 		// had trouble with scanf, hail my glorious parsing code
+		auto lastEvent = fcpsQueue->getLastEvent();
+		if (!lastEvent)
+			return false;
+		for (; isspace(*arg); arg++);
 		char* end;
+		bool upperNeg = false;
+		bool lowerNeg = arg[0] == RANGE_NEG_CHAR;
+		arg += lowerNeg; // skip negative char if exists
 		upper = lower = strtoul(arg, &end, 10);
 		if (end == arg) // check if lower number parsed at all
 			return false;
@@ -224,14 +230,18 @@ namespace fcps {
 		bool upperParsed = false;
 		char* curPtr = end; // curPtr is now after the first num
 		while (*curPtr) {
-			if (*curPtr == '-') {
+			if (*curPtr == RANGE_SEP_CHAR) {
 				if (isRange)
-					return false; // we already parsed a separator, this tells us there's a second one "x-y-..."
+					return false; // we already parsed a separator, this tells us there's a second one "x^y^..."
 				isRange = true;
 				curPtr++;
-			} else if (isdigit(*curPtr)) {
+			} else if (isdigit(*curPtr) || *curPtr == RANGE_NEG_CHAR) {
 				if (upperParsed || !isRange)
 					return false;
+				if (*curPtr == RANGE_NEG_CHAR) {
+					upperNeg = true;
+					curPtr++;
+				}
 				upper = strtoul(curPtr, &curPtr, 10);
 				upperParsed = true;
 			} else if (isspace(*curPtr)) {
@@ -240,14 +250,20 @@ namespace fcps {
 				return false;
 			}
 		}
+		if (lowerNeg)
+			lower = lastEvent->eventId - lower + 1;
+		if (!upperParsed)
+			upper = lower;
+		else if (upperNeg)
+			upper = lastEvent->eventId - upper + 1;
 		if ((isRange && !upperParsed) || lower > upper)
 			return false;
-		// check that events with these ID's exist, all IDs in between must also exist
+		// check that events with these IDs exist, all IDs in between must also exist
 		return fcpsQueue->getEventWithId(lower) && fcpsQueue->getEventWithId(upper);
 	}
 
 
-	CON_COMMAND_F(fcps_save_events, "[file] [x]|[x-y] (no extesion) - saves the event with ID x and writes it to the given file, use x-y to save a range of events (inclusive)", FCVAR_DONTRECORD) {
+	CON_COMMAND_F(fcps_save_events, "[file] [x]|[x" RANGE_SEP_STR "y] (no extesion) - saves the event with ID x and writes it to the given file, " RANGE_HELP_STR, FCVAR_DONTRECORD) {
 		if (args.ArgC() < 3) {
 			Msg(" - %s\n", fcps_save_events_command.GetHelpText());
 			return;
@@ -258,24 +274,24 @@ namespace fcps {
 			Msg("\"%s\" is not a valid value or a valid range of values (check if events with the given values are recorded).\n", args.Arg(2));
 			return;
 		}
-		std::string binstr = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
-		std::string txtstr = GetGameDir() + "\\" + args.Arg(1) + ".txt";
-		remove(binstr.c_str());
-		FILE* txtfile = fopen(txtstr.c_str(), "w");
+		std::string bindir = GetGameDir() + "\\" + args.Arg(1) + ".fcps";
+		std::string txtdir = GetGameDir() + "\\" + args.Arg(1) + ".txt";
+		remove(bindir.c_str());
+		FILE* txtfile = fopen(txtdir.c_str(), "w");
 		if (!txtfile) {
-			Msg("Could not write to file \"%s\"\n", txtstr.c_str());
+			Msg("Could not write to file \"%s\"\n", txtdir.c_str());
 			return;
 		}
 		char version_str[20];
-		int version_str_len = snprintf(version_str, 20, "version %d", FCPS_EVENT_VERSION);
+		int version_str_len = snprintf(version_str, sizeof(version_str), "version %d", FCPS_EVENT_VERSION);
 
 		for (auto id = lower; id <= upper; id++) {
 			char archive_name[20];
 			sprintf(archive_name, "event %d", id);
 			auto fcpsEvent = RecordedFcpsQueue->getEventWithId(id);
 			Assert(fcpsEvent);
-			if (!mz_zip_add_mem_to_archive_file_in_place(binstr.c_str(), archive_name, fcpsEvent, sizeof(FcpsEvent), version_str, version_str_len, MZ_DEFAULT_LEVEL)) {
-				Msg("Could not write to file \"%s\"\n", binstr.c_str());
+			if (!mz_zip_add_mem_to_archive_file_in_place(bindir.c_str(), archive_name, fcpsEvent, sizeof(FcpsEvent), version_str, version_str_len, MZ_DEFAULT_LEVEL)) {
+				Msg("Could not write to file \"%s\"\n", bindir.c_str());
 				fclose(txtfile);
 				return;
 			}

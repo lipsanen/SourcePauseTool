@@ -29,6 +29,7 @@ namespace fcps {
 		QAngle angles;
 	};
 
+	// one big struct, everything is in-place (no pointers) so that saving/loading is super easy
 	struct FcpsEvent {
 
 		// general info
@@ -68,7 +69,7 @@ namespace fcps {
 				struct OneWayRayCheck {
 					int cornerIdx;
 					// the ray/trace is only valid if the corner is inbounds since rays are only fired then
-					// (the exception is that the startsolid flag of the trace is valid)
+					// (the exception is that the startsolid flag of the trace is always valid)
 					Ray_t ray;
 					trace_t trace;
 					float oldWeight;
@@ -117,7 +118,15 @@ namespace fcps {
 	extern FixedFcpsQueue* RecordedFcpsQueue;
 	extern FixedFcpsQueue* LoadedFcpsQueue;
 
+	// Similiar to python/C# ranges: "1^-3" means all IDs from 1 to third to last inclusive.
+	// Kinda weird choice of characters, but I don't want to use ':' as a separator since
+	// that forces you to use quotes, and "1-^3" feels less intuitive to me.
+	#define RANGE_SEP_STR "^"
+	#define RANGE_SEP_CHAR RANGE_SEP_STR[0]
+	#define RANGE_NEG_STR "-"
+	#define RANGE_NEG_CHAR RANGE_NEG_STR[0]
+	#define RANGE_HELP_STR "use x" RANGE_SEP_STR "y to specify a range of events (inclusive). Negative values for x or y are relative from the end of the list."
 
 	extern void stopFcpsAnimation();
-	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue); // parses "x" or "x:y" into a range, returns true on success
+	bool parseFcpsEventRange(const char* arg, unsigned long& lower, unsigned long& upper, FixedFcpsQueue* fcpsQueue); // parses "x" or "x^y" into a range, returns true on success
 }

@@ -391,12 +391,12 @@ namespace fcps {
 		std::wstring pStr = L"event " + std::to_wstring(curId);
 		if (fromId != toId)
 			pStr += L" (" + std::to_wstring(curId - fromId + 1) + L"/" + std::to_wstring(toId - fromId + 1) + L")";
-		pStr += L": loop " + std::to_wstring(curLoopIdx + 1);
+		pStr += L": loop " + std::to_wstring(curLoopIdx + 1) + L"/" + std::to_wstring(curQueue->getEventWithId(curId)->loopStartCount);
 		if (curStep != AS_DrawBBox && curStep != AS_CornerValidation)
 			pStr += L", ";
 		switch (curStep) {
 			case AS_TestTrace:
-				pStr += L"new pos -> start pos ray";
+				pStr += L"new -> start pos ray";
 				break;
 			case AS_CornerValidation:
 				if (cornerIdx != -1)
@@ -449,12 +449,12 @@ namespace fcps {
 	}
 
 
-	CON_COMMAND_F(fcps_animate_recorded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
+	CON_COMMAND_F(fcps_animate_recorded_events, "[x]|[x" RANGE_SEP_STR "y] - animates the FCPS events with the given ID or range of IDs, " RANGE_HELP_STR " Use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
 		CC_Animate_Events(fcps_animate_recorded_events_command, args, RecordedFcpsQueue);
 	}
 
 
-	CON_COMMAND_F(fcps_animate_loaded_events, "[x]|[x-y] - animates the FCPS events with the given ID or range of IDs, use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
+	CON_COMMAND_F(fcps_animate_loaded_events, "[x]|[x" RANGE_SEP_STR "y] - animates the FCPS events with the given ID or range of IDs, " RANGE_HELP_STR " Use fcps_animation_time to specify the length of the animation.", FCVAR_DONTRECORD) {
 		CC_Animate_Events(fcps_animate_loaded_events_command, args, LoadedFcpsQueue);
 	}
 
