@@ -16,10 +16,10 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if anything in these structs or file writing is changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 8
+	#define FCPS_EVENT_VERSION 9
 
 	#define MAP_NAME_LEN 64
-	#define MAX_COLLIDING_ENTS 10
+	#define MAX_COLLIDING_ENTS 16
 
 	struct EntInfo {
 		int entIdx;
