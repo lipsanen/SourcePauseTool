@@ -30,6 +30,7 @@ namespace fcps {
 	};
 
 	// one big struct, everything is in-place (no pointers) so that saving/loading is super easy
+	// (this does mean that m_pEnt and surface.name from any traces are not valid)
 	struct FcpsEvent {
 
 		// general info
