@@ -113,7 +113,7 @@ namespace fcps {
 	}
 
 
-	bool FcpsAnimator::canManualStep() {
+	bool FcpsAnimator::canManualStep() const {
 		if (!isAnimating || curStep == AS_Finished) {
 			Msg("No animation in progress.\n");
 			return false;
@@ -156,7 +156,7 @@ namespace fcps {
 	}
 
 
-	void FcpsAnimator::drawRaysFromCorners(float duration) {
+	void FcpsAnimator::drawRaysFromCorners(float duration) const {
 
 		auto vdo = GetDebugOverlay();
 		auto& loopInfo = curQueue->getEventWithId(curId)->loops[curLoopIdx];
@@ -385,7 +385,7 @@ namespace fcps {
 		}
 	}
 
-	std::wstring FcpsAnimator::getProgressString() {
+	std::wstring FcpsAnimator::getProgressString() const {
 		if (!isAnimating || curStep == AS_Finished)
 			return L"no FCPS animation in progress";
 		std::wstring pStr = L"event " + std::to_wstring(curId);

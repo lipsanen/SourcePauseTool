@@ -43,14 +43,14 @@ namespace fcps {
 	}
 
 
-	FcpsEvent* FixedFcpsQueue::getLastEvent() {
+	FcpsEvent* FixedFcpsQueue::getLastEvent() const {
 		if (size)
 			return &arr[(start + size - 1) % arrSize];
 		return nullptr;
 	}
 
 
-	FcpsEvent* FixedFcpsQueue::getEventWithId(unsigned long id) {
+	FcpsEvent* FixedFcpsQueue::getEventWithId(unsigned long id) const {
 		if (id < 1 || size == 0)
 			return nullptr;
 		unsigned long smallestId = arr[start].eventId;
@@ -60,12 +60,12 @@ namespace fcps {
 	}
 
 
-	int FixedFcpsQueue::count() {
+	int FixedFcpsQueue::count() const {
 		return size;
 	}
 
 
-	void FixedFcpsQueue::printAllEvents() {
+	void FixedFcpsQueue::printAllEvents() const {
 		for (int i = 0; i < size; i++) {
 			// sleep to minimize lines getting shuffled around
 			std::this_thread::sleep_for(std::chrono::microseconds(10));
@@ -87,7 +87,7 @@ namespace fcps {
 	}
 
 
-	void FcpsEvent::writeTextToDisk(FILE* f) {
+	void FcpsEvent::writeTextToDisk(FILE* f) const {
 		#define BOOL_STR(x) ((x) ? "true" : "false")
 		#define DECOMPOSE(v) v.x, v.y, v.z
 		#define FL_F "%.4f"
@@ -111,7 +111,7 @@ namespace fcps {
 		fprintf(f, IND_1 "entity extents (from center): " VEC_F "\n", DECOMPOSE(origMaxs));
 		fprintf(f, IND_1 "ray extents and grow size: " VEC_F "\n", DECOMPOSE(growSize));
 		for (int loopIdx = 0; loopIdx < loopStartCount; loopIdx++) {
-			FcpsLoop& loopInfo = loops[loopIdx];
+			const FcpsLoop& loopInfo = loops[loopIdx];
 			fprintf(f, "ITERATION %d:\n", loopIdx + 1);
 			if (loopIdx != 0) {
 				float frac = loopInfo.entTrace.fraction;

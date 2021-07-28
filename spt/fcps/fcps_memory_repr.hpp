@@ -94,7 +94,7 @@ namespace fcps {
 		FcpsEvent(int eventId);
 		~FcpsEvent() = default;
 		FcpsEvent(std::istream& infile);
-		void writeTextToDisk(FILE* f);
+		void writeTextToDisk(FILE* f) const;
 		void print(); // should all fit on one line
 	};
 
@@ -108,10 +108,10 @@ namespace fcps {
 		FixedFcpsQueue(int count);
 		~FixedFcpsQueue();
 		FcpsEvent& beginNextEvent(); // returns with ID field set
-		FcpsEvent* getLastEvent();
-		FcpsEvent* getEventWithId(unsigned long id); // returns null if there is no such event
-		void printAllEvents();
-		int count();
+		FcpsEvent* getLastEvent() const;
+		FcpsEvent* getEventWithId(unsigned long id) const; // returns null if there is no such event
+		void printAllEvents() const;
+		int count() const;
 	};
 
 	

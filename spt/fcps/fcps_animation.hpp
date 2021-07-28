@@ -55,8 +55,8 @@ namespace fcps {
 		bool nextSubStepIsTrace;
 
 		void calcSubStepDurations(double seconds);
-		void drawRaysFromCorners(float duration);
-		bool canManualStep();
+		void drawRaysFromCorners(float duration) const;
+		bool canManualStep() const;
 
 	public:
 		FcpsAnimator();
@@ -68,7 +68,7 @@ namespace fcps {
 		void draw();
 		void adjustAnimationSpeed(double seconds);
 		void setHeldStepButton(bool pressed);
-		std::wstring getProgressString();
+		std::wstring getProgressString() const;
 	};
 
 
