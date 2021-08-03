@@ -130,6 +130,7 @@ namespace fcps {
 				return;
 			}
 			fprintf(f, IND_1 "entity is still stuck, determining which corners are inbounds\n");
+			fprintf(f, IND_1 "ray extents: " VEC_F "\n", DECOMPOSE(loopInfo.rayExtents));
 			bool anyInbounds = false;
 			for (int cornerIdx = 0; cornerIdx < 8; cornerIdx++) {
 				char locDescription[7];
@@ -168,7 +169,6 @@ namespace fcps {
 			} else {
 				fprintf(f, IND_1 "no corners are valid, pushing entity towards vIndecisivePush and resetting ray extents\n");
 			}
-			fprintf(f, IND_1 "new ray extents: " VEC_F "\n", DECOMPOSE(loopInfo.newCornerRayExtents));
 			fprintf(f, IND_1 "entity nudged by: " VEC_F "\n", DECOMPOSE(loopInfo.newOriginDirection));
 			fprintf(f, IND_1 "new entity center: " VEC_F "\n", DECOMPOSE(loopInfo.newCenter));
 		}
@@ -310,10 +310,6 @@ namespace fcps {
 
 	CON_COMMAND_F(fcps_load_events, "loads the specified .fcps file (no extension)", FCVAR_DONTRECORD) {
 
-		#define CLEANUP {mz_zip_reader_end(&zip_archive); return;}
-		#define BAD_FORMAT_EXIT {Msg("File \"%s\" does not have the correct format.\n", inpath); CLEANUP}
-		#define DELETE_QUEUE_BAD_FORMAT {delete LoadedFcpsQueue; BAD_FORMAT_EXIT}
-
 		if (args.ArgC() < 2) {
 			Msg("- %s\n", fcps_load_events_command.GetHelpText());
 			return;
@@ -325,11 +321,11 @@ namespace fcps {
 
 		if (!mz_zip_reader_init_file(&zip_archive, inpath, 0)) {
 			Msg("Could not open file \"%s\", it may have an incorrect format.\n", inpath);
-			CLEANUP
+			goto c1;
 		}
 		mz_uint32 archive_count = zip_archive.m_total_files;
 		if (archive_count > MAX_LOADED_EVENTS)
-			BAD_FORMAT_EXIT
+			goto c2;
 		stopFcpsAnimation();
 		if (LoadedFcpsQueue)
 			delete LoadedFcpsQueue;
@@ -343,20 +339,26 @@ namespace fcps {
 				|| !file_stat.m_is_supported
 				|| sscanf(file_stat.m_comment, "version %d", &version) != 1)
 			{
-				DELETE_QUEUE_BAD_FORMAT
+				goto c3;
 			}
 			if (version != FCPS_EVENT_VERSION) {
 				Msg("File \"%s\" is not the correct version, expected %d but got %d.\n", inpath, FCPS_EVENT_VERSION, version);
 				delete LoadedFcpsQueue;
-				CLEANUP
+				LoadedFcpsQueue = nullptr;
+				goto c1;
 			}
 			// check this after so that we get the correct error message
 			if (file_stat.m_uncomp_size != sizeof(FcpsEvent))
-				DELETE_QUEUE_BAD_FORMAT
+				goto c3;
 			if (!mz_zip_reader_extract_file_to_mem(&zip_archive, file_stat.m_filename, &LoadedFcpsQueue->beginNextEvent(), sizeof(FcpsEvent), 0))
-				DELETE_QUEUE_BAD_FORMAT
+				goto c3;
 		}
 		Msg("Successfully loaded %d events from file.\n", archive_count);
-		CLEANUP
+		goto c1;
+
+	c3:	delete LoadedFcpsQueue;
+		LoadedFcpsQueue = nullptr;
+	c2: Msg("File \"%s\" does not have the correct format.\n", inpath);
+	c1: mz_zip_reader_end(&zip_archive);
 	}
 }

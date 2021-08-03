@@ -251,6 +251,7 @@ namespace fcps {
 				// no point was valid, apply the indecisive vector & reset sizing
 				ptEntityCenter += vIndecisivePush;
 				testRay.m_Extents = vGrowSize;
+				// see comment in overrideAndRecord
 				vEntityMaxs = vOriginalExtents;
 				vEntityMins = -vEntityMaxs;
 			}		
@@ -360,6 +361,7 @@ namespace fcps {
 				return FCPS_Success;
 			}
 
+			thisLoop.rayExtents = testRay.m_Extents;
 			bool bExtentInvalid[8];
 			for(int i = 0; i != 8; ++i) {
 				fExtentsValidation[i] = 0.0f;
@@ -422,13 +424,15 @@ namespace fcps {
 				// no point was valid, apply the indecisive vector & reset sizing
 				ptEntityCenter += thisLoop.newOriginDirection = vIndecisivePush;
 				testRay.m_Extents = vGrowSize;
+				// NOTE: when the maxs are set to the original extents, those original extents are not scaled by the grow size, so the rays poke out of the bbox
+				// by the grow size amount. This means that it's possible to "fit" in a tight spot, then not "fit" after vIndecisive is used.
+				// (This is a very subtle bug in the actual implementation).
 				vEntityMaxs = vOriginalExtents;
 				vEntityMins = -vEntityMaxs;
 			}
 			thisLoop.newCenter = ptEntityCenter;
 			thisLoop.newMins = vEntityMins;
 			thisLoop.newMaxs = vEntityMaxs;
-			thisLoop.newCornerRayExtents = testRay.m_Extents;
 			thisEvent.loopFinishCount++;
 		}
 		thisEvent.wasSuccess = false;
@@ -450,6 +454,7 @@ namespace fcps {
 	}
 
 
+	// if the trace collides with an ent that we haven't seen before, add that to the animation
 	void checkTraceForEntCollision(FcpsEvent& fcpsEvent, std::unordered_set<int>& entSet, trace_t& trace) {
 		if (!trace.m_pEnt || fcpsEvent.collidingEntsCount == MAX_COLLIDING_ENTS)
 			return;

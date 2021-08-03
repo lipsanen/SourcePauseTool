@@ -208,11 +208,8 @@ namespace fcps {
 			exceededThresholdFromStart[i] = (corner[i] - impact[i]).LengthSqr() > distThresholdSqr;
 			exceededThresholdFromEnd[i] = (corner[(i+1)%2] - impact[i]).LengthSqr() > distThresholdSqr;
 		}
-		Vector testRayExtents;
+		Vector testRayExtents = loopInfo.rayExtents * 1.001; // prevent z-fighting
 		for (int i = 0; i < 2; i++) {
-			// save the extents of whichever ray was traced
-			if (!twc.checks[i].trace.startsolid)
-				testRayExtents = twc.checks[i].ray.m_Extents * 1.001; // prevent z-fighting
 			// draw trace up to impact
 			if (exceededThresholdFromStart[i]) {
 				vdo->AddSweptBoxOverlay(corner[i], impact[i], -raySuccessMaxs, raySuccessMaxs, vec3_angle, 0, 255, 0, 100, duration);
@@ -233,7 +230,7 @@ namespace fcps {
 				if (exceededThresholdFromStart[i])
 					vdo->AddBoxOverlay(impact[i], -impactMaxs, impactMaxs, vec3_angle, 0, 255, 0, 75, duration);
 		}
-		if (!drawProperExtentsWithImpact)
+		if (!drawProperExtentsWithImpact || (!exceededThresholdFromStart[0] && !exceededThresholdFromStart[1]))
 			vdo->AddSweptBoxOverlay(corner[0], corner[1], -testRayExtents, testRayExtents, vec3_angle, 255, 255, 255, 100, duration);
 	}
 

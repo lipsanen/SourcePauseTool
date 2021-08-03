@@ -16,7 +16,7 @@ namespace fcps {
 	enum FcpsCaller;
 	
 	// if anything in these structs or file writing is changed, the event version must be updated
-	#define FCPS_EVENT_VERSION 9
+	#define FCPS_EVENT_VERSION 10
 
 	#define MAP_NAME_LEN 64
 	#define MAX_COLLIDING_ENTS 16
@@ -62,6 +62,7 @@ namespace fcps {
 			trace_t entTrace;
 			// the rest is only valid in case of ent trace failure
 			Vector corners[8]; // the extents can get modified on every iteration so we need to keep track of that
+			Vector rayExtents;
 			bool cornersOob[8];
 
 			// the result of a ray fired from a->b and b->a
@@ -82,7 +83,6 @@ namespace fcps {
 			float totalWeight;
 			Vector newOriginDirection;
 			Vector newCenter, newMins, newMaxs; // new ent extents (from center)
-			Vector newCornerRayExtents;
 		} loops[100];
 
 		int loopStartCount;
