@@ -1093,13 +1093,12 @@ bool __cdecl ServerDLL::HOOKED_FindClosestPassableSpace_Func(CBaseEntity* pEntit
 				break;
 		}
 		auto start = high_resolution_clock::now();
-		bool returnVal, showTimeStats;
 		FcpsCallResult eventResult = fcps_override.GetInt() == 1
 			? FcpsOverrideFuncAndRecord(pEntity, vIndecisivePush, fMask, caller)
 			: FcpsOverrideFunc(pEntity, vIndecisivePush, fMask);
 
-		returnVal = eventResult == FCPS_Success || eventResult == FCPS_NotRun;
-		showTimeStats = eventResult == FCPS_Success || eventResult == FCPS_Fail;
+		bool returnVal = eventResult == FCPS_Success || eventResult == FCPS_NotRun;
+		bool showTimeStats = eventResult == FCPS_Success || eventResult == FCPS_Fail;
 
 		if (eventResult != FCPS_NotRun && fcps_override.GetInt() == 1) {
 			auto e = fcps::RecordedFcpsQueue->getLastEvent();

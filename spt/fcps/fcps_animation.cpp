@@ -235,7 +235,6 @@ namespace fcps {
 	}
 
 
-	// this should be called at least every frame (no drawing is done again if this is called twice in a frame)
 	void FcpsAnimator::draw() {
 		if (!isAnimating())
 			return;
@@ -248,7 +247,7 @@ namespace fcps {
 		auto vdo = GetDebugOverlay();
 		if (!vdo)
 			return;
-		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER; // negative duration should make this only draw for one frame but it seem to work
+		float dur = NDEBUG_PERSIST_TILL_NEXT_SERVER; // negative duration should make this only draw for one frame but it doesn't seem to work
 		// at least 0 to prevent saveloads from messing up the animation
 		float timeSinceLastDrawCall = std::fmax(0, hacks::curTime() - lastDrawTime);
 		if (isSetToManualStep) {
