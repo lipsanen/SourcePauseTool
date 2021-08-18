@@ -42,6 +42,7 @@ namespace fcps {
 		bool wasRunOnPlayer;
 		bool isHeldObject;
 		// if this wasn't run on the player, we probably want to see where the player was
+		// UNDONE: this is no longer used, when the event version is updated next time this can safely be removed
 		EntInfo playerInfo;
 		Vector vIndecisivePush;
 		int fMask;

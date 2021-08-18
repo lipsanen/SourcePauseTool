@@ -441,6 +441,8 @@ namespace fcps {
 
 
 	void populateEntInfo(EntInfo& entInfo, CBaseEntity* ent) {
+		if (!ent)
+			return;
 		entInfo.entIdx = hacks::entindex(ent);
 		V_strncpy(entInfo.debugName, hacks::GetDebugName(ent), sizeof(entInfo.debugName));
 		V_strncpy(entInfo.className, ent->GetClassname(), sizeof(entInfo.className));
