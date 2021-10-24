@@ -142,14 +142,17 @@
     <ClCompile Include="spt\OrangeBox\vgui\graphics.cpp">
       <Filter>spt\OrangeBox\vgui</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\vphysicsDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\feature.cpp">
       <Filter>spt</Filter>
     </ClCompile>
     <ClCompile Include="spt\utils\game_detection.cpp">
       <Filter>spt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\isg.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\shadow.cpp">
+      <Filter>spt\features</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -381,14 +384,17 @@
     <ClInclude Include="spt\OrangeBox\vgui\graphics.hpp">
       <Filter>spt\OrangeBox\vgui</Filter>
     </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\vphysicsDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClInclude>
     <ClInclude Include="spt\feature.hpp">
       <Filter>spt</Filter>
     </ClInclude>
     <ClInclude Include="spt\utils\game_detection.hpp">
       <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\isg.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\shadow.hpp">
+      <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -450,6 +456,9 @@
     </Filter>
     <Filter Include="thirdparty">
       <UniqueIdentifier>{20f959c6-2185-4a22-af30-a22417e39297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\features">
+      <UniqueIdentifier>{e24a2a7d-8667-4610-887c-f14d62c9fbf7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
