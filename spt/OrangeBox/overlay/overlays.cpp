@@ -6,6 +6,7 @@
 #include "..\..\utils\math.hpp"
 #include "..\modules.hpp"
 #include "..\modules\ClientDLL.hpp"
+#include "..\..\features\shadow.hpp"
 #include "overlays.hpp"
 #include "portal_camera.hpp"
 
@@ -27,7 +28,7 @@ CameraInformation rearViewMirrorOverlay()
 CameraInformation havokViewMirrorOverlay()
 {
 	CameraInformation info;
-	Vector havokpos = vphysicsDLL.PlayerHavokPos;
+	Vector havokpos = GetPlayerHavokPos();
 
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;

@@ -17,6 +17,7 @@
 #include "..\overlay\portal_camera.hpp"
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
+#include "..\..\features\isg.hpp"
 #include "Color.h"
 #include "const.h"
 #include "vgui_controls\controls.h"
@@ -521,9 +522,9 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 	}
 
 #ifdef SSDK2007
-	if (y_spt_hud_isg.GetBool() && vphysicsDLL.isgFlagPtr)
+	if (y_spt_hud_isg.GetBool())
 	{
-		DRAW_INT(L"isg", *(vphysicsDLL.isgFlagPtr));
+		DRAW_INT(L"isg", IsISGActive());
 	}
 #endif
 }
