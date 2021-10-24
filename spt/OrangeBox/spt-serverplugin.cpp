@@ -15,6 +15,7 @@
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "..\ipc\ipc-spt.hpp"
+#include "..\feature.hpp"
 #include "vstdlib\random.h"
 
 #include "cdll_int.h"
@@ -395,6 +396,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	Hooks::AddToHookedModules(&vgui_matsurfaceDLL);
 #endif
 	Hooks::Init(true);
+	Feature::LoadFeatures();
 	ipc::Init();
 	ModuleHooks::ConnectSignals();
 
