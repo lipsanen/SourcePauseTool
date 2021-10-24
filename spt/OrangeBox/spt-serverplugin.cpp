@@ -9,6 +9,7 @@
 #include "..\utils\ent_utils.hpp"
 #include "..\utils\math.hpp"
 #include "..\utils\string_parsing.hpp"
+#include "..\utils\game_detection.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
 #include "modules.hpp"
@@ -163,6 +164,11 @@ std::string GetGameDir()
 #endif
 }
 
+EngineClientWrapper* GetEngineClient()
+{
+	return engine.get();
+}
+
 #ifndef P2
 IServerUnknown* GetServerPlayer()
 {
@@ -183,51 +189,6 @@ IServerUnknown* GetServerPlayer()
 	return nullptr;
 }
 #endif
-
-bool DoesGameLookLikePortal()
-{
-#ifndef OE
-	if (g_pCVar)
-	{
-		if (g_pCVar->FindCommand("upgrade_portalgun"))
-			return true;
-
-		return false;
-	}
-
-	if (engine)
-	{
-		auto game_dir = engine->GetGameDirectory();
-		return (GetFileName(Convert(game_dir)) == L"portal"s);
-	}
-#endif
-
-	return false;
-}
-
-bool DoesGameLookLikeDMoMM()
-{
-#ifdef OE
-	if (g_pCVar)
-	{
-		if (g_pCVar->FindVar("mm_xana_fov"))
-			return true;
-	}
-#endif
-
-	return false;
-}
-
-bool DoesGameLookLikeHLS()
-{
-	if (g_pCVar)
-	{
-		if (g_pCVar->FindVar("hl1_ref_db_distance"))
-			return true;
-	}
-
-	return false;
-}
 
 bool FoundEngineServer()
 {
@@ -307,7 +268,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	if (ptr)
 	{
 #ifdef OE
-		if (DoesGameLookLikeDMoMM())
+		if (utils::DoesGameLookLikeDMoMM())
 			engine = std::make_unique<IVEngineClientWrapper<IVEngineClientDMoMM>>(
 			    reinterpret_cast<IVEngineClientDMoMM*>(ptr));
 #endif
@@ -327,7 +288,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 		Warning("SPT: y_spt_stucksave has no effect.\n");
 	}
 
-	if (DoesGameLookLikePortal())
+	if (utils::DoesGameLookLikePortal())
 	{
 		DevMsg("SPT: This game looks like portal. Setting the tas_* cvars appropriately.\n");
 

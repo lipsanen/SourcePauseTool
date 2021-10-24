@@ -5,6 +5,7 @@
 #include "..\spt-serverplugin.hpp"
 
 #include "..\..\sptlib-wrapper.hpp"
+#include "..\..\utils\game_detection.hpp"
 #include "..\..\utils\math.hpp"
 #include "..\..\utils\string_parsing.hpp"
 #include "..\cvars.hpp"
@@ -466,7 +467,7 @@ namespace scripts
 		propertyHandlers["velyaw"] = &SourceTASReader::HandleVelYaw;
 		propertyHandlers["velpitch"] = &SourceTASReader::HandleVelPitch;
 #if SSDK2007
-		if (DoesGameLookLikePortal())
+		if (utils::DoesGameLookLikePortal())
 		{
 			propertyHandlers["portal_bubble"] = &SourceTASReader::HandlePBubbleCondition;
 		}

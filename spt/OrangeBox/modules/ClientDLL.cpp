@@ -13,6 +13,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "..\scripts\tests\test.hpp"
+#include "..\..\utils\game_detection.hpp"
 #include "..\..\aim.hpp"
 #include "bspflags.h"
 
@@ -206,7 +207,7 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
 	GET_HOOKEDFUTURE(ResetToneMapping);
 
-	if (DoesGameLookLikeHLS())
+	if (utils::DoesGameLookLikeHLS())
 	{
 		sizeofCUserCmd = 84 - sizeof(CUtlVector<int>);
 	}

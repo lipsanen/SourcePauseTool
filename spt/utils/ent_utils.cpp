@@ -6,7 +6,6 @@
 #include <regex>
 #include <vector>
 
-#include "..\OrangeBox\spt-serverplugin.hpp"
 #include "..\OrangeBox\cvars.hpp"
 #include "..\OrangeBox\modules.hpp"
 #include "..\OrangeBox\modules\ClientDLL.hpp"
@@ -16,9 +15,11 @@
 #include "..\strafestuff.hpp"
 #include "SPTLib\sptlib.hpp"
 #include "client_class.h"
+#include "game_detection.hpp"
 #include "property_getter.hpp"
 #include "string_parsing.hpp"
 #include "math.hpp"
+#include "game_detection.hpp"
 #undef max
 
 #if !defined(OE) && !defined(P2)
