@@ -9,6 +9,7 @@
 #include "..\overlay\overlays.hpp"
 #include "..\patterns.hpp"
 #include "ServerDLL.hpp"
+#include "..\..\utils\game_detection.hpp"
 
 #ifdef OE
 #include "SDK\usercmd.h"
@@ -273,7 +274,7 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 	GET_FUTURE(CGameMovement__DecayPunchAngle);
 
-	if (DoesGameLookLikePortal())
+	if (utils::DoesGameLookLikePortal())
 	{
 		DEF_FUTURE(MiddleOfTeleportTouchingEntity);
 		DEF_FUTURE(EndOfTeleportTouchingEntity);
@@ -584,7 +585,7 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	SnapEyeAngles = reinterpret_cast<_SnapEyeAngles>((unsigned int)moduleBase + 0x1B92F0);
 	GetActiveWeapon = reinterpret_cast<_GetActiveWeapon>((unsigned int)moduleBase + 0xCCE90);
 
-	if (DoesGameLookLikePortal())
+	if (utils::DoesGameLookLikePortal())
 	{
 		FirePortal = reinterpret_cast<_FirePortal>((unsigned int)moduleBase + 0x442090);
 		m_hPortalEnvironmentOffsetPtr = reinterpret_cast<int*>((unsigned int)FirePortal + 0xA3);
@@ -649,7 +650,7 @@ void ServerDLL::TracePlayerBBox(const Vector& start,
 	serverDLL._mins = mins;
 	serverDLL._maxs = maxs;
 
-	if (DoesGameLookLikePortal())
+	if (utils::DoesGameLookLikePortal())
 		ORIG_CPortalGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
 	else
 		ORIG_CGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
@@ -990,7 +991,7 @@ void ServerDLL::HOOKED_EndOfTeleportTouchingEntity_Func()
 bool ServerDLL::CanTracePlayerBBox()
 {
 	extern void* gm;
-	if (DoesGameLookLikePortal())
+	if (utils::DoesGameLookLikePortal())
 	{
 		return gm != nullptr && ORIG_TracePlayerBBoxForGround2 && ORIG_CGameMovement__TracePlayerBBox
 		       && ORIG_CGameMovement__GetPlayerMaxs && ORIG_CGameMovement__GetPlayerMins;

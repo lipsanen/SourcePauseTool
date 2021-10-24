@@ -17,6 +17,7 @@
 #include "strafe_utils.hpp"
 #include "strafestuff.hpp"
 #include "utils/ent_utils.hpp"
+#include "utils\game_detection.hpp"
 #include "utils/math.hpp"
 #include "utils/property_getter.hpp"
 
@@ -257,7 +258,7 @@ namespace Strafe
 				return PositionType::GROUND;
 			}
 
-			if (DoesGameLookLikePortal())
+			if (utils::DoesGameLookLikePortal())
 				serverDLL.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
 				                                         point,
 				                                         mins,

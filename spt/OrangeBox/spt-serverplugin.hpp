@@ -97,8 +97,7 @@ IVDebugOverlay* GetDebugOverlay();
 void* GetGamemovement();
 ICvar* GetCvarInterface();
 std::string GetGameDir();
-bool DoesGameLookLikePortal();
-bool DoesGameLookLikeHLS();
+EngineClientWrapper* GetEngineClient();
 
 #if defined(OE)
 struct ArgsWrapper

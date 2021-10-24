@@ -13,6 +13,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "..\scripts\tests\test.hpp"
+#include "..\..\utils\game_detection.hpp"
 #include "..\..\aim.hpp"
 #include "bspflags.h"
 
@@ -206,7 +207,7 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
 	GET_HOOKEDFUTURE(ResetToneMapping);
 
-	if (DoesGameLookLikeHLS())
+	if (utils::DoesGameLookLikeHLS())
 	{
 		sizeofCUserCmd = 84 - sizeof(CUtlVector<int>);
 	}
@@ -439,23 +440,27 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 		switch (ptnNumber)
 		{
 		case 0:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 29) + ORIG_MiddleOfCAM_Think + 33);
+			ORIG_GetLocalPlayer =
+			    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 29)
+			                      + ORIG_MiddleOfCAM_Think + 33);
 			break;
 
 		case 1:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 30) + ORIG_MiddleOfCAM_Think + 34);
+			ORIG_GetLocalPlayer =
+			    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 30)
+			                      + ORIG_MiddleOfCAM_Think + 34);
 			break;
 
 		case 2:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 21) + ORIG_MiddleOfCAM_Think + 25);
+			ORIG_GetLocalPlayer =
+			    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 21)
+			                      + ORIG_MiddleOfCAM_Think + 25);
 			break;
 
 		case 3:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 23) + ORIG_MiddleOfCAM_Think + 27);
+			ORIG_GetLocalPlayer =
+			    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 23)
+			                      + ORIG_MiddleOfCAM_Think + 27);
 			break;
 		}
 
