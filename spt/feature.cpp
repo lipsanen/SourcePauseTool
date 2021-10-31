@@ -154,15 +154,15 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 			       modulePattern.patternName,
 			       *modulePattern.origPtr,
 			       foundPattern->name());
-
-			if (modulePattern.callback)
-			{
-				modulePattern.callback(foundPattern, foundPattern - modulePattern.patternArr);
-			}
 		}
 		else
 		{
 			DevWarning("[%s] Could not find %s.\n", Convert(moduleName).c_str(), modulePattern.patternName);
+		}
+
+		if (modulePattern.callback)
+		{
+			modulePattern.callback(foundPattern, foundPattern - modulePattern.patternArr);
 		}
 	}
 
