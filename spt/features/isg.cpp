@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
-#include "..\OrangeBox\patterns.hpp"
 #include "..\utils\game_detection.hpp"
 
 #include <functional>
@@ -10,6 +9,7 @@
 
 #if defined(SSDK2007) || defined(SSDK2013)
 
+// This feature enables the ISG setting and HUD features
 class ISGFeature : public Feature
 {
 public:
@@ -32,10 +32,7 @@ protected:
 			else
 				Warning("y_spt_hud_isg 1 and y_spt_set_isg have no effect\n");
 		};
-		FIND_PATTERN_WITH_CALLBACK(vphysics,
-		                           MiddleOfRecheck_ov_element,
-		                           ORIG_MiddleOfRecheck_ov_element,
-		                           callback);
+		FIND_PATTERN_WITH_CALLBACK(vphysics, MiddleOfRecheck_ov_element, callback);
 	}
 
 	virtual void LoadFeature() override;
