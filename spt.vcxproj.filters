@@ -154,6 +154,12 @@
     <ClCompile Include="spt\features\shadow.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\tas.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\playerio.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -394,6 +400,12 @@
       <Filter>spt\features</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\shadow.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\tas.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\playerio.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>

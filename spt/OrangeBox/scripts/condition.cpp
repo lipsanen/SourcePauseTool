@@ -9,6 +9,7 @@
 #include "..\..\utils\property_getter.hpp"
 #include "..\modules.hpp"
 #include "..\modules\ClientDLL.hpp"
+#include "..\..\features\playerio.hpp"
 
 namespace scripts
 {
@@ -54,9 +55,9 @@ namespace scripts
 		Vector v;
 
 		if (isPos)
-			v = clientDLL.GetPlayerEyePos();
+			v = playerio::GetPlayerEyePos();
 		else
-			v = clientDLL.GetPlayerVelocity();
+			v = playerio::GetPlayerVelocity();
 
 		float val;
 
@@ -136,7 +137,7 @@ namespace scripts
 		if (!utils::playerEntityAvailable())
 			return false;
 
-		Vector v = clientDLL.GetPlayerVelocity();
+		Vector v = playerio::GetPlayerVelocity();
 		QAngle angles;
 		VectorAngles(v, Vector(0, 0, 1), angles);
 		float f;

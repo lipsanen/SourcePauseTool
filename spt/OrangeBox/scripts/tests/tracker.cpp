@@ -4,6 +4,7 @@
 #include "..\..\..\utils\string_parsing.hpp"
 #include "..\..\modules.hpp"
 #include "..\..\modules\ClientDLL.hpp"
+#include "..\..\..\features\playerio.hpp"
 
 namespace scripts
 {
@@ -48,12 +49,12 @@ namespace scripts
 
 	std::string VelocityTracker::GenerateTestData() const
 	{
-		return GenerateVectorData(clientDLL.GetPlayerVelocity(), decimals);
+		return GenerateVectorData(playerio::GetPlayerVelocity(), decimals);
 	}
 
 	ValidationResult VelocityTracker::Validate(const std::string& expectedValue) const
 	{
-		return VectorValidation(clientDLL.GetPlayerVelocity(), expectedValue, decimals);
+		return VectorValidation(playerio::GetPlayerVelocity(), expectedValue, decimals);
 	}
 
 	std::string VelocityTracker::TrackerName() const
@@ -68,12 +69,12 @@ namespace scripts
 
 	std::string PosTracker::GenerateTestData() const
 	{
-		return GenerateVectorData(clientDLL.GetPlayerEyePos(), decimals);
+		return GenerateVectorData(playerio::GetPlayerEyePos(), decimals);
 	}
 
 	ValidationResult PosTracker::Validate(const std::string& expectedValue) const
 	{
-		return VectorValidation(clientDLL.GetPlayerEyePos(), expectedValue, decimals);
+		return VectorValidation(playerio::GetPlayerEyePos(), expectedValue, decimals);
 	}
 
 	std::string PosTracker::TrackerName() const

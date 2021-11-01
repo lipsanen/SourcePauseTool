@@ -10,6 +10,7 @@
 #include "..\utils\math.hpp"
 #include "..\utils\string_parsing.hpp"
 #include "..\utils\game_detection.hpp"
+#include "..\features\playerio.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
 #include "modules.hpp"
@@ -652,97 +653,6 @@ CON_COMMAND(y_spt_print_ent_props, "Prints all props for a given entity index.")
 
 #endif
 
-#if defined(OE)
-static void DuckspamDown()
-#else
-static void DuckspamDown(const CCommand& args)
-#endif
-{
-	clientDLL.EnableDuckspam();
-}
-static ConCommand DuckspamDown_Command("+y_spt_duckspam", DuckspamDown, "Enables the duckspam.");
-
-#if defined(OE)
-static void DuckspamUp()
-#else
-static void DuckspamUp(const CCommand& args)
-#endif
-{
-	clientDLL.DisableDuckspam();
-}
-static ConCommand DuckspamUp_Command("-y_spt_duckspam", DuckspamUp, "Disables the duckspam.");
-
-CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
-{
-	if (!engine)
-		return;
-
-#if defined(OE)
-	ArgsWrapper args(engine.get());
-#endif
-
-	if (args.ArgC() != 2)
-	{
-		Msg("Usage: _y_spt_setpitch <pitch>\n");
-		return;
-	}
-
-	clientDLL.SetPitch(atof(args.Arg(1)));
-}
-
-CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
-{
-	if (!engine)
-		return;
-
-#if defined(OE)
-	ArgsWrapper args(engine.get());
-#endif
-
-	if (args.ArgC() != 2)
-	{
-		Msg("Usage: _y_spt_setyaw <yaw>\n");
-		return;
-	}
-
-	clientDLL.SetYaw(atof(args.Arg(1)));
-}
-
-CON_COMMAND(_y_spt_resetpitchyaw, "Resets pitch/yaw commands.")
-{
-	if (!engine)
-		return;
-
-	clientDLL.ResetPitchYawCommands();
-}
-
-CON_COMMAND(_y_spt_setangles, "Sets the angles. Usage: _y_spt_setangles <pitch> <yaw>")
-{
-	if (!engine)
-		return;
-
-#if defined(OE)
-	ArgsWrapper args(engine.get());
-#endif
-
-	if (args.ArgC() != 3)
-	{
-		Msg("Usage: _y_spt_setangles <pitch> <yaw>\n");
-		return;
-	}
-
-	clientDLL.SetPitch(atof(args.Arg(1)));
-	clientDLL.SetYaw(atof(args.Arg(2)));
-}
-
-CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
-{
-	const Vector vel = clientDLL.GetPlayerVelocity();
-
-	Warning("Velocity (x, y, z): %f %f %f\n", vel.x, vel.y, vel.z);
-	Warning("Velocity (xy): %f\n", vel.Length2D());
-}
-
 CON_COMMAND(_y_spt_getangles, "Gets the view angles of the player.")
 {
 	if (!engine)
@@ -853,32 +763,6 @@ CON_COMMAND(tas_script_result_stop, "Signals a stop in a variable search.")
 	scripts::g_TASReader.SearchResult(scripts::SearchResult::NoSearch);
 }
 
-CON_COMMAND(_y_spt_setangle,
-            "Sets the yaw/pitch angle required to look at the given position from player's current position.")
-{
-#if defined(OE)
-	if (!engine)
-		return;
-
-	ArgsWrapper args(engine.get());
-#endif
-	Vector target;
-
-	if (args.ArgC() > 3 && utils::playerEntityAvailable())
-	{
-		target.x = atof(args.Arg(1));
-		target.y = atof(args.Arg(2));
-		target.z = atof(args.Arg(3));
-
-		Vector player_origin = clientDLL.GetPlayerEyePos();
-		Vector diff = (target - player_origin);
-		QAngle angles;
-		VectorAngles(diff, angles);
-		clientDLL.SetPitch(angles[PITCH]);
-		clientDLL.SetYaw(angles[YAW]);
-	}
-}
-
 CON_COMMAND(tas_test_generate, "Generates test data for given test.")
 {
 #if defined(OE)
@@ -926,7 +810,7 @@ CON_COMMAND(tas_test_automated_validate, "Validates a test, produces a log file 
 
 CON_COMMAND(tas_print_movement_vars, "Prints movement vars.")
 {
-	auto vars = clientDLL.GetMovementVars();
+	auto vars = playerio::GetMovementVars();
 
 	Msg("Accelerate %f\n", vars.Accelerate);
 	Msg("AirAccelerate %f\n", vars.Airaccelerate);
@@ -947,150 +831,6 @@ CON_COMMAND(tas_print_movement_vars, "Prints movement vars.")
 
 #if SSDK2007
 // TODO: remove fixed offsets.
-
-#undef GetClassName
-CON_COMMAND(y_spt_find_portals, "Yes")
-{
-	if (clientDLL.offServerAbsOrigin == 0)
-		return;
-
-	for (int i = 0; i < MAX_EDICTS; ++i)
-	{
-		auto ent = engine_server->PEntityOfEntIndex(i);
-
-		if (ent && !ent->IsFree() && !strcmp(ent->GetClassName(), "prop_portal"))
-		{
-			auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-			                                          + clientDLL.offServerAbsOrigin);
-
-			Msg("SPT: There's a portal with index %d at %.8f %.8f %.8f.\n",
-			    i,
-			    origin.x,
-			    origin.y,
-			    origin.z);
-		}
-	}
-}
-
-void calculate_offset_player_pos(edict_t* saveglitch_portal, Vector& new_player_origin, QAngle& new_player_angles)
-{
-	// Here we make sure that the eye position and the eye angles match up.
-	const Vector view_offset(0, 0, 64);
-	auto& player_origin =
-	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + clientDLL.offServerAbsOrigin);
-	auto& player_angles = *reinterpret_cast<QAngle*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + 2568);
-
-	auto& matrix = *reinterpret_cast<VMatrix*>(reinterpret_cast<uintptr_t>(saveglitch_portal->GetUnknown()) + 1072);
-
-	auto eye_origin = player_origin + view_offset;
-	auto new_eye_origin = matrix * eye_origin;
-	new_player_origin = new_eye_origin - view_offset;
-
-	new_player_angles = TransformAnglesToWorldSpace(player_angles, matrix.As3x4());
-	new_player_angles.x = AngleNormalizePositive(new_player_angles.x);
-	new_player_angles.y = AngleNormalizePositive(new_player_angles.y);
-	new_player_angles.z = AngleNormalizePositive(new_player_angles.z);
-}
-
-CON_COMMAND(
-    y_spt_calc_relative_position,
-    "y_spt_calc_relative_position <index of the save glitch portal | \"blue\" | \"orange\"> [1 if you want to teleport there instead of just printing]")
-{
-	if (args.ArgC() != 2 && args.ArgC() != 3)
-	{
-		Msg("Usage: y_spt_calc_relative_position <index of the save glitch portal | \"blue\" | \"orange\"> [1 if you want to teleport there instead of just printing]\n");
-		return;
-	}
-
-	if (clientDLL.offServerAbsOrigin == 0)
-	{
-		Warning("Could not find the required offset in the client DLL.\n");
-		return;
-	}
-
-	int portal_index = atoi(args.Arg(1));
-
-	if (!strcmp(args.Arg(1), "blue") || !strcmp(args.Arg(1), "orange"))
-	{
-		std::vector<int> indices;
-
-		for (int i = 0; i < MAX_EDICTS; ++i)
-		{
-			auto ent = engine_server->PEntityOfEntIndex(i);
-
-			if (ent && !ent->IsFree() && !strcmp(ent->GetClassName(), "prop_portal"))
-			{
-				auto is_orange_portal =
-				    *reinterpret_cast<bool*>(reinterpret_cast<uintptr_t>(ent->GetUnknown()) + 1137);
-
-				if (is_orange_portal == (args.Arg(1)[0] == 'o'))
-					indices.push_back(i);
-			}
-		}
-
-		if (indices.size() > 1)
-		{
-			Msg("There are multiple %s portals, please use the index:\n", args.Arg(1));
-
-			for (auto i : indices)
-			{
-				auto ent = engine_server->PEntityOfEntIndex(i);
-				auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-				                                          + clientDLL.offServerAbsOrigin);
-
-				Msg("%d located at %.8f %.8f %.8f\n", i, origin.x, origin.y, origin.z);
-			}
-
-			return;
-		}
-		else if (indices.size() == 0)
-		{
-			Msg("There are no %s portals.\n", args.Arg(1));
-			return;
-		}
-		else
-		{
-			portal_index = indices[0];
-		}
-	}
-
-	auto portal = engine_server->PEntityOfEntIndex(portal_index);
-	if (!portal || portal->IsFree() || strcmp(portal->GetClassName(), "prop_portal") != 0)
-	{
-		Warning("The portal index is invalid.\n");
-		return;
-	}
-
-	Vector new_player_origin;
-	QAngle new_player_angles;
-	calculate_offset_player_pos(portal, new_player_origin, new_player_angles);
-
-	if (args.ArgC() == 2)
-	{
-		Msg("setpos %.8f %.8f %.8f;setang %.8f %.8f %.8f\n",
-		    new_player_origin.x,
-		    new_player_origin.y,
-		    new_player_origin.z,
-		    new_player_angles.x,
-		    new_player_angles.y,
-		    new_player_angles.z);
-	}
-	else
-	{
-		char buf[256];
-		snprintf(buf,
-		         ARRAYSIZE(buf),
-		         "setpos %.8f %.8f %.8f;setang %.8f %.8f %.8f\n",
-		         new_player_origin.x,
-		         new_player_origin.y,
-		         new_player_origin.z,
-		         new_player_angles.x,
-		         new_player_angles.y,
-		         new_player_angles.z);
-
-		engine->ClientCmd(buf);
-	}
-}
 
 void setang_exact(const QAngle& angles)
 {

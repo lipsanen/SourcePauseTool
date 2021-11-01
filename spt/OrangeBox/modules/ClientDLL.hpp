@@ -18,14 +18,7 @@ using std::uintptr_t;
 typedef void(__cdecl* _DoImageSpaceMotionBlur)(void* view, int x, int y, int w, int h);
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef void(__stdcall* _HudUpdate)(bool bActive);
-typedef int(__fastcall* _GetButtonBits)(void* thisptr, int edx, int bResetState);
-typedef void(__fastcall* _AdjustAngles)(void* thisptr, int edx, float frametime);
-typedef void(
-    __fastcall* _CreateMove)(void* thisptr, int edx, int sequence_number, float input_sample_frametime, bool active);
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
-typedef void*(__cdecl* _GetLocalPlayer)();
-typedef void*(__fastcall* _GetGroundEntity)(void* thisptr, int edx);
-typedef void(__fastcall* _CalcAbsoluteVelocity)(void* thisptr, int edx);
 typedef void(
     __fastcall* _CViewRender__RenderView)(void* thisptr, int edx, void* cameraView, int nClearFlags, int whatToDraw);
 typedef void(__fastcall* _CViewRender__Render)(void* thisptr, int edx, void* rect);
@@ -64,12 +57,6 @@ struct afterframes_entry_t
 	std::string command;
 };
 
-typedef struct
-{
-	float angle;
-	bool set;
-} angset_command_t;
-
 class ClientDLL : public IHookableNameFilter
 {
 public:
@@ -85,8 +72,6 @@ public:
 	static void __cdecl HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, int w, int h);
 	static bool __fastcall HOOKED_CheckJumpButton(void* thisptr, int edx);
 	static void __stdcall HOOKED_HudUpdate(bool bActive);
-	static int __fastcall HOOKED_GetButtonBits(void* thisptr, int edx, int bResetState);
-	static void __fastcall HOOKED_AdjustAngles(void* thisptr, int edx, float frametime);
 	static void __fastcall HOOKED_CreateMove(void* thisptr,
 	                                         int edx,
 	                                         int sequence_number,
@@ -104,13 +89,6 @@ public:
 	void __cdecl HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, int y, int w, int h);
 	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __stdcall HOOKED_HudUpdate_Func(bool bActive);
-	int __fastcall HOOKED_GetButtonBits_Func(void* thisptr, int edx, int bResetState);
-	void __fastcall HOOKED_AdjustAngles_Func(void* thisptr, int edx, float frametime);
-	void __fastcall HOOKED_CreateMove_Func(void* thisptr,
-	                                       int edx,
-	                                       int sequence_number,
-	                                       float input_sample_frametime,
-	                                       bool active);
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_CViewRender__RenderView_Func(void* thisptr,
 	                                                    int edx,
@@ -133,38 +111,7 @@ public:
 		afterframesPaused = false;
 	}
 
-	void EnableDuckspam()
-	{
-		duckspam = true;
-	}
-	void DisableDuckspam()
-	{
-		duckspam = false;
-	}
-
-	void SetPitch(float pitch)
-	{
-		setPitch.angle = pitch;
-		setPitch.set = true;
-	}
-	void SetYaw(float yaw)
-	{
-		setYaw.angle = yaw;
-		setYaw.set = true;
-	}
-	void ResetPitchYawCommands()
-	{
-		setYaw.set = false;
-		setPitch.set = false;
-	}
-	Strafe::MovementVars GetMovementVars();
-	Strafe::PlayerData GetPlayerData();
-	Vector GetPlayerVelocity();
-	Vector GetPlayerEyePos();
 	Vector GetCameraOrigin();
-	int GetPlayerFlags();
-	bool GetFlagsDucking();
-	double GetDuckJumpTime();
 	bool CanUnDuckJump(trace_t& ptr);
 
 	Gallant::Signal0<void> FrameSignal;
@@ -173,22 +120,14 @@ public:
 	Gallant::Signal1<bool> OngroundSignal;
 	bool renderingOverlay;
 	void* screenRect;
-	void* cinput_thisptr;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	_UTIL_TraceRay ORIG_UTIL_TraceRay;
-	bool IsGroundEntitySet();
 
 protected:
 	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur;
 	_CheckJumpButton ORIG_CheckJumpButton;
 	_HudUpdate ORIG_HudUpdate;
-	_GetButtonBits ORIG_GetButtonBits;
-	_AdjustAngles ORIG_AdjustAngles;
-	_CreateMove ORIG_CreateMove;
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
-	_GetLocalPlayer ORIG_GetLocalPlayer;
-	_GetGroundEntity ORIG_GetGroundEntity;
-	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity;
 	_CViewRender__RenderView ORIG_CViewRender__RenderView;
 	_CViewRender__Render ORIG_CViewRender__Render;
 	_CGameMovement__CanUnDuckJump ORIG_CGameMovement__CanUnDuckJump;
@@ -198,35 +137,12 @@ protected:
 	_ResetToneMapping ORIG_ResetToneMapping;
 
 	uintptr_t* pgpGlobals;
-	ptrdiff_t offM_pCommands;
 	ptrdiff_t off1M_nOldButtons;
 	ptrdiff_t off2M_nOldButtons;
-	ptrdiff_t offForwardmove;
-	ptrdiff_t offSidemove;
-	ptrdiff_t offMaxspeed;
-	ptrdiff_t offFlags;
-	ptrdiff_t offAbsVelocity;
-	ptrdiff_t offDucking;
-	ptrdiff_t offDuckJumpTime;
-	ptrdiff_t offServerSurfaceFriction;
-	ptrdiff_t offServerPreviouslyPredictedOrigin;
-	std::size_t sizeofCUserCmd;
-
-public:
-	ptrdiff_t offServerAbsOrigin;
 
 protected:
-	uintptr_t pCmd;
-
-	bool tasAddressesWereFound;
-
 	std::vector<afterframes_entry_t> afterframesQueue;
 	bool afterframesPaused = false;
-
-	bool duckspam;
-	angset_command_t setPitch, setYaw;
-	bool forceJump;
-	bool forceUnduck;
 	bool cantJumpNextTime;
 
 	void OnFrame();

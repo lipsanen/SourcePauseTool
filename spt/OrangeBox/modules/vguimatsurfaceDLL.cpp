@@ -18,6 +18,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "..\..\features\isg.hpp"
+#include "..\..\features\playerio.hpp"
 #include "Color.h"
 #include "const.h"
 #include "vgui_controls\controls.h"
@@ -127,7 +128,7 @@ void VGui_MatSurfaceDLL::OnGround(bool onground)
 			if (lastHop > 15)
 				return;
 
-			auto vel = clientDLL.GetPlayerVelocity().Length2D();
+			auto vel = playerio::GetPlayerVelocity().Length2D();
 			loss = maxVel - vel;
 			percentage = (vel / maxVel) * 100;
 			displayHop = lastHop - 1;
@@ -211,10 +212,10 @@ void VGui_MatSurfaceDLL::DrawCrosshair(vrect_t* screen)
 
 void VGui_MatSurfaceDLL::CalculateAbhVel()
 {
-	auto vel = clientDLL.GetPlayerVelocity().Length2D();
-	auto ducked = clientDLL.GetFlagsDucking();
+	auto vel = playerio::GetPlayerVelocity().Length2D();
+	auto ducked = playerio::GetFlagsDucking();
 	auto sprinting = utils::GetProperty<bool>(0, "m_fIsSprinting");
-	auto vars = clientDLL.GetMovementVars();
+	auto vars = playerio::GetMovementVars();
 
 	float modifier;
 
@@ -401,7 +402,7 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 
 	const int BUFFER_SIZE = 256;
 	wchar_t buffer[BUFFER_SIZE];
-	currentVel = clientDLL.GetPlayerVelocity();
+	currentVel = playerio::GetPlayerVelocity();
 	Vector accel = currentVel - previousVel;
 	std::string info(y_spt_hud_ent_info.GetString());
 
@@ -464,7 +465,7 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 
 	if (y_spt_hud_flags.GetBool())
 	{
-		int flags = clientDLL.GetPlayerFlags();
+		int flags = playerio::GetPlayerFlags();
 		DRAW_FLAGS(NULL, FLAGS, flags, false);
 	}
 
@@ -488,7 +489,7 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 
 	if (y_spt_hud_vars.GetBool() && utils::playerEntityAvailable())
 	{
-		auto vars = clientDLL.GetMovementVars();
+		auto vars = playerio::GetMovementVars();
 		DRAW_FLOAT(L"accelerate", vars.Accelerate);
 		DRAW_FLOAT(L"airaccelerate", vars.Airaccelerate);
 		DRAW_FLOAT(L"ent friction", vars.EntFriction);
@@ -502,7 +503,7 @@ void VGui_MatSurfaceDLL::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMat
 
 	if (y_spt_hud_ag_sg_tester.GetBool() && utils::playerEntityAvailable())
 	{
-		Vector v = clientDLL.GetPlayerEyePos();
+		Vector v = playerio::GetPlayerEyePos();
 		QAngle q;
 
 		std::wstring result = calculateWillAGSG(v, q);

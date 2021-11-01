@@ -20,6 +20,7 @@
 #include "utils\game_detection.hpp"
 #include "utils/math.hpp"
 #include "utils/property_getter.hpp"
+#include "features\playerio.hpp"
 
 #ifndef OE
 #include "OrangeBox/overlay/portal_camera.hpp"
@@ -195,14 +196,14 @@ namespace Strafe
 
 		if (!tas_strafe_use_tracing.GetBool() || strafe_version == 0 || !CanTrace())
 		{
-			if (clientDLL.IsGroundEntitySet())
+			if (playerio::IsGroundEntitySet())
 				return PositionType::GROUND;
 			else
 				return PositionType::AIR;
 		}
 		else if (strafe_version == 1)
 		{
-			if (clientDLL.IsGroundEntitySet())
+			if (playerio::IsGroundEntitySet())
 				return PositionType::GROUND;
 
 			if (player.Velocity[2] > 140.f)
@@ -991,81 +992,92 @@ namespace Strafe
 	bool StrafeJump(bool jumped,
 	                PlayerData& player,
 	                const MovementVars& vars,
-	                bool ducking,
 	                ProcessedFrame& out,
 	                bool yawChanged)
 	{
+
+		bool rval = false;
 		if (!jumped)
-			return false;
-
-		out.Jump = true;
-		out.Processed = true;
-
-		if (yawChanged && !tas_strafe_allow_jump_override.GetBool())
 		{
-			// Yaw changed and override not permitted
-			if (tas_strafe_version.GetInt() >= 3)
-				out.Processed = false;
-			return true;
-		}
-		else if (tas_strafe_jumptype.GetInt() == 2)
-		{
-			// OE bhop
-			out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat());
-			out.Forward = true;
-			MapSpeeds(out, vars);
-
-			return true;
-		}
-		else if (tas_strafe_jumptype.GetInt() == 1)
-		{
-			float cap = vars.Maxspeed * ((ducking || (vars.Maxspeed == 320)) ? 0.1 : 0.5);
-			float speed = player.Velocity.Length2D();
-
-			if (speed >= cap)
-			{
-				// Above ABH speed
-				if (tas_strafe_afh.GetBool())
-				{ // AFH
-					out.Yaw = tas_strafe_yaw.GetFloat();
-					out.ForwardSpeed = -tas_strafe_afh_length.GetFloat();
-					return true;
-				}
-				else
-				{
-					// ABH
-					out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat() + 180);
-					return true;
-				}
-			}
-			else
-			{
-				// Below ABH speed, dont do anything
-				return false;
-			}
-		}
-		else if (tas_strafe_jumptype.GetInt() == 3)
-		{
-			// Glitchless bhop
-			const Vector vel = player.Velocity;
-			out.Yaw = NormalizeRad(Atan2(player.Velocity[1], player.Velocity[0])) * M_RAD2DEG;
-			out.Forward = true;
-			MapSpeeds(out, vars);
-
-			return true;
+			rval = false;
 		}
 		else
 		{
-			// Invalid jump type set
-			out.Processed = false;
-			return false;
+			out.Jump = true;
+			out.Processed = true;
+
+			if (yawChanged && !tas_strafe_allow_jump_override.GetBool())
+			{
+				// Yaw changed and override not permitted
+				if (tas_strafe_version.GetInt() >= 3)
+					out.Processed = false;
+				rval = true;
+			}
+			else if (tas_strafe_jumptype.GetInt() == 2)
+			{
+				// OE bhop
+				out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat());
+				out.Forward = true;
+				MapSpeeds(out, vars);
+
+				rval = true;
+			}
+			else if (tas_strafe_jumptype.GetInt() == 1)
+			{
+				float cap = vars.Maxspeed * ((player.Ducking || (vars.Maxspeed == 320)) ? 0.1 : 0.5);
+				float speed = player.Velocity.Length2D();
+
+				if (speed >= cap)
+				{
+					// Above ABH speed
+					if (tas_strafe_afh.GetBool())
+					{ // AFH
+						out.Yaw = tas_strafe_yaw.GetFloat();
+						out.ForwardSpeed = -tas_strafe_afh_length.GetFloat();
+						rval = true;
+					}
+					else
+					{
+						// ABH
+						out.Yaw = NormalizeDeg(tas_strafe_yaw.GetFloat() + 180);
+						rval = true;
+					}
+				}
+				else
+				{
+					// Below ABH speed, dont do anything
+					rval = false;
+				}
+			}
+			else if (tas_strafe_jumptype.GetInt() == 3)
+			{
+				// Glitchless bhop
+				const Vector vel = player.Velocity;
+				out.Yaw = NormalizeRad(Atan2(player.Velocity[1], player.Velocity[0])) * M_RAD2DEG;
+				out.Forward = true;
+				MapSpeeds(out, vars);
+
+				rval = true;
+			}
+			else
+			{
+				// Invalid jump type set
+				out.Processed = false;
+				rval = false;
+			}
 		}
+
+		// Jumpbug check
+		if(out.Jump && !player.Ducking && player.DuckPressed && tas_strafe_autojb.GetBool())
+			out.ForceUnduck = true;
+
+		return rval;
+
 	}
 
 	void StrafeVectorial(PlayerData& player,
 	                     const MovementVars& vars,
 	                     bool jumped,
-	                     bool ducking,
 	                     StrafeType type,
 	                     StrafeDir dir,
 	                     double target_yaw,
@@ -1073,7 +1085,7 @@ namespace Strafe
 	                     ProcessedFrame& out,
 	                     bool yawChanged)
 	{
-		if (StrafeJump(jumped, player, vars, ducking, out, yawChanged))
+		if (StrafeJump(jumped, player, vars, out, yawChanged))
 		{
 			return;
 		}
@@ -1083,7 +1095,6 @@ namespace Strafe
 		    player,
 		    vars,
 		    jumped,
-		    ducking,
 		    type,
 		    dir,
 		    target_yaw,
@@ -1128,7 +1139,6 @@ namespace Strafe
 	bool Strafe(PlayerData& player,
 	            const MovementVars& vars,
 	            bool jumped,
-	            bool ducking,
 	            StrafeType type,
 	            StrafeDir dir,
 	            double target_yaw,
@@ -1141,7 +1151,6 @@ namespace Strafe
 		if (StrafeJump(jumped,
 		               player,
 		               vars,
-		               ducking,
 		               out,
 		               false)) // yawChanged == false when calling this function
 		{

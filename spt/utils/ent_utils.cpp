@@ -20,6 +20,7 @@
 #include "string_parsing.hpp"
 #include "math.hpp"
 #include "game_detection.hpp"
+#include "..\features\playerio.hpp"
 #undef max
 
 #if !defined(OE) && !defined(P2)
@@ -423,8 +424,8 @@ namespace utils
 
 	void SimulateFrames(int frames)
 	{
-		auto vars = clientDLL.GetMovementVars();
-		auto player = clientDLL.GetPlayerData();
+		auto vars = playerio::GetMovementVars();
+		auto player = playerio::GetPlayerData();
 		auto type = Strafe::GetPositionType(player, Strafe::HullType::NORMAL);
 
 		for (int i = 0; i < frames; ++i)
@@ -483,8 +484,8 @@ namespace utils
 		if (!utils::playerEntityAvailable())
 			return data;
 
-		Vector player_origin = clientDLL.GetPlayerEyePos();
-		Vector vel = clientDLL.GetPlayerVelocity();
+		Vector player_origin = playerio::GetPlayerEyePos();
+		Vector vel = playerio::GetPlayerVelocity();
 
 		constexpr float gravity = 600;
 		constexpr float groundThreshold = 2.0f;

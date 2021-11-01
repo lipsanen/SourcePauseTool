@@ -7,6 +7,7 @@
 #include "..\modules.hpp"
 #include "..\modules\ClientDLL.hpp"
 #include "..\..\features\shadow.hpp"
+#include "..\..\features\playerio.hpp"
 #include "overlays.hpp"
 #include "portal_camera.hpp"
 
@@ -33,7 +34,7 @@ CameraInformation havokViewMirrorOverlay()
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;
 
-	auto ducked = clientDLL.GetFlagsDucking();
+	auto ducked = playerio::GetFlagsDucking();
 	auto angles = utils::GetPlayerEyeAngles();
 
 	info.x = havokpos.x;

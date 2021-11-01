@@ -98,6 +98,7 @@ void* GetGamemovement();
 ICvar* GetCvarInterface();
 std::string GetGameDir();
 EngineClientWrapper* GetEngineClient();
+bool FoundEngineServer();
 
 #if defined(OE)
 struct ArgsWrapper

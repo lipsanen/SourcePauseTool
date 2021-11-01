@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "SPTLib\patterns.hpp"
 #include "utils\patterncontainer.hpp"
+#include "OrangeBox\patterns.hpp"
 
 typedef std::function<void(patterns::PatternWrapper*, int)> _PatternCallback;
 enum class ModuleEnum
@@ -18,34 +19,34 @@ enum class ModuleEnum
 };
 const int HOOKED_MODULE_COUNT = 6;
 
-#define FIND_PATTERN(moduleName, name, orig) \
+#define FIND_PATTERN(moduleName, name) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               ModuleEnum::moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&orig), \
+	               reinterpret_cast<void**>(&ORIG_ ##name##), \
 	               nullptr, \
 	               nullptr);
-#define HOOK_FUNCTION(moduleName, name, orig, function) \
+#define HOOK_FUNCTION(moduleName, name) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               ModuleEnum::moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&orig), \
-	               reinterpret_cast<void*>(function), \
+	               reinterpret_cast<void**>(&ORIG_ ##name##), \
+	               reinterpret_cast<void*>(HOOKED_ ##name##), \
 	               nullptr);
 #define PATTERN_CALLBACK [&](patterns::PatternWrapper * found, int index)
-#define FIND_PATTERN_WITH_CALLBACK(moduleName, name, orig, callback) \
+#define FIND_PATTERN_WITH_CALLBACK(moduleName, name, callback) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               ModuleEnum::moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&orig), \
+	               reinterpret_cast<void**>(&ORIG_ ##name##), \
 	               nullptr, \
 	               callback);
-#define HOOK_FUNCTION_WITH_CALLBACK(moduleName, name, orig, function, callback) \
+#define HOOK_FUNCTION_WITH_CALLBACK(moduleName, name, callback) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               ModuleEnum::moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&orig), \
-	               reinterpret_cast<void*>(function), \
+	               reinterpret_cast<void**>(&ORIG_ ##name##), \
+	               reinterpret_cast<void*>(HOOKED_ ##name##), \
 	               callback);
 
 struct PatternHook
