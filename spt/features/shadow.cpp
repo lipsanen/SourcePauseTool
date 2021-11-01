@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
-#include "..\OrangeBox\patterns.hpp"
 #include "..\utils\game_detection.hpp"
 #include "shadow.hpp"
 
 typedef int(__fastcall* _GetShadowPosition)(void* thisptr, int edx, Vector* worldPosition, QAngle* angles);
 
+// This feature allows access to the Havok hitbox location (aka physics shadow)
 class ShadowPosition : public Feature
 {
 public:
@@ -27,10 +27,7 @@ protected:
 
 	virtual void InitHooks() override
 	{
-		HOOK_FUNCTION(vphysics,
-		              GetShadowPosition,
-		              ORIG_GetShadowPosition,
-		              ShadowPosition::HOOKED_GetShadowPosition);
+		HOOK_FUNCTION(vphysics, GetShadowPosition);
 	}
 
 	virtual void LoadFeature() override {}
