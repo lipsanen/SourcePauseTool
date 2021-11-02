@@ -54,11 +54,14 @@ void TASFeature::UnloadFeature() {}
 void __fastcall TASFeature::HOOKED_AdjustAngles_Func(void* thisptr, int edx, float frametime)
 {
 	ORIG_AdjustAngles(thisptr, edx, frametime);
+	playerio::Set_cinput_thisptr(thisptr);
+
+	if(_playerio.pCmd == NULL)
+		return;
 
 	float va[3];
 	bool yawChanged = false;
 	EngineGetViewAngles(va);
-	playerio::Set_cinput_thisptr(thisptr);
 	playerio::HandleAiming(va, yawChanged);
 
 	if (tasAddressesWereFound && tas_strafe.GetBool())
