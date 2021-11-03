@@ -680,5 +680,6 @@ void __fastcall EngineDLL::HOOKED_SetSignonState_Func(void* thisptr, int edx, in
 void __cdecl EngineDLL::HOOKED_Stop_Func()
 {
 	isAutoRecordingDemo = false;
-	ORIG_Stop();
+	if(ORIG_Stop)
+		ORIG_Stop();
 }
