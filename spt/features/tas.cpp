@@ -5,6 +5,7 @@
 #include "..\aim.hpp"
 #include "..\strafestuff.hpp"
 #include "..\OrangeBox\cvars.hpp"
+#include "generic.hpp"
 #include "playerio.hpp"
 
 typedef void(__fastcall* _AdjustAngles)(void* thisptr, int edx, float frametime);

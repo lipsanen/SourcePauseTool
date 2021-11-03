@@ -10,6 +10,7 @@
 #include "..\utils\math.hpp"
 #include "..\utils\string_parsing.hpp"
 #include "..\utils\game_detection.hpp"
+#include "..\features\generic.hpp"
 #include "..\features\playerio.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
@@ -388,6 +389,11 @@ void CSourcePauseTool::Unload(void)
 const char* CSourcePauseTool::GetPluginDescription(void)
 {
 	return "SourcePauseTool v" SPT_VERSION ", Ivan \"YaLTeR\" Molodetskikh";
+}
+
+void CSourcePauseTool::GameFrame(bool simulating)
+{
+	generic_.Tick();
 }
 
 CON_COMMAND(_y_spt_afterframes_wait, "Delays the afterframes queue. Usage: _y_spt_afterframes_wait <delay>")

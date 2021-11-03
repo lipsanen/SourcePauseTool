@@ -16,6 +16,11 @@
 PlayerIOFeature _playerio;
 static void* cinput_thisptr = nullptr;
 
+bool PlayerIOFeature::ShouldLoadFeature()
+{
+	return GetEngine() != nullptr;
+}
+
 void PlayerIOFeature::InitHooks()
 {
 	HOOK_FUNCTION_WITH_CALLBACK(client, CreateMove, CreateMove_callback);
@@ -98,18 +103,24 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 	auto pl = GetPlayerData();
 	vars.OnGround = Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
 	                == Strafe::PositionType::GROUND;
+	bool ground; // for backwards compatibility with old bugs
 
 	if (tas_strafe_version.GetInt() <= 1)
 	{
-		vars.OnGround = IsGroundEntitySet();
+		ground = IsGroundEntitySet();
+	}
+	else
+	{
+		ground = vars.OnGround;
 	}
 
 	if (tas_force_onground.GetBool())
 	{
+		ground = true;
 		vars.OnGround = true;
 	}
 
-	vars.ReduceWishspeed = vars.OnGround && GetFlagsDucking();
+	vars.ReduceWishspeed = ground && GetFlagsDucking();
 	vars.Accelerate = _sv_accelerate->GetFloat();
 
 	if (tas_force_airaccelerate.GetString()[0] != '\0')
@@ -148,7 +159,7 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 
 		if (pl.Velocity.z <= 140.f)
 		{
-			if (vars.OnGround)
+			if (ground)
 			{
 				// TODO: This should check the real surface friction.
 				vars.EntFriction = 1.0f;

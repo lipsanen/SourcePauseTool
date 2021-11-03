@@ -9,6 +9,7 @@
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "vgui\graphics.hpp"
+#include "..\features\generic.hpp"
 
 namespace ModuleHooks
 {
@@ -41,12 +42,12 @@ namespace ModuleHooks
 		clientDLL.AfterFramesSignal.Connect(&utils::CheckPiwSave);
 #endif
 
-		clientDLL.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
+		generic_.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
 
 #ifndef OE
-		clientDLL.TickSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::NewTick);
-		clientDLL.TickSignal.Connect(vgui::DrawLines);
-		clientDLL.OngroundSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::OnGround);
+		generic_.TickSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::NewTick);
+		generic_.TickSignal.Connect(vgui::DrawLines);
+		generic_.OngroundSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::OnGround);
 
 		serverDLL.JumpSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::Jump);
 #endif

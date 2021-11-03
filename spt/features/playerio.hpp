@@ -107,10 +107,7 @@ private:
 	std::size_t sizeofCUserCmd;
 
 protected:
-	virtual bool ShouldLoadFeature() override
-	{
-		return GetEngine() != nullptr;
-	}
+	virtual bool ShouldLoadFeature() override;
 
 	virtual void InitHooks() override;
 
