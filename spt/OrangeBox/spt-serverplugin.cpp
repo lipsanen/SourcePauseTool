@@ -391,11 +391,6 @@ const char* CSourcePauseTool::GetPluginDescription(void)
 	return "SourcePauseTool v" SPT_VERSION ", Ivan \"YaLTeR\" Molodetskikh";
 }
 
-void CSourcePauseTool::GameFrame(bool simulating)
-{
-	generic_.Tick();
-}
-
 CON_COMMAND(_y_spt_afterframes_wait, "Delays the afterframes queue. Usage: _y_spt_afterframes_wait <delay>")
 {
 	if (!engine)

@@ -54,10 +54,10 @@ void TASFeature::UnloadFeature() {}
 
 void __fastcall TASFeature::HOOKED_AdjustAngles_Func(void* thisptr, int edx, float frametime)
 {
-	ORIG_AdjustAngles(thisptr, edx, frametime);
 	playerio::Set_cinput_thisptr(thisptr);
+	ORIG_AdjustAngles(thisptr, edx, frametime);
 
-	if(_playerio.pCmd == NULL)
+	if(!_playerio.pCmd)
 		return;
 
 	float va[3];
@@ -71,6 +71,7 @@ void __fastcall TASFeature::HOOKED_AdjustAngles_Func(void* thisptr, int edx, flo
 	}
 
 	EngineSetViewAngles(va);
+	generic_.Tick();
 }
 
 void TASFeature::Strafe(float* va, bool yawChanged)

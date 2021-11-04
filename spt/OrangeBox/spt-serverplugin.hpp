@@ -31,7 +31,7 @@ public:
 	virtual const char* GetPluginDescription(void);
 	virtual void LevelInit(char const* pMapName){};
 	virtual void ServerActivate(edict_t* pEdictList, int edictCount, int clientMax){};
-	virtual void GameFrame(bool simulating);
+	virtual void GameFrame(bool simulating){};
 	virtual void LevelShutdown(void){};
 	virtual void ClientActive(edict_t* pEntity){};
 	virtual void ClientDisconnect(edict_t* pEntity){};

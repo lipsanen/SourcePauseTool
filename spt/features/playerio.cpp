@@ -512,10 +512,6 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 
 void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
 {
-	// Apply jump and unduck regardless of whether we are strafing
-	forceUnduck = out.ForceUnduck;
-	forceJump = out.Jump;
-
 	// This bool is set if strafing should occur
 	if (out.Processed)
 	{
@@ -523,6 +519,10 @@ void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
 		{
 			aim::SetJump();
 		}
+
+		// Apply jump and unduck regardless of whether we are strafing
+		forceUnduck = out.ForceUnduck;
+		forceJump = out.Jump;
 
 		*reinterpret_cast<float*>(pCmd + offForwardmove) = out.ForwardSpeed;
 		*reinterpret_cast<float*>(pCmd + offSidemove) = out.SideSpeed;
