@@ -10,6 +10,7 @@
 #include "..\patterns.hpp"
 #include "ServerDLL.hpp"
 #include "..\..\utils\game_detection.hpp"
+#include "..\..\features\afterframes.hpp"
 
 #ifdef OE
 #include "SDK\usercmd.h"
@@ -942,7 +943,7 @@ void ServerDLL::HOOKED_MiddleOfSlidingFunction_Func()
 			afterframes_entry_t entry;
 			entry.framesLeft = pauseFor;
 			entry.command = "unpause";
-			clientDLL.AddIntoAfterframesQueue(entry);
+			_afterframes.AddAfterFramesEntry(entry);
 		}
 	}
 }

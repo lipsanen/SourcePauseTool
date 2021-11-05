@@ -10,9 +10,9 @@
 #include "..\..\utils\string_parsing.hpp"
 #include "..\cvars.hpp"
 #include "..\modules.hpp"
-#include "..\modules\ClientDLL.hpp"
 #include "..\modules\EngineDLL.hpp"
 #include "framebulk_handler.hpp"
+#include "..\..\features\afterframes.hpp"
 
 namespace scripts
 {
@@ -43,11 +43,11 @@ namespace scripts
 		fileName = script;
 		CommonExecuteScript(false);
 
-		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
+		_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
 		tickTime = engineDLL.GetTickrate();
 		snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
 		int resumeTick = GetCurrentScriptLength() - resumeTicks;
-		clientDLL.AddIntoAfterframesQueue(afterframes_entry_t(resumeTick, buffer));
+		_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
 	}
 
 	void SourceTASReader::StartSearch(const std::string& script)
@@ -188,7 +188,7 @@ namespace scripts
 		SetFpsAndPlayspeed();
 		engineDLL.Demo_StopRecording();
 		currentTick = 0;
-		clientDLL.ResetAfterframesQueue();
+		_afterframes.ResetAfterframesQueue();
 		currentScript.Init(fileName);
 
 		auto demoName = currentScript.GetDemoName();
@@ -211,7 +211,7 @@ namespace scripts
 		{
 			if (entry.framesLeft != NO_AFTERFRAMES_BULK)
 			{
-				clientDLL.AddIntoAfterframesQueue(entry);
+				_afterframes.AddAfterFramesEntry(entry);
 			}
 		}
 	}

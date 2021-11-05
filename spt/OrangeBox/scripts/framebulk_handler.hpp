@@ -1,6 +1,7 @@
 #pragma once
 
 #include "srctas_reader.hpp"
+#include <set>
 
 namespace scripts
 {

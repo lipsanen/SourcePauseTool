@@ -17,7 +17,6 @@ using std::uintptr_t;
 
 typedef void(__cdecl* _DoImageSpaceMotionBlur)(void* view, int x, int y, int w, int h);
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
-typedef void(__stdcall* _HudUpdate)(bool bActive);
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
 typedef void(
     __fastcall* _CViewRender__RenderView)(void* thisptr, int edx, void* cameraView, int nClearFlags, int whatToDraw);
@@ -46,16 +45,6 @@ typedef void(__fastcall* _CViewEffects__Shake)(void* thisptr, int edx, void* dat
 typedef const Vector&(__cdecl* _MainViewOrigin)();
 typedef void(__cdecl* _ResetToneMapping)(float value);
 
-struct afterframes_entry_t
-{
-	afterframes_entry_t(long long int framesLeft, std::string command)
-	    : framesLeft(framesLeft), command(std::move(command))
-	{
-	}
-	afterframes_entry_t() {}
-	long long int framesLeft;
-	std::string command;
-};
 
 class ClientDLL : public IHookableNameFilter
 {
@@ -88,7 +77,6 @@ public:
 	static void __fastcall HOOKED_CViewEffects__Shake(void* thisptr, int edx, void* data);
 	void __cdecl HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, int y, int w, int h);
 	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
-	void __stdcall HOOKED_HudUpdate_Func(bool bActive);
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_CViewRender__RenderView_Func(void* thisptr,
 	                                                    int edx,
@@ -98,24 +86,9 @@ public:
 	void __fastcall HOOKED_CViewRender__Render_Func(void* thisptr, int edx, void* rect);
 	static void __cdecl HOOKED_ResetToneMapping(float value);
 
-	void DelayAfterframesQueue(int delay);
-	void AddIntoAfterframesQueue(const afterframes_entry_t& entry);
-	void ResetAfterframesQueue();
-
-	void PauseAfterframesQueue()
-	{
-		afterframesPaused = true;
-	}
-	void ResumeAfterframesQueue()
-	{
-		afterframesPaused = false;
-	}
-
 	Vector GetCameraOrigin();
 	bool CanUnDuckJump(trace_t& ptr);
 
-	Gallant::Signal0<void> FrameSignal;
-	Gallant::Signal0<void> AfterFramesSignal;
 	bool renderingOverlay;
 	void* screenRect;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
@@ -124,7 +97,6 @@ public:
 protected:
 	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur;
 	_CheckJumpButton ORIG_CheckJumpButton;
-	_HudUpdate ORIG_HudUpdate;
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
 	_CViewRender__RenderView ORIG_CViewRender__RenderView;
 	_CViewRender__Render ORIG_CViewRender__Render;
@@ -139,12 +111,6 @@ protected:
 	ptrdiff_t off2M_nOldButtons;
 
 protected:
-	std::vector<afterframes_entry_t> afterframesQueue;
-	bool afterframesPaused = false;
 	bool cantJumpNextTime;
-
-	void OnFrame();
-
-	int afterframesDelay;
 	PatternContainer patternContainer;
 };

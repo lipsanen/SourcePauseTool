@@ -39,12 +39,6 @@ bool __fastcall ClientDLL::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	return clientDLL.HOOKED_CheckJumpButton_Func(thisptr, edx);
 }
 
-void __stdcall ClientDLL::HOOKED_HudUpdate(bool bActive)
-{
-	TRACE_ENTER();
-	return clientDLL.HOOKED_HudUpdate_Func(bActive);
-}
-
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx)
 {
 	TRACE_ENTER();
@@ -145,7 +139,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 
 	patternContainer.Init(moduleName);
 
-	DEF_FUTURE(HudUpdate);
 	DEF_FUTURE(CViewRender__OnRenderStart);
 	DEF_FUTURE(MiddleOfCAM_Think);
 	DEF_FUTURE(DoImageSpaceMotionBlur);
@@ -160,7 +153,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CHudDamageIndicator__GetDamagePosition);
 	DEF_FUTURE(ResetToneMapping);
 
-	GET_HOOKEDFUTURE(HudUpdate);
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
 	GET_HOOKEDFUTURE(DoImageSpaceMotionBlur);
 	GET_HOOKEDFUTURE(CheckJumpButton);
@@ -277,11 +269,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 		Warning("y_spt_autojump has no effect in multiplayer.\n");
 	}
 
-	if (!ORIG_HudUpdate)
-	{
-		Warning("_y_spt_afterframes has no effect.\n");
-	}
-
 	if (ORIG_CHLClient__CanRecordDemo)
 	{
 		int offset = *reinterpret_cast<int*>(ORIG_CHLClient__CanRecordDemo + 1);
@@ -333,7 +320,6 @@ void ClientDLL::Clear()
 	IHookableNameFilter::Clear();
 	ORIG_DoImageSpaceMotionBlur = nullptr;
 	ORIG_CheckJumpButton = nullptr;
-	ORIG_HudUpdate = nullptr;
 	ORIG_CViewRender__RenderView = nullptr;
 	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
@@ -343,24 +329,6 @@ void ClientDLL::Clear()
 	pgpGlobals = nullptr;
 	off1M_nOldButtons = 0;
 	off2M_nOldButtons = 0;
-
-	afterframesQueue.clear();
-	afterframesPaused = false;
-}
-
-void ClientDLL::DelayAfterframesQueue(int delay)
-{
-	afterframesDelay = delay;
-}
-
-void ClientDLL::AddIntoAfterframesQueue(const afterframes_entry_t& entry)
-{
-	afterframesQueue.push_back(entry);
-}
-
-void ClientDLL::ResetAfterframesQueue()
-{
-	afterframesQueue.clear();
 }
 
 Vector ClientDLL::GetCameraOrigin()
@@ -380,35 +348,6 @@ bool ClientDLL::CanUnDuckJump(trace_t& ptr)
 	}
 
 	return ORIG_CGameMovement__CanUnDuckJump(GetGamemovement(), 0, ptr);
-}
-
-void ClientDLL::OnFrame()
-{
-	FrameSignal();
-
-	if (afterframesPaused)
-	{
-		return;
-	}
-
-	if (afterframesDelay-- > 0)
-	{
-		return;
-	}
-
-	for (auto it = afterframesQueue.begin(); it != afterframesQueue.end();)
-	{
-		it->framesLeft--;
-		if (it->framesLeft <= 0)
-		{
-			EngineConCmd(it->command.c_str());
-			it = afterframesQueue.erase(it);
-		}
-		else
-			++it;
-	}
-
-	AfterFramesSignal();
 }
 
 void __cdecl ClientDLL::HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, int y, int w, int h)
@@ -494,13 +433,6 @@ bool __fastcall ClientDLL::HOOKED_CheckJumpButton_Func(void* thisptr, int edx)
 	DevMsg("Engine call: [client dll] CheckJumpButton() => %s\n", (rv ? "true" : "false"));
 
 	return rv;
-}
-
-void __stdcall ClientDLL::HOOKED_HudUpdate_Func(bool bActive)
-{
-	OnFrame();
-
-	return ORIG_HudUpdate(bActive);
 }
 
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx)

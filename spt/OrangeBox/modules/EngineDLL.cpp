@@ -13,6 +13,7 @@
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "vguimatsurfaceDLL.hpp"
+#include "..\..\features\afterframes.hpp"
 
 using std::size_t;
 using std::uintptr_t;
@@ -489,16 +490,10 @@ bool __cdecl EngineDLL::HOOKED_SV_ActivateServer_Func()
 		}
 	}
 
-	if (_y_spt_afterframes_reset_on_server_activate.GetBool())
-		clientDLL.ResetAfterframesQueue();
+	_afterframes.SV_ActivateServer();
 
 	return result;
 }
-
-ConVar _y_spt_afterframes_await_legacy("_y_spt_afterframes_await_legacy",
-                                       "0",
-                                       FCVAR_TAS_RESET,
-                                       "Set to 1 for backwards compatibility with old scripts.");
 
 void __fastcall EngineDLL::HOOKED_FinishRestore_Func(void* thisptr, int edx)
 {
@@ -514,14 +509,12 @@ void __fastcall EngineDLL::HOOKED_FinishRestore_Func(void* thisptr, int edx)
 
 	ORIG_FinishRestore(thisptr, edx);
 
-	if (_y_spt_afterframes_await_legacy.GetBool())
-		clientDLL.ResumeAfterframesQueue();
+	_afterframes.FinishRestore();
 }
 
 void __fastcall EngineDLL::HOOKED_SetPaused_Func(void* thisptr, int edx, bool paused)
 {
-	if (!paused && !_y_spt_afterframes_await_legacy.GetBool())
-		clientDLL.ResumeAfterframesQueue();
+	_afterframes.SetPaused(paused);
 
 	if (pM_bLoadgame)
 	{

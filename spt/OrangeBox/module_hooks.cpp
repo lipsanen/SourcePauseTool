@@ -33,13 +33,12 @@ namespace ModuleHooks
 
 	void ConnectSignals()
 	{
-		clientDLL.FrameSignal.Connect(ipc::Loop);
-
-		clientDLL.AfterFramesSignal.Connect(&scripts::g_TASReader, &scripts::SourceTASReader::OnAfterFrames);
-		clientDLL.AfterFramesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
-		clientDLL.AfterFramesSignal.Connect(&PauseOnDemoTick);
+		generic_.FrameSignal.Connect(ipc::Loop);
+		_afterframes.AfterFramesSignal.Connect(&scripts::g_TASReader, &scripts::SourceTASReader::OnAfterFrames);
+		_afterframes.AfterFramesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
+		_afterframes.AfterFramesSignal.Connect(&PauseOnDemoTick);
 #if !defined(OE) && !defined(P2)
-		clientDLL.AfterFramesSignal.Connect(&utils::CheckPiwSave);
+		_afterframes.AfterFramesSignal.Connect(&utils::CheckPiwSave);
 #endif
 
 		generic_.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);

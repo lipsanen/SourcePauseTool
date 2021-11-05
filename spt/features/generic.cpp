@@ -22,6 +22,7 @@ bool GenericFeature::ShouldLoadFeature()
 
 void GenericFeature::InitHooks()
 {
+	HOOK_FUNCTION(client, HudUpdate);
 }
 
 void GenericFeature::LoadFeature()
@@ -30,4 +31,10 @@ void GenericFeature::LoadFeature()
 
 void GenericFeature::UnloadFeature()
 {
+}
+
+void __stdcall GenericFeature::HOOKED_HudUpdate(bool bActive)
+{
+	generic_.FrameSignal();
+	generic_.ORIG_HudUpdate(bActive);
 }
