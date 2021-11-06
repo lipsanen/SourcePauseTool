@@ -133,9 +133,6 @@
     <ClCompile Include="spt\ipc\ipc-commands.cpp">
       <Filter>spt\ipc</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\inputSystemDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\aim.cpp">
       <Filter>spt</Filter>
     </ClCompile>
@@ -170,6 +167,9 @@
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\autojump.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\nosleep.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
   </ItemGroup>
@@ -389,9 +389,6 @@
     </ClInclude>
     <ClInclude Include="thirdparty\Signal.h">
       <Filter>thirdparty</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\inputSystemDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
     </ClInclude>
     <ClInclude Include="spt\aim.hpp">
       <Filter>spt</Filter>
