@@ -13,6 +13,7 @@
 #include "..\..\features\tickrate.hpp"
 #include "framebulk_handler.hpp"
 #include "..\..\features\afterframes.hpp"
+#include "..\..\features\demo.hpp"
 
 namespace scripts
 {
@@ -186,7 +187,7 @@ namespace scripts
 	{
 		iterationFinished = false;
 		SetFpsAndPlayspeed();
-		engineDLL.Demo_StopRecording();
+		g_Demostuff.Demo_StopRecording();
 		currentTick = 0;
 		_afterframes.ResetAfterframesQueue();
 		currentScript.Init(fileName);

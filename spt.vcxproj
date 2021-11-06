@@ -1368,6 +1368,7 @@
     <ClCompile Include="spt\feature.cpp" />
     <ClCompile Include="spt\features\afterframes.cpp" />
     <ClCompile Include="spt\features\autojump.cpp" />
+    <ClCompile Include="spt\features\demo.cpp" />
     <ClCompile Include="spt\features\dmomm.cpp" />
     <ClCompile Include="spt\features\generic.cpp" />
     <ClCompile Include="spt\features\hud.cpp" />
@@ -1759,6 +1760,7 @@
     <ClInclude Include="spt\feature.hpp" />
     <ClInclude Include="spt\features\afterframes.hpp" />
     <ClInclude Include="spt\features\autojump.hpp" />
+    <ClInclude Include="spt\features\demo.hpp" />
     <ClInclude Include="spt\features\generic.hpp" />
     <ClInclude Include="spt\features\isg.hpp" />
     <ClInclude Include="spt\features\overlay.hpp" />
