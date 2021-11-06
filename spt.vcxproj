@@ -1367,6 +1367,7 @@
     <ClCompile Include="spt\aim.cpp" />
     <ClCompile Include="spt\feature.cpp" />
     <ClCompile Include="spt\features\afterframes.cpp" />
+    <ClCompile Include="spt\features\autojump.cpp" />
     <ClCompile Include="spt\features\generic.cpp" />
     <ClCompile Include="spt\features\isg.cpp" />
     <ClCompile Include="spt\features\pause.cpp" />
@@ -1779,6 +1780,7 @@
     <ClInclude Include="spt\aim.hpp" />
     <ClInclude Include="spt\feature.hpp" />
     <ClInclude Include="spt\features\afterframes.hpp" />
+    <ClInclude Include="spt\features\autojump.hpp" />
     <ClInclude Include="spt\features\generic.hpp" />
     <ClInclude Include="spt\features\isg.hpp" />
     <ClInclude Include="spt\features\playerio.hpp" />

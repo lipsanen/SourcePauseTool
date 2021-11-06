@@ -33,12 +33,6 @@ void __cdecl ClientDLL::HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, 
 	return clientDLL.HOOKED_DoImageSpaceMotionBlur_Func(view, x, y, w, h);
 }
 
-bool __fastcall ClientDLL::HOOKED_CheckJumpButton(void* thisptr, int edx)
-{
-	TRACE_ENTER();
-	return clientDLL.HOOKED_CheckJumpButton_Func(thisptr, edx);
-}
-
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx)
 {
 	TRACE_ENTER();
@@ -142,7 +136,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CViewRender__OnRenderStart);
 	DEF_FUTURE(MiddleOfCAM_Think);
 	DEF_FUTURE(DoImageSpaceMotionBlur);
-	DEF_FUTURE(CheckJumpButton);
 	DEF_FUTURE(CHLClient__CanRecordDemo);
 	DEF_FUTURE(CViewRender__RenderView);
 	DEF_FUTURE(CViewRender__Render);
@@ -155,7 +148,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
 	GET_HOOKEDFUTURE(DoImageSpaceMotionBlur);
-	GET_HOOKEDFUTURE(CheckJumpButton);
 	GET_FUTURE(CHLClient__CanRecordDemo);
 	GET_HOOKEDFUTURE(CViewRender__RenderView);
 	GET_HOOKEDFUTURE(CViewRender__Render);
@@ -202,71 +194,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	else
 	{
 		Warning("y_spt_motion_blur_fix has no effect.\n");
-	}
-
-	if (ORIG_CheckJumpButton)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_CheckJumpButton);
-
-		switch (ptnNumber)
-		{
-		case 0:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-		case 1:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 2:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 3:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 4:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 5:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 6:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 7:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 8:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 9:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 10:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-		}
-	}
-	else
-	{
-		Warning("y_spt_autojump has no effect in multiplayer.\n");
 	}
 
 	if (ORIG_CHLClient__CanRecordDemo)
@@ -319,7 +246,6 @@ void ClientDLL::Clear()
 {
 	IHookableNameFilter::Clear();
 	ORIG_DoImageSpaceMotionBlur = nullptr;
-	ORIG_CheckJumpButton = nullptr;
 	ORIG_CViewRender__RenderView = nullptr;
 	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
@@ -327,8 +253,6 @@ void ClientDLL::Clear()
 	ORIG_ResetToneMapping = nullptr;
 
 	pgpGlobals = nullptr;
-	off1M_nOldButtons = 0;
-	off2M_nOldButtons = 0;
 }
 
 Vector ClientDLL::GetCameraOrigin()
@@ -379,60 +303,6 @@ void __cdecl ClientDLL::HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, in
 			*pgpGlobals = origgpGlobals;
 		}
 	}
-}
-
-bool __fastcall ClientDLL::HOOKED_CheckJumpButton_Func(void* thisptr, int edx)
-{
-	/*
-	Not sure if this gets called at all from the client dll, but
-	I will just hook it in exactly the same way as the server one.
-	*/
-	const int IN_JUMP = (1 << 1);
-
-	int* pM_nOldButtons = NULL;
-	int origM_nOldButtons = 0;
-
-	if (y_spt_autojump.GetBool())
-	{
-		pM_nOldButtons = (int*)(*((uintptr_t*)thisptr + off1M_nOldButtons) + off2M_nOldButtons);
-		origM_nOldButtons = *pM_nOldButtons;
-
-		if (!cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
-		{
-			*pM_nOldButtons &= ~IN_JUMP; // Reset the jump button state as if it wasn't pressed.
-		}
-		else
-		{
-			// DevMsg( "Con jump prevented!\n" );
-		}
-	}
-
-	cantJumpNextTime = false;
-
-	bool rv = ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
-
-	if (y_spt_autojump.GetBool())
-	{
-		if (!(*pM_nOldButtons & IN_JUMP)) // CheckJumpButton didn't change anything (we didn't jump).
-		{
-			*pM_nOldButtons = origM_nOldButtons; // Restore the old jump button state.
-		}
-	}
-
-	if (rv)
-	{
-		// We jumped.
-		if (_y_spt_autojump_ensure_legit.GetBool())
-		{
-			cantJumpNextTime = true; // Prevent consecutive jumps.
-		}
-
-		// DevMsg( "Jump!\n" );
-	}
-
-	DevMsg("Engine call: [client dll] CheckJumpButton() => %s\n", (rv ? "true" : "false"));
-
-	return rv;
 }
 
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx)

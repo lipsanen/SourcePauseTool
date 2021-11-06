@@ -4,7 +4,6 @@
 #include "modules.hpp"
 
 ConVar y_spt_motion_blur_fix("y_spt_motion_blur_fix", "0");
-ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
 ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",
                                   "0",
                                   0,
@@ -140,7 +139,6 @@ ConVar tas_script_printvars("tas_script_printvars",
                             "Prints variable information when running .srctas scripts.\n");
 ConVar tas_script_savestates("tas_script_savestates", "1", 0, "Enables/disables savestates in .srctas scripts.\n");
 ConVar tas_script_onsuccess("tas_script_onsuccess", "", 0, "Commands to be executed when a search concludes.\n");
-ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_CHEAT);
 ConVar _y_spt_anglesetspeed(
     "_y_spt_anglesetspeed",
     "360",

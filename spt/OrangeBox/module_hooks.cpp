@@ -9,6 +9,7 @@
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "vgui\graphics.hpp"
+#include "..\features\autojump.hpp"
 #include "..\features\generic.hpp"
 
 namespace ModuleHooks
@@ -48,7 +49,7 @@ namespace ModuleHooks
 		generic_.TickSignal.Connect(vgui::DrawLines);
 		generic_.OngroundSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::OnGround);
 
-		serverDLL.JumpSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::Jump);
+		_autojump.JumpSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::Jump);
 #endif
 	}
 } // namespace ModuleHooks

@@ -87,7 +87,6 @@ public:
 	virtual void Unhook();
 	virtual void Clear();
 
-	static bool __fastcall HOOKED_CheckJumpButton(void* thisptr, int edx);
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
 	static void __fastcall HOOKED_PlayerRunCommand(void* thisptr, int edx, void* ucmd, void* moveHelper);
 	static int __fastcall HOOKED_CheckStuck(void* thisptr, int edx);
@@ -121,7 +120,6 @@ public:
 	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx);
 	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx);
 	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
-	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper);
 	int __fastcall HOOKED_CheckStuck_Func(void* thisptr, int edx);
@@ -195,7 +193,6 @@ public:
 	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox;
 	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround;
 	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2;
-	Gallant::Signal0<void> JumpSignal;
 	bool overrideMinMax;
 	Vector _mins;
 	Vector _maxs;
@@ -217,10 +214,6 @@ protected:
 	void* ORIG_EndOfTeleportTouchingEntity;
 	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;
 
-	ptrdiff_t off1M_nOldButtons;
-	ptrdiff_t off2M_nOldButtons;
-	bool cantJumpNextTime;
-	bool insideCheckJumpButton;
 	int commandNumber;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;

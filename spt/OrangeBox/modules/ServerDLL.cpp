@@ -11,6 +11,7 @@
 #include "ServerDLL.hpp"
 #include "..\..\utils\game_detection.hpp"
 #include "..\..\features\afterframes.hpp"
+#include "..\..\features\autojump.hpp"
 
 #ifdef OE
 #include "SDK\usercmd.h"
@@ -20,12 +21,6 @@
 
 using std::size_t;
 using std::uintptr_t;
-
-bool __fastcall ServerDLL::HOOKED_CheckJumpButton(void* thisptr, int edx)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_CheckJumpButton_Func(thisptr, edx);
-}
 
 void __fastcall ServerDLL::HOOKED_FinishGravity(void* thisptr, int edx)
 {
@@ -260,7 +255,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
 	GET_HOOKEDFUTURE(MiddleOfSlidingFunction);
-	GET_HOOKEDFUTURE(CheckJumpButton);
 	GET_FUTURE(CHL2_Player__HandleInteraction);
 	GET_FUTURE(PerformFlyCollisionResolution);
 	GET_FUTURE(GetStepSoundVelocities);
@@ -281,113 +275,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		DEF_FUTURE(EndOfTeleportTouchingEntity);
 		GET_HOOKEDFUTURE(MiddleOfTeleportTouchingEntity);
 		GET_HOOKEDFUTURE(EndOfTeleportTouchingEntity);
-	}
-
-	// Server-side CheckJumpButton
-	if (ORIG_CheckJumpButton)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_CheckJumpButton);
-		switch (ptnNumber)
-		{
-		case 0:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 1:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 2:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 3:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 4:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 5:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 6:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 7:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 8:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 9:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 10:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 11:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 12:
-			off1M_nOldButtons = 3;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 13:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 14:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 15:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 16:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 17:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 18:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-		}
-	}
-	else
-	{
-		Warning("y_spt_autojump has no effect.\n");
 	}
 
 	// FinishGravity
@@ -615,10 +502,6 @@ void ServerDLL::Clear()
 	ORIG_MiddleOfSlidingFunction = nullptr;
 	ORIG_MiddleOfTeleportTouchingEntity = nullptr;
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
-	off1M_nOldButtons = 0;
-	off2M_nOldButtons = 0;
-	cantJumpNextTime = false;
-	insideCheckJumpButton = false;
 	off1M_bDucked = 0;
 	off2M_bDucked = 0;
 	offM_vecAbsVelocity = 0;
@@ -707,87 +590,11 @@ void __cdecl ServerDLL::HOOKED_SetPredictionRandomSeed(void* usercmd)
 	serverDLL.ORIG_SetPredictionRandomSeed(usercmd);
 }
 
-bool __fastcall ServerDLL::HOOKED_CheckJumpButton_Func(void* thisptr, int edx)
-{
-	const int IN_JUMP = (1 << 1);
-
-	int* pM_nOldButtons = NULL;
-	int origM_nOldButtons = 0;
-
-	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + off1M_nOldButtons));
-	if (tas_log.GetBool())
-		DevMsg("[CheckJumpButton PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
-		       mv->GetAbsOrigin().x,
-		       mv->GetAbsOrigin().y,
-		       mv->GetAbsOrigin().z,
-		       mv->m_vecVelocity.x,
-		       mv->m_vecVelocity.y,
-		       mv->m_vecVelocity.z);
-
-	if (y_spt_autojump.GetBool())
-	{
-		pM_nOldButtons = (int*)(*((uintptr_t*)thisptr + off1M_nOldButtons) + off2M_nOldButtons);
-		// EngineMsg("thisptr: %p, pM_nOldButtons: %p, difference: %x\n", thisptr, pM_nOldButtons, (pM_nOldButtons - thisptr));
-		origM_nOldButtons = *pM_nOldButtons;
-
-		if (!cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
-		{
-			*pM_nOldButtons &= ~IN_JUMP; // Reset the jump button state as if it wasn't pressed.
-		}
-		else
-		{
-			//DevMsg( "Con jump prevented!\n" );
-		}
-	}
-
-	cantJumpNextTime = false;
-
-	insideCheckJumpButton = true;
-	bool rv = ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
-	insideCheckJumpButton = false;
-
-	if (y_spt_autojump.GetBool())
-	{
-		if (!(*pM_nOldButtons & IN_JUMP)) // CheckJumpButton didn't change anything (we didn't jump).
-		{
-			*pM_nOldButtons = origM_nOldButtons; // Restore the old jump button state.
-		}
-	}
-
-	if (rv)
-	{
-		// We jumped.
-		if (_y_spt_autojump_ensure_legit.GetBool())
-		{
-			JumpSignal();
-			cantJumpNextTime = true; // Prevent consecutive jumps.
-		}
-
-		//DevMsg( "Jump!\n" );
-	}
-
-	//DevMsg( "Engine call: [server dll] CheckJumpButton() => %s\n", (rv ? "true" : "false") );
-
-	//CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t *)thisptr + off1M_nOldButtons));
-	//DevMsg("[CJB] maxspeed = %.8f; speed = %.8f; yaw = %.8f; fmove = %.8f; smove = %.8f\n", mv->m_flMaxSpeed, mv->m_vecVelocity.Length2D(), mv->m_vecViewAngles[YAW], mv->m_flForwardMove, mv->m_flSideMove);
-
-	if (tas_log.GetBool())
-		DevMsg("[CheckJumpButton POST] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
-		       mv->GetAbsOrigin().x,
-		       mv->GetAbsOrigin().y,
-		       mv->GetAbsOrigin().z,
-		       mv->m_vecVelocity.x,
-		       mv->m_vecVelocity.y,
-		       mv->m_vecVelocity.z);
-
-	return rv;
-}
-
 void __fastcall ServerDLL::HOOKED_FinishGravity_Func(void* thisptr, int edx)
 {
-	if (insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
+	if (_autojump.insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
 	{
-		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + off1M_nOldButtons));
+		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
 		bool ducked = *(bool*)(*((uintptr_t*)thisptr + off1M_bDucked) + off2M_bDucked);
 
 		// <stolen from gamemovement.cpp>
@@ -856,7 +663,7 @@ void __fastcall ServerDLL::HOOKED_AirAccelerate_Func(void* thisptr,
 {
 	const double M_RAD2DEG = 180 / M_PI;
 
-	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + off1M_nOldButtons));
+	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
 	DevMsg("[AA Pre ] velocity: %.8f %.8f %.8f\n", mv->m_vecVelocity.x, mv->m_vecVelocity.y, mv->m_vecVelocity.z);
 	DevMsg("[AA Pre ] speed = %.8f; wishspeed = %.8f; accel = %.8f; wishdir = %.8f; surface friction = %.8f\n",
 	       mv->m_vecVelocity.Length2D(),

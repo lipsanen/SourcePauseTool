@@ -16,7 +16,6 @@ using std::size_t;
 using std::uintptr_t;
 
 typedef void(__cdecl* _DoImageSpaceMotionBlur)(void* view, int x, int y, int w, int h);
-typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
 typedef void(
     __fastcall* _CViewRender__RenderView)(void* thisptr, int edx, void* cameraView, int nClearFlags, int whatToDraw);
@@ -59,7 +58,6 @@ public:
 	virtual void Clear();
 
 	static void __cdecl HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, int w, int h);
-	static bool __fastcall HOOKED_CheckJumpButton(void* thisptr, int edx);
 	static void __stdcall HOOKED_HudUpdate(bool bActive);
 	static void __fastcall HOOKED_CreateMove(void* thisptr,
 	                                         int edx,
@@ -76,7 +74,6 @@ public:
 	static void __fastcall HOOKED_CViewEffects__Fade(void* thisptr, int edx, void* data);
 	static void __fastcall HOOKED_CViewEffects__Shake(void* thisptr, int edx, void* data);
 	void __cdecl HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, int y, int w, int h);
-	bool __fastcall HOOKED_CheckJumpButton_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_CViewRender__RenderView_Func(void* thisptr,
 	                                                    int edx,
@@ -96,7 +93,6 @@ public:
 
 protected:
 	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur;
-	_CheckJumpButton ORIG_CheckJumpButton;
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
 	_CViewRender__RenderView ORIG_CViewRender__RenderView;
 	_CViewRender__Render ORIG_CViewRender__Render;
@@ -107,10 +103,7 @@ protected:
 	_ResetToneMapping ORIG_ResetToneMapping;
 
 	uintptr_t* pgpGlobals;
-	ptrdiff_t off1M_nOldButtons;
-	ptrdiff_t off2M_nOldButtons;
 
 protected:
-	bool cantJumpNextTime;
 	PatternContainer patternContainer;
 };
