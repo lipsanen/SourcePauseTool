@@ -34,19 +34,19 @@ ConVar y_spt_hud_accel("y_spt_hud_accel", "0", FCVAR_CHEAT, "Turns on the accele
 ConVar y_spt_hud_script_length("y_spt_hud_script_progress", "0", FCVAR_CHEAT, "Turns on the script progress hud.\n");
 ConVar y_spt_hud_portal_bubble("y_spt_hud_portal_bubble", "0", FCVAR_CHEAT, "Turns on portal bubble index hud.\n");
 ConVar y_spt_hud_decimals("y_spt_hud_decimals",
-	"2",
-	FCVAR_CHEAT,
-	"Determines the number of decimals in the SPT HUD.\n");
+                          "2",
+                          FCVAR_CHEAT,
+                          "Determines the number of decimals in the SPT HUD.\n");
 ConVar y_spt_hud_vars("y_spt_hud_vars", "0", FCVAR_CHEAT, "Turns on the movement vars HUD.\n");
 ConVar y_spt_hud_ag_sg_tester("y_spt_hud_ag_sg_tester",
-	"0",
-	FCVAR_CHEAT,
-	"Tests if angle glitch will save glitch you.\n");
+                              "0",
+                              FCVAR_CHEAT,
+                              "Tests if angle glitch will save glitch you.\n");
 ConVar y_spt_hud_ent_info(
-	"y_spt_hud_ent_info",
-	"",
-	FCVAR_CHEAT,
-	"Display entity info on HUD. Format is \"[ent index],[prop regex],[prop regex],...,[prop regex];[ent index],...,[prop regex]\".\n");
+    "y_spt_hud_ent_info",
+    "",
+    FCVAR_CHEAT,
+    "Display entity info on HUD. Format is \"[ent index],[prop regex],[prop regex],...,[prop regex];[ent index],...,[prop regex]\".\n");
 ConVar y_spt_hud_left("y_spt_hud_left", "0", FCVAR_CHEAT, "When set to 1, displays SPT HUD on the left.\n");
 ConVar y_spt_hud_oob("y_spt_hud_oob", "0", FCVAR_CHEAT, "Is the player OoB?");
 ConVar y_spt_hud_isg("y_spt_hud_isg", "0", FCVAR_CHEAT, "Is the ISG flag set?\n");
@@ -63,6 +63,7 @@ protected:
 	virtual void LoadFeature() override;
 
 	virtual void UnloadFeature() override;
+
 private:
 	void Jump();
 	void OnGround(bool ground);
@@ -98,49 +99,49 @@ private:
 	void DrawHopHud(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSurface* surface);
 	void DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSurface* surface);
 	void DrawFlagsHud(bool mutuallyExclusiveFlags,
-		const wchar* hudName,
-		int& vertIndex,
-		int x,
-		const wchar** nameArray,
-		int count,
-		IMatSystemSurface* surface,
-		wchar* buffer,
-		int bufferCount,
-		int flags,
-		int fontTall);
+	                  const wchar* hudName,
+	                  int& vertIndex,
+	                  int x,
+	                  const wchar** nameArray,
+	                  int count,
+	                  IMatSystemSurface* surface,
+	                  wchar* buffer,
+	                  int bufferCount,
+	                  int flags,
+	                  int fontTall);
 	void DrawSingleFloat(int& vertIndex,
-		const wchar* name,
-		float f,
-		int fontTall,
-		int bufferCount,
-		int x,
-		IMatSystemSurface* surface,
-		wchar* buffer);
+	                     const wchar* name,
+	                     float f,
+	                     int fontTall,
+	                     int bufferCount,
+	                     int x,
+	                     IMatSystemSurface* surface,
+	                     wchar* buffer);
 	void DrawSingleInt(int& vertIndex,
-		const wchar* name,
-		int i,
-		int fontTall,
-		int bufferCount,
-		int x,
-		IMatSystemSurface* surface,
-		wchar* buffer);
+	                   const wchar* name,
+	                   int i,
+	                   int fontTall,
+	                   int bufferCount,
+	                   int x,
+	                   IMatSystemSurface* surface,
+	                   wchar* buffer);
 	void DrawTripleFloat(int& vertIndex,
-		const wchar* name,
-		float f1,
-		float f2,
-		float f3,
-		int fontTall,
-		int bufferCount,
-		int x,
-		IMatSystemSurface* surface,
-		wchar* buffer);
+	                     const wchar* name,
+	                     float f1,
+	                     float f2,
+	                     float f3,
+	                     int fontTall,
+	                     int bufferCount,
+	                     int x,
+	                     IMatSystemSurface* surface,
+	                     wchar* buffer);
 	void DrawSingleString(int& vertIndex,
-		const wchar* str,
-		int fontTall,
-		int bufferCount,
-		int x,
-		IMatSystemSurface* surface,
-		wchar* buffer);
+	                      const wchar* str,
+	                      int fontTall,
+	                      int bufferCount,
+	                      int x,
+	                      IMatSystemSurface* surface,
+	                      wchar* buffer);
 };
 
 static HUDFeature _hud;
@@ -151,31 +152,37 @@ ConVar y_spt_hud_hops_y("y_spt_hud_hops_y", "100", FCVAR_CHEAT, "Hops HUD y offs
 ConVar y_spt_hud_velocity_angles("y_spt_hud_velocity_angles", "0", FCVAR_CHEAT, "Display velocity Euler angles.");
 ConVar _y_spt_overlay_crosshair_size("_y_spt_overlay_crosshair_size", "10", FCVAR_CHEAT, "Overlay crosshair size.");
 ConVar _y_spt_overlay_crosshair_thickness("_y_spt_overlay_crosshair_thickness",
-	"1",
-	FCVAR_CHEAT,
-	"Overlay crosshair thickness.");
+                                          "1",
+                                          FCVAR_CHEAT,
+                                          "Overlay crosshair thickness.");
 ConVar _y_spt_overlay_crosshair_color("_y_spt_overlay_crosshair_color",
-	"0 255 0 255",
-	FCVAR_CHEAT,
-	"Overlay crosshair RGBA color.");
+                                      "0 255 0 255",
+                                      FCVAR_CHEAT,
+                                      "Overlay crosshair RGBA color.");
 
 const int INDEX_MASK = MAX_EDICTS - 1;
-
 
 bool HUDFeature::ShouldLoadFeature()
 {
 	return true;
 }
 
-void HUDFeature::InitHooks() 
+void HUDFeature::InitHooks()
 {
 	FIND_PATTERN(vguimatsurface, StartDrawing);
 	FIND_PATTERN(vguimatsurface, FinishDrawing);
 	HOOK_FUNCTION(engine, VGui_Paint);
 }
 
-void HUDFeature::LoadFeature() 
+void HUDFeature::LoadFeature()
 {
+	auto icvar = GetCvarInterface();
+	cl_showpos = icvar->FindVar("cl_showpos");
+	cl_showfps = icvar->FindVar("cl_showfps");
+	auto scheme = vgui::GetScheme();
+	font = scheme->GetFont("DefaultFixedOutline", false);
+	hopsFont = scheme->GetFont("Trebuchet24", false);
+
 	if (!ORIG_VGui_Paint || !ORIG_FinishDrawing || !ORIG_StartDrawing)
 	{
 		Warning("Speedrun hud is not available.\n");
@@ -258,11 +265,11 @@ void HUDFeature::DrawHUD(vrect_t* screen)
 		}
 
 		if (y_spt_hud_velocity.GetBool() || y_spt_hud_flags.GetBool() || y_spt_hud_moveflags.GetBool()
-			|| y_spt_hud_movecollideflags.GetBool() || y_spt_hud_collisionflags.GetBool()
-			|| y_spt_hud_script_length.GetBool() || y_spt_hud_accel.GetBool() || y_spt_hud_vars.GetBool()
-			|| y_spt_hud_portal_bubble.GetBool() || y_spt_hud_ag_sg_tester.GetBool()
-			|| !whiteSpacesOnly(y_spt_hud_ent_info.GetString()) || y_spt_hud_oob.GetBool()
-			|| y_spt_hud_velocity_angles.GetBool() || y_spt_hud_isg.GetBool())
+		    || y_spt_hud_movecollideflags.GetBool() || y_spt_hud_collisionflags.GetBool()
+		    || y_spt_hud_script_length.GetBool() || y_spt_hud_accel.GetBool() || y_spt_hud_vars.GetBool()
+		    || y_spt_hud_portal_bubble.GetBool() || y_spt_hud_ag_sg_tester.GetBool()
+		    || !whiteSpacesOnly(y_spt_hud_ent_info.GetString()) || y_spt_hud_oob.GetBool()
+		    || y_spt_hud_velocity_angles.GetBool() || y_spt_hud_isg.GetBool())
 		{
 			DrawTopHUD(screen, scheme, surface);
 		}
@@ -339,77 +346,77 @@ void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 	_hud.ORIG_VGui_Paint(thisptr, edx, mode);
 }
 
-const wchar* FLAGS[] = { L"FL_ONGROUND",
-						L"FL_DUCKING",
-						L"FL_WATERJUMP",
-						L"FL_ONTRAIN",
-						L"FL_INRAIN",
-						L"FL_FROZEN",
-						L"FL_ATCONTROLS",
-						L"FL_CLIENT",
-						L"FL_FAKECLIENT",
-						L"FL_INWATER",
-						L"FL_FLY",
-						L"FL_SWIM",
-						L"FL_CONVEYOR",
-						L"FL_NPC",
-						L"FL_GODMODE",
-						L"FL_NOTARGET",
-						L"FL_AIMTARGET",
-						L"FL_PARTIALGROUND",
-						L"FL_STATICPROP",
-						L"FL_GRAPHED",
-						L"FL_GRENADE",
-						L"FL_STEPMOVEMENT",
-						L"FL_DONTTOUCH",
-						L"FL_BASEVELOCITY",
-						L"FL_WORLDBRUSH",
-						L"FL_OBJECT",
-						L"FL_KILLME",
-						L"FL_ONFIRE",
-						L"FL_DISSOLVING",
-						L"FL_TRANSRAGDOLL",
-						L"FL_UNBLOCKABLE_BY_PLAYER" };
+const wchar* FLAGS[] = {L"FL_ONGROUND",
+                        L"FL_DUCKING",
+                        L"FL_WATERJUMP",
+                        L"FL_ONTRAIN",
+                        L"FL_INRAIN",
+                        L"FL_FROZEN",
+                        L"FL_ATCONTROLS",
+                        L"FL_CLIENT",
+                        L"FL_FAKECLIENT",
+                        L"FL_INWATER",
+                        L"FL_FLY",
+                        L"FL_SWIM",
+                        L"FL_CONVEYOR",
+                        L"FL_NPC",
+                        L"FL_GODMODE",
+                        L"FL_NOTARGET",
+                        L"FL_AIMTARGET",
+                        L"FL_PARTIALGROUND",
+                        L"FL_STATICPROP",
+                        L"FL_GRAPHED",
+                        L"FL_GRENADE",
+                        L"FL_STEPMOVEMENT",
+                        L"FL_DONTTOUCH",
+                        L"FL_BASEVELOCITY",
+                        L"FL_WORLDBRUSH",
+                        L"FL_OBJECT",
+                        L"FL_KILLME",
+                        L"FL_ONFIRE",
+                        L"FL_DISSOLVING",
+                        L"FL_TRANSRAGDOLL",
+                        L"FL_UNBLOCKABLE_BY_PLAYER"};
 
-const wchar* MOVETYPE_FLAGS[] = { L"MOVETYPE_NONE",
-								 L"MOVETYPE_ISOMETRIC",
-								 L"MOVETYPE_WALK",
-								 L"MOVETYPE_STEP",
-								 L"MOVETYPE_FLY",
-								 L"MOVETYPE_FLYGRAVITY",
-								 L"MOVETYPE_VPHYSICS",
-								 L"MOVETYPE_PUSH",
-								 L"MOVETYPE_NOCLIP",
-								 L"MOVETYPE_LADDER",
-								 L"MOVETYPE_OBSERVER",
-								 L"MOVETYPE_CUSTOM" };
+const wchar* MOVETYPE_FLAGS[] = {L"MOVETYPE_NONE",
+                                 L"MOVETYPE_ISOMETRIC",
+                                 L"MOVETYPE_WALK",
+                                 L"MOVETYPE_STEP",
+                                 L"MOVETYPE_FLY",
+                                 L"MOVETYPE_FLYGRAVITY",
+                                 L"MOVETYPE_VPHYSICS",
+                                 L"MOVETYPE_PUSH",
+                                 L"MOVETYPE_NOCLIP",
+                                 L"MOVETYPE_LADDER",
+                                 L"MOVETYPE_OBSERVER",
+                                 L"MOVETYPE_CUSTOM"};
 
-const wchar* MOVECOLLIDE_FLAGS[] = { L"MOVECOLLIDE_DEFAULT",
-									L"MOVECOLLIDE_FLY_BOUNCE",
-									L"MOVECOLLIDE_FLY_CUSTOM",
-									L"MOVECOLLIDE_COUNT" };
+const wchar* MOVECOLLIDE_FLAGS[] = {L"MOVECOLLIDE_DEFAULT",
+                                    L"MOVECOLLIDE_FLY_BOUNCE",
+                                    L"MOVECOLLIDE_FLY_CUSTOM",
+                                    L"MOVECOLLIDE_COUNT"};
 
-const wchar* COLLISION_GROUPS[] = { L"COLLISION_GROUP_NONE",
-								   L"COLLISION_GROUP_DEBRIS",
-								   L"COLLISION_GROUP_DEBRIS_TRIGGER",
-								   L"COLLISION_GROUP_INTERACTIVE_DEBRIS",
-								   L"COLLISION_GROUP_INTERACTIVE",
-								   L"COLLISION_GROUP_PLAYER",
-								   L"COLLISION_GROUP_BREAKABLE_GLASS,",
-								   L"COLLISION_GROUP_VEHICLE",
-								   L"COLLISION_GROUP_PLAYER_MOVEMENT",
-								   L"COLLISION_GROUP_NPC",
-								   L"COLLISION_GROUP_IN_VEHICLE",
-								   L"COLLISION_GROUP_WEAPON",
-								   L"COLLISION_GROUP_VEHICLE_CLIP",
-								   L"COLLISION_GROUP_PROJECTILE",
-								   L"COLLISION_GROUP_DOOR_BLOCKER",
-								   L"COLLISION_GROUP_PASSABLE_DOOR",
-								   L"COLLISION_GROUP_DISSOLVING",
-								   L"COLLISION_GROUP_PUSHAWAY",
-								   L"COLLISION_GROUP_NPC_ACTOR",
-								   L"COLLISION_GROUP_NPC_SCRIPTED",
-								   L"LAST_SHARED_COLLISION_GROUP" };
+const wchar* COLLISION_GROUPS[] = {L"COLLISION_GROUP_NONE",
+                                   L"COLLISION_GROUP_DEBRIS",
+                                   L"COLLISION_GROUP_DEBRIS_TRIGGER",
+                                   L"COLLISION_GROUP_INTERACTIVE_DEBRIS",
+                                   L"COLLISION_GROUP_INTERACTIVE",
+                                   L"COLLISION_GROUP_PLAYER",
+                                   L"COLLISION_GROUP_BREAKABLE_GLASS,",
+                                   L"COLLISION_GROUP_VEHICLE",
+                                   L"COLLISION_GROUP_PLAYER_MOVEMENT",
+                                   L"COLLISION_GROUP_NPC",
+                                   L"COLLISION_GROUP_IN_VEHICLE",
+                                   L"COLLISION_GROUP_WEAPON",
+                                   L"COLLISION_GROUP_VEHICLE_CLIP",
+                                   L"COLLISION_GROUP_PROJECTILE",
+                                   L"COLLISION_GROUP_DOOR_BLOCKER",
+                                   L"COLLISION_GROUP_PASSABLE_DOOR",
+                                   L"COLLISION_GROUP_DISSOLVING",
+                                   L"COLLISION_GROUP_PUSHAWAY",
+                                   L"COLLISION_GROUP_NPC_ACTOR",
+                                   L"COLLISION_GROUP_NPC_SCRIPTED",
+                                   L"LAST_SHARED_COLLISION_GROUP"};
 
 static const int MAX_ENTRIES = 128;
 static const int INFO_BUFFER_SIZE = 256;
@@ -469,17 +476,17 @@ void HUDFeature::DrawHopHud(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 	int width = y_spt_hud_decimals.GetInt();
 	swprintf_s(buffer, BUFFER_SIZE, L"Timing: %d", displayHop);
 	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-		screen->height / 2 + y_spt_hud_hops_y.GetFloat());
+	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat());
 	surface->DrawPrintText(buffer, wcslen(buffer));
 
 	swprintf_s(buffer, BUFFER_SIZE, L"Speed loss: %.*f", width, loss);
 	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-		screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN));
+	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN));
 	surface->DrawPrintText(buffer, wcslen(buffer));
 
 	swprintf_s(buffer, BUFFER_SIZE, L"Percentage: %.*f", width, percentage);
 	surface->DrawSetTextPos(screen->width / 2 + y_spt_hud_hops_x.GetFloat(),
-		screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN) * 2);
+	                        screen->height / 2 + y_spt_hud_hops_y.GetFloat() + (fontTall + MARGIN) * 2);
 	surface->DrawPrintText(buffer, wcslen(buffer));
 }
 
@@ -516,20 +523,20 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 	if (!whiteSpacesOnly(info))
 	{
 		int entries = utils::FillInfoArray(info,
-			INFO_ARRAY,
-			MAX_ENTRIES,
-			INFO_BUFFER_SIZE,
-			PROP_SEPARATOR,
-			ENT_SEPARATOR);
+		                                   INFO_ARRAY,
+		                                   MAX_ENTRIES,
+		                                   INFO_BUFFER_SIZE,
+		                                   PROP_SEPARATOR,
+		                                   ENT_SEPARATOR);
 		for (int i = 0; i < entries; ++i)
 		{
 			DrawSingleString(vertIndex,
-				INFO_ARRAY + INFO_BUFFER_SIZE * i,
-				fontTall,
-				BUFFER_SIZE,
-				x,
-				surface,
-				buffer);
+			                 INFO_ARRAY + INFO_BUFFER_SIZE * i,
+			                 fontTall,
+			                 BUFFER_SIZE,
+			                 x,
+			                 surface,
+			                 buffer);
 		}
 	}
 
@@ -555,10 +562,10 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 	if (y_spt_hud_script_length.GetBool())
 	{
 		swprintf_s(buffer,
-			BUFFER_SIZE,
-			L"frame: %d / %d",
-			scripts::g_TASReader.GetCurrentTick(),
-			scripts::g_TASReader.GetCurrentScriptLength());
+		           BUFFER_SIZE,
+		           L"frame: %d / %d",
+		           scripts::g_TASReader.GetCurrentTick(),
+		           scripts::g_TASReader.GetCurrentScriptLength());
 		DRAW();
 	}
 
@@ -638,16 +645,16 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 }
 
 void HUDFeature::DrawFlagsHud(bool mutuallyExclusiveFlags,
-	const wchar* hudName,
-	int& vertIndex,
-	int x,
-	const wchar** nameArray,
-	int count,
-	IMatSystemSurface* surface,
-	wchar* buffer,
-	int bufferCount,
-	int flags,
-	int fontTall)
+                              const wchar* hudName,
+                              int& vertIndex,
+                              int x,
+                              const wchar** nameArray,
+                              int count,
+                              IMatSystemSurface* surface,
+                              wchar* buffer,
+                              int bufferCount,
+                              int flags,
+                              int fontTall)
 {
 	bool drewSomething = false;
 	for (int u = 0; u < count; ++u)
@@ -681,13 +688,13 @@ void HUDFeature::DrawFlagsHud(bool mutuallyExclusiveFlags,
 }
 
 void HUDFeature::DrawSingleFloat(int& vertIndex,
-	const wchar* name,
-	float f,
-	int fontTall,
-	int bufferCount,
-	int x,
-	IMatSystemSurface* surface,
-	wchar* buffer)
+                                 const wchar* name,
+                                 float f,
+                                 int fontTall,
+                                 int bufferCount,
+                                 int x,
+                                 IMatSystemSurface* surface,
+                                 wchar* buffer)
 {
 	int width = y_spt_hud_decimals.GetInt();
 	swprintf_s(buffer, bufferCount, L"%s: %.*f", name, width, f);
@@ -695,28 +702,28 @@ void HUDFeature::DrawSingleFloat(int& vertIndex,
 }
 
 void HUDFeature::DrawSingleInt(int& vertIndex,
-	const wchar* name,
-	int i,
-	int fontTall,
-	int bufferCount,
-	int x,
-	IMatSystemSurface* surface,
-	wchar* buffer)
+                               const wchar* name,
+                               int i,
+                               int fontTall,
+                               int bufferCount,
+                               int x,
+                               IMatSystemSurface* surface,
+                               wchar* buffer)
 {
 	swprintf_s(buffer, bufferCount, L"%s: %d", name, i);
 	DRAW();
 }
 
 void HUDFeature::DrawTripleFloat(int& vertIndex,
-	const wchar* name,
-	float f1,
-	float f2,
-	float f3,
-	int fontTall,
-	int bufferCount,
-	int x,
-	IMatSystemSurface* surface,
-	wchar* buffer)
+                                 const wchar* name,
+                                 float f1,
+                                 float f2,
+                                 float f3,
+                                 int fontTall,
+                                 int bufferCount,
+                                 int x,
+                                 IMatSystemSurface* surface,
+                                 wchar* buffer)
 {
 	int width = y_spt_hud_decimals.GetInt();
 	swprintf_s(buffer, bufferCount, L"%s: %.*f %.*f %.*f", name, width, f1, width, f2, width, f3);
@@ -724,12 +731,12 @@ void HUDFeature::DrawTripleFloat(int& vertIndex,
 }
 
 void HUDFeature::DrawSingleString(int& vertIndex,
-	const wchar* str,
-	int fontTall,
-	int bufferCount,
-	int x,
-	IMatSystemSurface* surface,
-	wchar* buffer)
+                                  const wchar* str,
+                                  int fontTall,
+                                  int bufferCount,
+                                  int x,
+                                  IMatSystemSurface* surface,
+                                  wchar* buffer)
 {
 	swprintf_s(buffer, bufferCount, L"%s", str);
 	DRAW();
