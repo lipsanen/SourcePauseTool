@@ -184,6 +184,9 @@
     <ClCompile Include="spt\features\dmomm.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\overlay.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -436,6 +439,9 @@
       <Filter>spt\features</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\tickrate.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\overlay.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>

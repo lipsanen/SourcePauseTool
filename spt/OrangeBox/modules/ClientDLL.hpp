@@ -16,9 +16,6 @@ using std::size_t;
 using std::uintptr_t;
 
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
-typedef void(
-    __fastcall* _CViewRender__RenderView)(void* thisptr, int edx, void* cameraView, int nClearFlags, int whatToDraw);
-typedef void(__fastcall* _CViewRender__Render)(void* thisptr, int edx, void* rect);
 typedef void*(__cdecl* _GetClientModeNormal)();
 typedef void(__cdecl* _UTIL_TraceLine)(const Vector& vecAbsStart,
                                        const Vector& vecAbsEnd,
@@ -61,32 +58,16 @@ public:
 	                                         float input_sample_frametime,
 	                                         bool active);
 	static void __fastcall HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx);
-	static void __fastcall HOOKED_CViewRender__RenderView(void* thisptr,
-	                                                      int edx,
-	                                                      void* cameraView,
-	                                                      int nClearFlags,
-	                                                      int whatToDraw);
-	static void __fastcall HOOKED_CViewRender__Render(void* thisptr, int edx, void* rect);
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
-	void __fastcall HOOKED_CViewRender__RenderView_Func(void* thisptr,
-	                                                    int edx,
-	                                                    void* cameraView,
-	                                                    int nClearFlags,
-	                                                    int whatToDraw);
-	void __fastcall HOOKED_CViewRender__Render_Func(void* thisptr, int edx, void* rect);
 
 	Vector GetCameraOrigin();
 	bool CanUnDuckJump(trace_t& ptr);
 
-	bool renderingOverlay;
-	void* screenRect;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	_UTIL_TraceRay ORIG_UTIL_TraceRay;
 
 protected:
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
-	_CViewRender__RenderView ORIG_CViewRender__RenderView;
-	_CViewRender__Render ORIG_CViewRender__Render;
 	_CGameMovement__CanUnDuckJump ORIG_CGameMovement__CanUnDuckJump;
 	_MainViewOrigin ORIG_MainViewOrigin;
 

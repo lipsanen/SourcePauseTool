@@ -14,6 +14,7 @@
 #include "autojump.hpp"
 #include "generic.hpp"
 #include "isg.hpp"
+#include "overlay.hpp"
 #include "playerio.hpp"
 #include "..\OrangeBox\modules.hpp"
 #include "..\OrangeBox\overlay\portal_camera.hpp"
@@ -333,13 +334,13 @@ void HUDFeature::CalculateAbhVel()
 void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 {
 #ifndef OE
-	if (mode == 2 && !clientDLL.renderingOverlay)
+	if (mode == 2 && !g_Overlay.renderingOverlay)
 	{
-		_hud.DrawHUD((vrect_t*)clientDLL.screenRect);
+		_hud.DrawHUD((vrect_t*)g_Overlay.screenRect);
 	}
 
-	if (clientDLL.renderingOverlay)
-		_hud.DrawCrosshair((vrect_t*)clientDLL.screenRect);
+	if (g_Overlay.renderingOverlay)
+		_hud.DrawCrosshair((vrect_t*)g_Overlay.screenRect);
 
 #endif
 

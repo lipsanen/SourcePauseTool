@@ -33,22 +33,6 @@ void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart(void* thisptr, int 
 	return clientDLL.HOOKED_CViewRender__OnRenderStart_Func(thisptr, edx);
 }
 
-void ClientDLL::HOOKED_CViewRender__RenderView(void* thisptr,
-                                               int edx,
-                                               void* cameraView,
-                                               int nClearFlags,
-                                               int whatToDraw)
-{
-	TRACE_ENTER();
-	clientDLL.HOOKED_CViewRender__RenderView_Func(thisptr, edx, cameraView, nClearFlags, whatToDraw);
-}
-
-void ClientDLL::HOOKED_CViewRender__Render(void* thisptr, int edx, void* rect)
-{
-	TRACE_ENTER();
-	clientDLL.HOOKED_CViewRender__Render_Func(thisptr, edx, rect);
-}
-
 #define DEF_FUTURE(name) auto f##name = FindAsync(ORIG_##name, patterns::client::##name);
 #define GET_HOOKEDFUTURE(future_name) \
 	{ \
@@ -114,16 +98,12 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CViewRender__OnRenderStart);
 	DEF_FUTURE(MiddleOfCAM_Think);
 	DEF_FUTURE(CHLClient__CanRecordDemo);
-	DEF_FUTURE(CViewRender__RenderView);
-	DEF_FUTURE(CViewRender__Render);
 	DEF_FUTURE(UTIL_TraceRay);
 	DEF_FUTURE(CGameMovement__CanUnDuckJump);
 	DEF_FUTURE(CHudDamageIndicator__GetDamagePosition);
 
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
 	GET_FUTURE(CHLClient__CanRecordDemo);
-	GET_HOOKEDFUTURE(CViewRender__RenderView);
-	GET_HOOKEDFUTURE(CViewRender__Render);
 	GET_FUTURE(UTIL_TraceRay);
 	GET_FUTURE(CGameMovement__CanUnDuckJump);
 	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
@@ -147,9 +127,6 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 		Warning("_y_spt_force_fov has no effect.\n");
 	}
 
-	if (ORIG_CViewRender__RenderView == nullptr || ORIG_CViewRender__Render == nullptr)
-		Warning("Overlay cameras have no effect.\n");
-
 	if (!ORIG_UTIL_TraceRay)
 		Warning("tas_strafe_version 1 not available\n");
 
@@ -168,8 +145,6 @@ void ClientDLL::Unhook()
 void ClientDLL::Clear()
 {
 	IHookableNameFilter::Clear();
-	ORIG_CViewRender__RenderView = nullptr;
-	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
 	ORIG_MainViewOrigin = nullptr;
 }
@@ -204,54 +179,4 @@ void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr,
 	float* fovViewmodel = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(thisptr) + 56);
 	*fov = _y_spt_force_fov.GetFloat();
 	*fovViewmodel = _viewmodel_fov->GetFloat();
-}
-
-void ClientDLL::HOOKED_CViewRender__RenderView_Func(void* thisptr,
-                                                    int edx,
-                                                    void* cameraView,
-                                                    int nClearFlags,
-                                                    int whatToDraw)
-{
-#ifndef SSDK2007
-	ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
-#else
-	if (g_OverlayRenderer.shouldRenderOverlay())
-	{
-		g_OverlayRenderer.modifyView(static_cast<CViewSetup*>(cameraView), renderingOverlay);
-		if (renderingOverlay)
-		{
-			g_OverlayRenderer.modifySmallScreenFlags(nClearFlags, whatToDraw);
-		}
-		else
-		{
-			g_OverlayRenderer.modifyBigScreenFlags(nClearFlags, whatToDraw);
-		}
-	}
-
-	ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
-#endif
-}
-
-void ClientDLL::HOOKED_CViewRender__Render_Func(void* thisptr, int edx, void* rect)
-{
-#ifndef SSDK2007
-	ORIG_CViewRender__Render(thisptr, edx, rect);
-#else
-	renderingOverlay = false;
-	screenRect = rect;
-	if (!g_OverlayRenderer.shouldRenderOverlay())
-	{
-		ORIG_CViewRender__Render(thisptr, edx, rect);
-	}
-	else
-	{
-		ORIG_CViewRender__Render(thisptr, edx, rect);
-
-		renderingOverlay = true;
-		Rect_t rec = g_OverlayRenderer.getRect();
-		screenRect = &rec;
-		ORIG_CViewRender__Render(thisptr, edx, &rec);
-		renderingOverlay = false;
-	}
-#endif
 }
