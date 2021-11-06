@@ -14,10 +14,8 @@
 using std::size_t;
 using std::uintptr_t;
 
-typedef void(__cdecl* __Host_RunFrame)(float time);
 typedef int(__fastcall* DemoPlayer__Func)(void* thisptr);
 typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int edx, const Vector& pt);
-typedef void(__cdecl* _Host_AccumulateTime)(float dt);
 typedef void(__fastcall* _StopRecording)(void* thisptr, int edx);
 typedef void(__fastcall* _SetSignonState)(void* thisptr, int edx, int state);
 typedef void(__cdecl* _Stop)();
@@ -34,7 +32,6 @@ public:
 	virtual void Unhook();
 	virtual void Clear();
 
-	static void __cdecl HOOKED_Host_AccumulateTime(float dt);
 	static void __fastcall HOOKED_StopRecording(void* thisptr, int edx);
 	static void __fastcall HOOKED_SetSignonState(void* thisptr, int edx, int state);
 	static void __cdecl HOOKED_Stop();
@@ -55,8 +52,6 @@ public:
 
 protected:
 	PatternContainer patternContainer;
-	__Host_RunFrame ORIG__Host_RunFrame;
-	_Host_AccumulateTime ORIG_Host_AccumulateTime;
 	_StopRecording ORIG_StopRecording;
 	_SetSignonState ORIG_SetSignonState;
 	_Stop ORIG_Stop;
@@ -65,8 +60,6 @@ protected:
 	bool* pM_bLoadgame;
 	bool shouldPreventNextUnpause;
 	float* pIntervalPerTick;
-	float* pHost_Frametime;
-	float* pHost_Realtime;
 	int* pM_State;
 	int* pM_nSignonState;
 	void** pDemoplayer;

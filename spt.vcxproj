@@ -1376,6 +1376,7 @@
     <ClCompile Include="spt\features\playerio.cpp" />
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
+    <ClCompile Include="spt\features\taspause.cpp" />
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />
     <ClCompile Include="spt\ipc\ipc-spt.cpp" />
     <ClCompile Include="spt\ipc\ipc.cpp" />

@@ -17,17 +17,6 @@
 using std::size_t;
 using std::uintptr_t;
 
-void __cdecl EngineDLL::HOOKED_Host_AccumulateTime(float dt)
-{
-	if (tas_pause.GetBool())
-	{
-		*engineDLL.pHost_Realtime += dt;
-		*engineDLL.pHost_Frametime = 0;
-	}
-	else
-		engineDLL.ORIG_Host_AccumulateTime(dt);
-}
-
 void __fastcall EngineDLL::HOOKED_StopRecording(void* thisptr, int edx)
 {
 	TRACE_ENTER();
@@ -111,16 +100,12 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(Record);
 	DEF_FUTURE(MiddleOfSV_InitGameDLL);
 	DEF_FUTURE(CEngineTrace__PointOutsideWorld);
-	DEF_FUTURE(_Host_RunFrame);
-	DEF_FUTURE(Host_AccumulateTime);
 	DEF_FUTURE(StopRecording);
 	DEF_FUTURE(SetSignonState);
 	DEF_FUTURE(Stop);
 
 	GET_FUTURE(MiddleOfSV_InitGameDLL);
 	GET_FUTURE(CEngineTrace__PointOutsideWorld);
-	GET_FUTURE(_Host_RunFrame);
-	GET_HOOKEDFUTURE(Host_AccumulateTime);
 	GET_HOOKEDFUTURE(StopRecording);
 	GET_HOOKEDFUTURE(SetSignonState);
 	GET_HOOKEDFUTURE(Stop);
@@ -217,16 +202,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 		    "TAS demo recording may overwrite demos if level transitions and saveloads are present in the same script.\n");
 	}
 
-	if (ORIG__Host_RunFrame)
-	{
-		pHost_Frametime = *reinterpret_cast<float**>((uintptr_t)ORIG__Host_RunFrame + 227);
-	}
-
-	if (ORIG_Host_AccumulateTime)
-	{
-		pHost_Realtime = *reinterpret_cast<float**>((uintptr_t)ORIG_Host_AccumulateTime + 5);
-	}
-
 	patternContainer.Hook();
 }
 
@@ -239,7 +214,6 @@ void EngineDLL::Unhook()
 void EngineDLL::Clear()
 {
 	IHookableNameFilter::Clear();
-	ORIG__Host_RunFrame = nullptr;
 	ORIG_StopRecording = nullptr;
 	ORIG_StopRecording = nullptr;
 	ORIG_SetSignonState = nullptr;
@@ -248,7 +222,6 @@ void EngineDLL::Clear()
 	pM_bLoadgame = nullptr;
 	shouldPreventNextUnpause = false;
 	pIntervalPerTick = nullptr;
-	pHost_Frametime = nullptr;
 	pM_State = nullptr;
 	pM_nSignonState = nullptr;
 	pDemoplayer = nullptr;
