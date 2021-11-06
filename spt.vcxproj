@@ -1377,6 +1377,7 @@
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />
+    <ClCompile Include="spt\features\tickrate.cpp" />
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />
     <ClCompile Include="spt\ipc\ipc-spt.cpp" />
     <ClCompile Include="spt\ipc\ipc.cpp" />
@@ -1760,6 +1761,7 @@
     <ClInclude Include="spt\features\playerio.hpp" />
     <ClInclude Include="spt\features\shadow.hpp" />
     <ClInclude Include="spt\features\tas.hpp" />
+    <ClInclude Include="spt\features\tickrate.hpp" />
     <ClInclude Include="spt\ipc\ipc-spt.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
     <ClInclude Include="spt\OrangeBox\module_hooks.hpp" />

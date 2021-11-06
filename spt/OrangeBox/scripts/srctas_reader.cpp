@@ -10,7 +10,7 @@
 #include "..\..\utils\string_parsing.hpp"
 #include "..\cvars.hpp"
 #include "..\modules.hpp"
-#include "..\modules\EngineDLL.hpp"
+#include "..\..\features\tickrate.hpp"
 #include "framebulk_handler.hpp"
 #include "..\..\features\afterframes.hpp"
 
@@ -44,7 +44,7 @@ namespace scripts
 		CommonExecuteScript(false);
 
 		_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
-		tickTime = engineDLL.GetTickrate();
+		tickTime = _tickrate.GetTickrate();
 		snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
 		int resumeTick = GetCurrentScriptLength() - resumeTicks;
 		_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
@@ -219,7 +219,7 @@ namespace scripts
 	void SourceTASReader::SetFpsAndPlayspeed()
 	{
 		std::ostringstream os;
-		tickTime = engineDLL.GetTickrate();
+		tickTime = _tickrate.GetTickrate();
 		float fps = 1.0f / tickTime * playbackSpeed;
 		os << "host_framerate " << tickTime << "; fps_max " << fps;
 		currentScript.AddDuringLoadCmd(os.str());

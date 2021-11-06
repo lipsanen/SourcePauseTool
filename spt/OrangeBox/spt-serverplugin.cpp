@@ -583,30 +583,6 @@ CON_COMMAND(_y_spt_getangles, "Gets the view angles of the player.")
 	Warning("View Angle (x, y, z): %f %f %f\n", va.x, va.y, va.z);
 }
 
-CON_COMMAND(_y_spt_tickrate, "Get or set the tickrate. Usage: _y_spt_tickrate [tickrate]")
-{
-#if defined(OE)
-	if (!engine)
-		return;
-
-	ArgsWrapper args(engine.get());
-#endif
-
-	switch (args.ArgC())
-	{
-	case 1:
-		Msg("Current tickrate: %f\n", engineDLL.GetTickrate());
-		break;
-
-	case 2:
-		engineDLL.SetTickrate(atof(args.Arg(1)));
-		break;
-
-	default:
-		Msg("Usage: _y_spt_tickrate [tickrate]\n");
-	}
-}
-
 CON_COMMAND(y_spt_timer_start, "Starts the SPT timer.")
 {
 	serverDLL.StartTimer();

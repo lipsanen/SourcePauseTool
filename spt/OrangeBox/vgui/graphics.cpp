@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "graphics.hpp"
 #include "convar.h"
+#include "..\modules.hpp"
 #include "..\spt-serverplugin.hpp"
 #include "..\..\sptlib-wrapper.hpp"
-#include "..\modules.hpp"
+#include "..\..\features\tickrate.hpp"
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\property_getter.hpp"
 
@@ -54,7 +55,7 @@ namespace vgui
 				bool seamshot = test1 || test2;
 
 				const int uiScale = 10;
-				float lifeTime = engineDLL.GetTickrate() * 2;
+				float lifeTime = _tickrate.GetTickrate() * 2;
 
 				//calculating an edge vector for drawing
 				Vector edge = edgeTr.plane.normal.Cross(tr.plane.normal);

@@ -95,43 +95,18 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	m_Length = moduleLength;
 	patternContainer.Init(moduleName);
 
-	uintptr_t ORIG_MiddleOfSV_InitGameDLL = NULL, ORIG_Record = NULL;
+	uintptr_t ORIG_Record = NULL;
 
 	DEF_FUTURE(Record);
-	DEF_FUTURE(MiddleOfSV_InitGameDLL);
 	DEF_FUTURE(CEngineTrace__PointOutsideWorld);
 	DEF_FUTURE(StopRecording);
 	DEF_FUTURE(SetSignonState);
 	DEF_FUTURE(Stop);
 
-	GET_FUTURE(MiddleOfSV_InitGameDLL);
 	GET_FUTURE(CEngineTrace__PointOutsideWorld);
 	GET_HOOKEDFUTURE(StopRecording);
 	GET_HOOKEDFUTURE(SetSignonState);
 	GET_HOOKEDFUTURE(Stop);
-
-	// interval_per_tick
-	if (ORIG_MiddleOfSV_InitGameDLL)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_MiddleOfSV_InitGameDLL);
-
-		switch (ptnNumber)
-		{
-		case 0:
-			pIntervalPerTick = *reinterpret_cast<float**>(ORIG_MiddleOfSV_InitGameDLL + 18);
-			break;
-
-		case 1:
-			pIntervalPerTick = *reinterpret_cast<float**>(ORIG_MiddleOfSV_InitGameDLL + 16);
-			break;
-		}
-
-		DevMsg("Found interval_per_tick at %p.\n", pIntervalPerTick);
-	}
-	else
-	{
-		Warning("_y_spt_tickrate has no effect.\n");
-	}
 
 	auto pRecord = fRecord.get();
 	if (ORIG_Record)
@@ -221,25 +196,10 @@ void EngineDLL::Clear()
 	pGameServer = nullptr;
 	pM_bLoadgame = nullptr;
 	shouldPreventNextUnpause = false;
-	pIntervalPerTick = nullptr;
 	pM_State = nullptr;
 	pM_nSignonState = nullptr;
 	pDemoplayer = nullptr;
 	currentAutoRecordDemoNumber = 1;
-}
-
-float EngineDLL::GetTickrate() const
-{
-	if (pIntervalPerTick)
-		return *pIntervalPerTick;
-
-	return 0;
-}
-
-void EngineDLL::SetTickrate(float value)
-{
-	if (pIntervalPerTick)
-		*pIntervalPerTick = value;
 }
 
 int EngineDLL::Demo_GetPlaybackTick() const

@@ -21,6 +21,8 @@
 #include "math.hpp"
 #include "game_detection.hpp"
 #include "..\features\playerio.hpp"
+#include "..\features\tickrate.hpp"
+
 #undef max
 
 #if !defined(OE) && !defined(P2)
@@ -489,7 +491,7 @@ namespace utils
 
 		constexpr float gravity = 600;
 		constexpr float groundThreshold = 2.0f;
-		float ticktime = engineDLL.GetTickrate();
+		float ticktime = _tickrate.GetTickrate();
 		constexpr int maxIterations = 1000;
 
 		for (int i = 0; i < maxIterations; ++i)

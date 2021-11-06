@@ -39,9 +39,6 @@ public:
 	void __fastcall HOOKED_SetSignonState_Func(void* thisptr, int edx, int state);
 	void __cdecl HOOKED_Stop_Func();
 
-	float GetTickrate() const;
-	void SetTickrate(float value);
-
 	int Demo_GetPlaybackTick() const;
 	int Demo_GetTotalTicks() const;
 	bool Demo_IsPlayingBack() const;
@@ -59,7 +56,6 @@ protected:
 	void* pGameServer;
 	bool* pM_bLoadgame;
 	bool shouldPreventNextUnpause;
-	float* pIntervalPerTick;
 	int* pM_State;
 	int* pM_nSignonState;
 	void** pDemoplayer;
