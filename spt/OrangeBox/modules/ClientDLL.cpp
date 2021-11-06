@@ -27,12 +27,6 @@
 using std::size_t;
 using std::uintptr_t;
 
-void __cdecl ClientDLL::HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, int w, int h)
-{
-	TRACE_ENTER();
-	return clientDLL.HOOKED_DoImageSpaceMotionBlur_Func(view, x, y, w, h);
-}
-
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx)
 {
 	TRACE_ENTER();
@@ -53,22 +47,6 @@ void ClientDLL::HOOKED_CViewRender__Render(void* thisptr, int edx, void* rect)
 {
 	TRACE_ENTER();
 	clientDLL.HOOKED_CViewRender__Render_Func(thisptr, edx, rect);
-}
-
-ConVar y_spt_disable_fade("y_spt_disable_fade", "0", FCVAR_ARCHIVE, "Disables all fades.");
-
-void __fastcall ClientDLL::HOOKED_CViewEffects__Fade(void* thisptr, int edx, void* data)
-{
-	if (!y_spt_disable_fade.GetBool())
-		clientDLL.ORIG_CViewEffects__Fade(thisptr, edx, data);
-}
-
-ConVar y_spt_disable_shake("y_spt_disable_shake", "0", FCVAR_ARCHIVE, "Disables all shakes.");
-
-void __fastcall ClientDLL::HOOKED_CViewEffects__Shake(void* thisptr, int edx, void* data)
-{
-	if (!y_spt_disable_shake.GetBool())
-		clientDLL.ORIG_CViewEffects__Shake(thisptr, edx, data);
 }
 
 #define DEF_FUTURE(name) auto f##name = FindAsync(ORIG_##name, patterns::client::##name);
@@ -135,66 +113,20 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 
 	DEF_FUTURE(CViewRender__OnRenderStart);
 	DEF_FUTURE(MiddleOfCAM_Think);
-	DEF_FUTURE(DoImageSpaceMotionBlur);
 	DEF_FUTURE(CHLClient__CanRecordDemo);
 	DEF_FUTURE(CViewRender__RenderView);
 	DEF_FUTURE(CViewRender__Render);
 	DEF_FUTURE(UTIL_TraceRay);
 	DEF_FUTURE(CGameMovement__CanUnDuckJump);
-	DEF_FUTURE(CViewEffects__Fade);
-	DEF_FUTURE(CViewEffects__Shake);
 	DEF_FUTURE(CHudDamageIndicator__GetDamagePosition);
-	DEF_FUTURE(ResetToneMapping);
 
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
-	GET_HOOKEDFUTURE(DoImageSpaceMotionBlur);
 	GET_FUTURE(CHLClient__CanRecordDemo);
 	GET_HOOKEDFUTURE(CViewRender__RenderView);
 	GET_HOOKEDFUTURE(CViewRender__Render);
 	GET_FUTURE(UTIL_TraceRay);
 	GET_FUTURE(CGameMovement__CanUnDuckJump);
-	GET_HOOKEDFUTURE(CViewEffects__Fade);
-	GET_HOOKEDFUTURE(CViewEffects__Shake);
 	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
-	GET_HOOKEDFUTURE(ResetToneMapping);
-
-	if (ORIG_DoImageSpaceMotionBlur)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_DoImageSpaceMotionBlur);
-
-		switch (ptnNumber)
-		{
-		case 0:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 132);
-			break;
-
-		case 1:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 153);
-			break;
-
-		case 2:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 129);
-			break;
-
-		case 3:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 171);
-			break;
-
-		case 4:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 177);
-			break;
-
-		case 5:
-			pgpGlobals = *(uintptr_t**)((uintptr_t)ORIG_DoImageSpaceMotionBlur + 128);
-			break;
-		}
-
-		DevMsg("[client dll] pgpGlobals is %p.\n", pgpGlobals);
-	}
-	else
-	{
-		Warning("y_spt_motion_blur_fix has no effect.\n");
-	}
 
 	if (ORIG_CHLClient__CanRecordDemo)
 	{
@@ -221,17 +153,8 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	if (!ORIG_UTIL_TraceRay)
 		Warning("tas_strafe_version 1 not available\n");
 
-	if (!ORIG_CViewEffects__Fade)
-		Warning("y_spt_disable_fade 1 not available\n");
-
-	if (!ORIG_CViewEffects__Shake)
-		Warning("y_spt_disable_shake 1 not available\n");
-
 	if (!ORIG_MainViewOrigin || !ORIG_UTIL_TraceRay)
 		Warning("y_spt_hud_oob 1 has no effect\n");
-
-	if (!ORIG_ResetToneMapping)
-		Warning("y_spt_disable_tone_map_reset has no effect\n");
 
 	patternContainer.Hook();
 }
@@ -245,14 +168,10 @@ void ClientDLL::Unhook()
 void ClientDLL::Clear()
 {
 	IHookableNameFilter::Clear();
-	ORIG_DoImageSpaceMotionBlur = nullptr;
 	ORIG_CViewRender__RenderView = nullptr;
 	ORIG_CViewRender__Render = nullptr;
 	ORIG_UTIL_TraceRay = nullptr;
 	ORIG_MainViewOrigin = nullptr;
-	ORIG_ResetToneMapping = nullptr;
-
-	pgpGlobals = nullptr;
 }
 
 Vector ClientDLL::GetCameraOrigin()
@@ -272,37 +191,6 @@ bool ClientDLL::CanUnDuckJump(trace_t& ptr)
 	}
 
 	return ORIG_CGameMovement__CanUnDuckJump(GetGamemovement(), 0, ptr);
-}
-
-void __cdecl ClientDLL::HOOKED_DoImageSpaceMotionBlur_Func(void* view, int x, int y, int w, int h)
-{
-	uintptr_t origgpGlobals = NULL;
-
-	/*
-	Replace gpGlobals with (gpGlobals + 12). gpGlobals->realtime is the first variable,
-	so it is located at gpGlobals. (gpGlobals + 12) is gpGlobals->curtime. This
-	function does not use anything apart from gpGlobals->realtime from gpGlobals,
-	so we can do such a replace to make it use gpGlobals->curtime instead without
-	breaking anything else.
-	*/
-	if (pgpGlobals)
-	{
-		if (y_spt_motion_blur_fix.GetBool())
-		{
-			origgpGlobals = *pgpGlobals;
-			*pgpGlobals = *pgpGlobals + 12;
-		}
-	}
-
-	ORIG_DoImageSpaceMotionBlur(view, x, y, w, h);
-
-	if (pgpGlobals)
-	{
-		if (y_spt_motion_blur_fix.GetBool())
-		{
-			*pgpGlobals = origgpGlobals;
-		}
-	}
 }
 
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx)
@@ -366,10 +254,4 @@ void ClientDLL::HOOKED_CViewRender__Render_Func(void* thisptr, int edx, void* re
 		renderingOverlay = false;
 	}
 #endif
-}
-
-void ClientDLL::HOOKED_ResetToneMapping(float value)
-{
-	if (!y_spt_disable_tone_map_reset.GetBool())
-		clientDLL.ORIG_ResetToneMapping(value);
 }

@@ -3,7 +3,6 @@
 #include "convar.h"
 #include "modules.hpp"
 
-ConVar y_spt_motion_blur_fix("y_spt_motion_blur_fix", "0");
 ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",
                                   "0",
                                   0,
@@ -23,11 +22,6 @@ ConVar y_spt_on_slide_pause_for("y_spt_on_slide_pause_for",
                                 "0",
                                 0,
                                 "Whenever sliding occurs in DMoMM, pause for this many ticks.");
-ConVar y_spt_disable_tone_map_reset(
-    "y_spt_disable_tone_map_reset",
-    "0",
-    0,
-    "Prevents the tone map getting reset (during each load), useful for keeping colors the same between demos");
 
 ConVar tas_strafe("tas_strafe", "0", FCVAR_TAS_RESET);
 ConVar tas_strafe_type(
