@@ -7,9 +7,6 @@
     <ClCompile Include="spt\OrangeBox\cvars.cpp">
       <Filter>spt\OrangeBox</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\EngineDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\OrangeBox\modules\ServerDLL.cpp">
       <Filter>spt\OrangeBox\modules</Filter>
     </ClCompile>
@@ -254,9 +251,6 @@
     </ClInclude>
     <ClInclude Include="spt\OrangeBox\cvars.hpp">
       <Filter>spt\OrangeBox</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\EngineDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
     </ClInclude>
     <ClInclude Include="spt\OrangeBox\modules\ServerDLL.hpp">
       <Filter>spt\OrangeBox\modules</Filter>

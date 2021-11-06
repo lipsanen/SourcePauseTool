@@ -2,10 +2,17 @@
 #include "..\feature.hpp"
 #include "thirdparty\Signal.h"
 
+#if defined( OE )
+#include "vector.h"
+#else
+#include "mathlib/vector.h"
+#endif
+
 typedef void(__stdcall* _HudUpdate)(bool bActive);
 typedef bool(__cdecl* _SV_ActivateServer)();
 typedef void(__fastcall* _FinishRestore)(void* thisptr, int edx);
 typedef void(__fastcall* _SetPaused)(void* thisptr, int edx, bool paused);
+typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int edx, const Vector& pt);
 
 // For hooks used by many features
 class GenericFeature : public Feature
@@ -22,6 +29,7 @@ public:
 	_SetPaused ORIG_SetPaused;
 	_SV_ActivateServer ORIG_SV_ActivateServer;
 	_FinishRestore ORIG_FinishRestore;
+	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
 	bool shouldPreventNextUnpause;
 
 	void Tick();

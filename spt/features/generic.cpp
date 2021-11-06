@@ -27,6 +27,7 @@ void GenericFeature::InitHooks()
 	HOOK_FUNCTION(engine, FinishRestore);
 	HOOK_FUNCTION(engine, SetPaused);
 	HOOK_FUNCTION(engine, SV_ActivateServer);
+	FIND_PATTERN(engine, CEngineTrace__PointOutsideWorld);
 }
 
 void GenericFeature::LoadFeature()
