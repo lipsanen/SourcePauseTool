@@ -12,7 +12,6 @@
 #include "..\overlay\overlay-renderer.hpp"
 #include "..\patterns.hpp"
 #include "..\scripts\srctas_reader.hpp"
-#include "vguimatsurfaceDLL.hpp"
 #include "..\..\features\afterframes.hpp"
 
 using std::size_t;
@@ -51,12 +50,6 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute()
 {
 	TRACE_ENTER();
 	return engineDLL.HOOKED_Cbuf_Execute_Func();
-}
-
-void __fastcall EngineDLL::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
-{
-	TRACE_ENTER();
-	engineDLL.HOOKED_VGui_Paint_Func(thisptr, edx, mode);
 }
 
 void __fastcall EngineDLL::HOOKED_StopRecording(void* thisptr, int edx)
@@ -141,7 +134,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 
 	DEF_FUTURE(Record);
 	DEF_FUTURE(MiddleOfSV_InitGameDLL);
-	DEF_FUTURE(VGui_Paint);
 	DEF_FUTURE(SpawnPlayer);
 	DEF_FUTURE(CEngineTrace__PointOutsideWorld);
 	DEF_FUTURE(_Host_RunFrame);
@@ -151,7 +143,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(Stop);
 
 	GET_FUTURE(MiddleOfSV_InitGameDLL);
-	GET_HOOKEDFUTURE(VGui_Paint);
 	GET_FUTURE(SpawnPlayer);
 	GET_FUTURE(CEngineTrace__PointOutsideWorld);
 	GET_FUTURE(_Host_RunFrame);
@@ -252,11 +243,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 		    "TAS demo recording may overwrite demos if level transitions and saveloads are present in the same script.\n");
 	}
 
-	if (!ORIG_VGui_Paint)
-	{
-		Warning("Speedrun hud is not available.\n");
-	}
-
 	if (ORIG__Host_RunFrame)
 	{
 		pHost_Frametime = *reinterpret_cast<float**>((uintptr_t)ORIG__Host_RunFrame + 227);
@@ -284,7 +270,6 @@ void EngineDLL::Clear()
 	ORIG__Host_RunFrame_Server = nullptr;
 	ORIG_StopRecording = nullptr;
 	ORIG_Cbuf_Execute = nullptr;
-	ORIG_VGui_Paint = nullptr;
 	ORIG_StopRecording = nullptr;
 	ORIG_SetSignonState = nullptr;
 	ORIG_Stop = nullptr;
@@ -406,22 +391,6 @@ void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()
 	ORIG_Cbuf_Execute();
 
 	DevMsg("Cbuf_Execute() end.\n");
-}
-
-void __fastcall EngineDLL::HOOKED_VGui_Paint_Func(void* thisptr, int edx, int mode)
-{
-#ifndef OE
-	if (mode == 2 && !clientDLL.renderingOverlay)
-	{
-		vgui_matsurfaceDLL.DrawHUD((vrect_t*)clientDLL.screenRect);
-	}
-
-	if (clientDLL.renderingOverlay)
-		vgui_matsurfaceDLL.DrawCrosshair((vrect_t*)clientDLL.screenRect);
-
-#endif
-
-	ORIG_VGui_Paint(thisptr, edx, mode);
 }
 
 void __fastcall EngineDLL::HOOKED_StopRecording_Func(void* thisptr, int edx)

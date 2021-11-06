@@ -353,9 +353,6 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	Hooks::AddToHookedModules(&engineDLL);
 	Hooks::AddToHookedModules(&clientDLL);
 	Hooks::AddToHookedModules(&serverDLL);
-#ifndef OE
-	Hooks::AddToHookedModules(&vgui_matsurfaceDLL);
-#endif
 	Hooks::Init(true);
 	Feature::LoadFeatures();
 	ipc::Init();

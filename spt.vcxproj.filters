@@ -91,9 +91,6 @@
     <ClCompile Include="spt\OrangeBox\scripts\tests\tracker.cpp">
       <Filter>spt\OrangeBox\scripts\tests</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\vguimatsurfaceDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\vgui\vgui_utils.cpp">
       <Filter>spt\OrangeBox\vgui</Filter>
     </ClCompile>
@@ -170,6 +167,9 @@
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\nosleep.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\hud.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
   </ItemGroup>
@@ -338,9 +338,6 @@
     </ClInclude>
     <ClInclude Include="spt\OrangeBox\scripts\tests\tracker.hpp">
       <Filter>spt\OrangeBox\scripts\tests</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\vguimatsurfaceDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
     </ClInclude>
     <ClInclude Include="spt\vgui\vgui_utils.hpp">
       <Filter>spt\OrangeBox\vgui</Filter>

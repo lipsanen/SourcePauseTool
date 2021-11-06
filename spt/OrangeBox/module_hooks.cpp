@@ -43,13 +43,8 @@ namespace ModuleHooks
 #endif
 
 		generic_.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
-
 #ifndef OE
-		generic_.TickSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::NewTick);
 		generic_.TickSignal.Connect(vgui::DrawLines);
-		generic_.OngroundSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::OnGround);
-
-		_autojump.JumpSignal.Connect(&vgui_matsurfaceDLL, &VGui_MatSurfaceDLL::Jump);
 #endif
 	}
 } // namespace ModuleHooks
