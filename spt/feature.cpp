@@ -6,6 +6,7 @@
 #include "SPTLib\Windows\detoursutils.hpp"
 
 static ModuleHookData moduleHookData[HOOKED_MODULE_COUNT];
+static std::unordered_map<uintptr_t, int> patternIndices;
 
 static std::vector<Feature*>& GetFeatures()
 {
@@ -91,6 +92,15 @@ void Feature::AddOffsetHook(ModuleEnum moduleEnum,
 	mhd.offsetHooks.push_back(OffsetHook{offset, patternName, origPtr, functionHook});
 }
 
+int Feature::GetPatternIndex(void **origPtr) {
+  uintptr_t ptr = reinterpret_cast<uintptr_t>(origPtr);
+  if (patternIndices.find(ptr) != patternIndices.end()) {
+    return patternIndices[ptr];
+  } else {
+    return -1;
+  }
+}
+
 void Feature::AddPatternHook(PatternHook hook, ModuleEnum moduleEnum)
 {
 	auto& mhd = moduleHookData[static_cast<int>(moduleEnum)];
@@ -154,7 +164,10 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 			       modulePattern.patternName,
 			       *modulePattern.origPtr,
 			       foundPattern->name());
-		}
+                        patternIndices[reinterpret_cast<uintptr_t>(
+                            modulePattern.origPtr)] =
+                            foundPattern - modulePattern.patternArr;
+                }
 		else
 		{
 			DevWarning("[%s] Could not find %s.\n", Convert(moduleName).c_str(), modulePattern.patternName);

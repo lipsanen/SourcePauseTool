@@ -120,6 +120,7 @@ public:
 	                          const char* patternName,
 	                          void** origPtr = nullptr,
 	                          void* functionHook = nullptr);
+	static int GetPatternIndex(void** origPtr);
 
 	Feature();
 
