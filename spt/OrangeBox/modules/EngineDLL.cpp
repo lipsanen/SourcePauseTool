@@ -18,24 +18,6 @@
 using std::size_t;
 using std::uintptr_t;
 
-bool __cdecl EngineDLL::HOOKED_SV_ActivateServer()
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED_SV_ActivateServer_Func();
-}
-
-void __fastcall EngineDLL::HOOKED_FinishRestore(void* thisptr, int edx)
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED_FinishRestore_Func(thisptr, edx);
-}
-
-void __fastcall EngineDLL::HOOKED_SetPaused(void* thisptr, int edx, bool paused)
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED_SetPaused_Func(thisptr, edx, paused);
-}
-
 void __cdecl EngineDLL::HOOKED__Host_RunFrame(float time)
 {
 	TRACE_ENTER();
@@ -157,10 +139,7 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 
 	uintptr_t ORIG_SpawnPlayer = NULL, ORIG_MiddleOfSV_InitGameDLL = NULL, ORIG_Record = NULL;
 
-	DEF_FUTURE(SV_ActivateServer);
-	DEF_FUTURE(FinishRestore);
 	DEF_FUTURE(Record);
-	DEF_FUTURE(SetPaused);
 	DEF_FUTURE(MiddleOfSV_InitGameDLL);
 	DEF_FUTURE(VGui_Paint);
 	DEF_FUTURE(SpawnPlayer);
@@ -171,9 +150,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(SetSignonState);
 	DEF_FUTURE(Stop);
 
-	GET_HOOKEDFUTURE(SV_ActivateServer);
-	GET_HOOKEDFUTURE(FinishRestore);
-	GET_HOOKEDFUTURE(SetPaused);
 	GET_FUTURE(MiddleOfSV_InitGameDLL);
 	GET_HOOKEDFUTURE(VGui_Paint);
 	GET_FUTURE(SpawnPlayer);
@@ -183,92 +159,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(StopRecording);
 	GET_HOOKEDFUTURE(SetSignonState);
 	GET_HOOKEDFUTURE(Stop);
-
-	// m_bLoadgame and pGameServer (&sv)
-	if (ORIG_SpawnPlayer)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_SpawnPlayer);
-
-		switch (ptnNumber)
-		{
-		case 0:
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 5));
-			pGameServer = (*(void**)(ORIG_SpawnPlayer + 18));
-			break;
-
-		case 1:
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 8));
-			pGameServer = (*(void**)(ORIG_SpawnPlayer + 21));
-			break;
-
-		case 2: // 4104 is the same as 5135 here.
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 5));
-			pGameServer = (*(void**)(ORIG_SpawnPlayer + 18));
-			break;
-
-		case 3: // 2257546 is the same as 5339 here.
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 8));
-			pGameServer = (*(void**)(ORIG_SpawnPlayer + 21));
-			break;
-
-		case 4:
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 26));
-			//pGameServer = (*(void **)(pSpawnPlayer + 21)); - We get this one from SV_ActivateServer in OE.
-			break;
-
-		case 5: // 6879 is the same as 5339 here.
-			pM_bLoadgame = (*(bool**)(ORIG_SpawnPlayer + 8));
-			pGameServer = (*(void**)(ORIG_SpawnPlayer + 21));
-			break;
-
-		default:
-			Warning("Spawnplayer did not have a matching switch-case statement!\n");
-			break;
-		}
-
-		DevMsg("m_bLoadGame is situated at %p.\n", pM_bLoadgame);
-
-#if !defined(OE)
-		DevMsg("pGameServer is %p.\n", pGameServer);
-#endif
-	}
-	else
-	{
-		Warning("y_spt_pause 2 has no effect.\n");
-	}
-
-	// SV_ActivateServer
-	if (ORIG_SV_ActivateServer)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_SV_ActivateServer);
-		switch (ptnNumber)
-		{
-		case 3:
-			pGameServer = (*(void**)((int)ORIG_SV_ActivateServer + 223));
-			break;
-		}
-
-#if defined(OE)
-		DevMsg("pGameServer is %p.\n", pGameServer);
-#endif
-	}
-	else
-	{
-		Warning("y_spt_pause 2 has no effect.\n");
-		Warning("_y_spt_afterframes_reset_on_server_activate has no effect.\n");
-	}
-
-	// FinishRestore
-	if (!ORIG_FinishRestore)
-	{
-		Warning("y_spt_pause 1 has no effect.\n");
-	}
-
-	// SetPaused
-	if (!ORIG_SetPaused)
-	{
-		Warning("y_spt_pause has no effect.\n");
-	}
 
 	// interval_per_tick
 	if (ORIG_MiddleOfSV_InitGameDLL)
@@ -389,9 +279,6 @@ void EngineDLL::Unhook()
 void EngineDLL::Clear()
 {
 	IHookableNameFilter::Clear();
-	ORIG_SV_ActivateServer = nullptr;
-	ORIG_FinishRestore = nullptr;
-	ORIG_SetPaused = nullptr;
 	ORIG__Host_RunFrame = nullptr;
 	ORIG__Host_RunFrame_Input = nullptr;
 	ORIG__Host_RunFrame_Server = nullptr;
@@ -471,74 +358,6 @@ void EngineDLL::Demo_StopRecording()
 bool EngineDLL::Demo_IsAutoRecordingAvailable() const
 {
 	return (ORIG_StopRecording && ORIG_SetSignonState);
-}
-
-bool __cdecl EngineDLL::HOOKED_SV_ActivateServer_Func()
-{
-	bool result = ORIG_SV_ActivateServer();
-
-	DevMsg("Engine call: SV_ActivateServer() => %s;\n", (result ? "true" : "false"));
-
-	if (ORIG_SetPaused && pM_bLoadgame && pGameServer)
-	{
-		if ((y_spt_pause.GetInt() == 2) && *pM_bLoadgame)
-		{
-			ORIG_SetPaused((void*)pGameServer, 0, true);
-			DevMsg("Pausing...\n");
-
-			shouldPreventNextUnpause = true;
-		}
-	}
-
-	_afterframes.SV_ActivateServer();
-
-	return result;
-}
-
-void __fastcall EngineDLL::HOOKED_FinishRestore_Func(void* thisptr, int edx)
-{
-	DevMsg("Engine call: FinishRestore();\n");
-
-	if (ORIG_SetPaused && (y_spt_pause.GetInt() == 1))
-	{
-		ORIG_SetPaused(thisptr, 0, true);
-		DevMsg("Pausing...\n");
-
-		shouldPreventNextUnpause = true;
-	}
-
-	ORIG_FinishRestore(thisptr, edx);
-
-	_afterframes.FinishRestore();
-}
-
-void __fastcall EngineDLL::HOOKED_SetPaused_Func(void* thisptr, int edx, bool paused)
-{
-	_afterframes.SetPaused(paused);
-
-	if (pM_bLoadgame)
-	{
-		DevMsg("Engine call: SetPaused( %s ); m_bLoadgame = %s\n",
-		       (paused ? "true" : "false"),
-		       (*pM_bLoadgame ? "true" : "false"));
-	}
-	else
-	{
-		DevMsg("Engine call: SetPaused( %s );\n", (paused ? "true" : "false"));
-	}
-
-	if (paused == false)
-	{
-		if (shouldPreventNextUnpause)
-		{
-			DevMsg("Unpause prevented.\n");
-			shouldPreventNextUnpause = false;
-			return;
-		}
-	}
-
-	shouldPreventNextUnpause = false;
-	return ORIG_SetPaused(thisptr, edx, paused);
 }
 
 void __cdecl EngineDLL::HOOKED__Host_RunFrame_Func(float time)

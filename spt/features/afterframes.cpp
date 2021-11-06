@@ -41,24 +41,6 @@ void AfterframesFeature::ResumeAfterframesQueue()
 	afterframesPaused = false;
 }
 
-void AfterframesFeature::SV_ActivateServer()
-{
-	if (_y_spt_afterframes_reset_on_server_activate.GetBool())
-		ResetAfterframesQueue();
-}
-
-void AfterframesFeature::FinishRestore()
-{
-	if (_y_spt_afterframes_await_legacy.GetBool())
-		ResumeAfterframesQueue();
-}
-
-void AfterframesFeature::SetPaused(bool paused)
-{
-	if (!paused && !_y_spt_afterframes_await_legacy.GetBool())
-		ResumeAfterframesQueue();
-}
-
 bool AfterframesFeature::ShouldLoadFeature()
 {
 	return true;
@@ -70,6 +52,10 @@ void AfterframesFeature::InitHooks()
 
 void AfterframesFeature::LoadFeature()
 {
+	generic_.SV_ActivateServerSignal.Connect(this, &AfterframesFeature::SV_ActivateServer);
+	generic_.SetPausedSignal.Connect(this, &AfterframesFeature::SetPaused);
+	generic_.FinishRestoreSignal.Connect(this, &AfterframesFeature::FinishRestore);
+
 	if (!generic_.ORIG_HudUpdate)
 	{
 		Warning("_y_spt_afterframes has no effect.\n");
@@ -114,6 +100,24 @@ void AfterframesFeature::OnFrame()
 	}
 
 	AfterFramesSignal();
+}
+
+void AfterframesFeature::SV_ActivateServer(bool result)
+{
+	if (_y_spt_afterframes_reset_on_server_activate.GetBool())
+		ResetAfterframesQueue();
+}
+
+void AfterframesFeature::FinishRestore(void* thisptr, int edx)
+{
+	if (_y_spt_afterframes_await_legacy.GetBool())
+		ResumeAfterframesQueue();
+}
+
+void AfterframesFeature::SetPaused(void* thisptr, int edx, bool paused)
+{
+	if (!paused && !_y_spt_afterframes_await_legacy.GetBool())
+		ResumeAfterframesQueue();
 }
 
 CON_COMMAND(_y_spt_afterframes_wait, "Delays the afterframes queue. Usage: _y_spt_afterframes_wait <delay>")

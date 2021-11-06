@@ -25,9 +25,6 @@ public:
 	void PauseAfterframesQueue();
 	void ResumeAfterframesQueue();
 
-	void SV_ActivateServer();
-	void FinishRestore();
-	void SetPaused(bool paused);
 	Gallant::Signal0<void> AfterFramesSignal;
 protected:
 
@@ -38,6 +35,9 @@ protected:
 
 private:
 	void OnFrame();
+	void SV_ActivateServer(bool result);
+	void FinishRestore(void* thisptr, int edx);
+	void SetPaused(void* thisptr, int edx, bool paused);
 	std::vector<afterframes_entry_t> afterframesQueue;
 	bool afterframesPaused;
 	int afterframesDelay;

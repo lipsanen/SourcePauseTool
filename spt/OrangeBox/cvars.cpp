@@ -3,7 +3,6 @@
 #include "convar.h"
 #include "modules.hpp"
 
-ConVar y_spt_pause("y_spt_pause", "0", FCVAR_ARCHIVE);
 ConVar y_spt_motion_blur_fix("y_spt_motion_blur_fix", "0");
 ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
 ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",

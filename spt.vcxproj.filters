@@ -166,6 +166,9 @@
     <ClCompile Include="spt\features\afterframes.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\pause.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -488,6 +491,9 @@
   <ItemGroup>
     <Text Include="thirdparty\example.txt">
       <Filter>thirdparty</Filter>
+    </Text>
+    <Text Include="spt\features\template.cpp.txt">
+      <Filter>spt\features</Filter>
     </Text>
   </ItemGroup>
 </Project>

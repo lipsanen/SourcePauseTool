@@ -1369,6 +1369,7 @@
     <ClCompile Include="spt\features\afterframes.cpp" />
     <ClCompile Include="spt\features\generic.cpp" />
     <ClCompile Include="spt\features\isg.cpp" />
+    <ClCompile Include="spt\features\pause.cpp" />
     <ClCompile Include="spt\features\playerio.cpp" />
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
@@ -1834,6 +1835,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Text Include="spt\features\template.cpp.txt" />
     <Text Include="thirdparty\example.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
