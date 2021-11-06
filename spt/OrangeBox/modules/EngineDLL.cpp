@@ -106,11 +106,10 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	m_Length = moduleLength;
 	patternContainer.Init(moduleName);
 
-	uintptr_t ORIG_SpawnPlayer = NULL, ORIG_MiddleOfSV_InitGameDLL = NULL, ORIG_Record = NULL;
+	uintptr_t ORIG_MiddleOfSV_InitGameDLL = NULL, ORIG_Record = NULL;
 
 	DEF_FUTURE(Record);
 	DEF_FUTURE(MiddleOfSV_InitGameDLL);
-	DEF_FUTURE(SpawnPlayer);
 	DEF_FUTURE(CEngineTrace__PointOutsideWorld);
 	DEF_FUTURE(_Host_RunFrame);
 	DEF_FUTURE(Host_AccumulateTime);
@@ -119,7 +118,6 @@ void EngineDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(Stop);
 
 	GET_FUTURE(MiddleOfSV_InitGameDLL);
-	GET_FUTURE(SpawnPlayer);
 	GET_FUTURE(CEngineTrace__PointOutsideWorld);
 	GET_FUTURE(_Host_RunFrame);
 	GET_HOOKEDFUTURE(Host_AccumulateTime);
