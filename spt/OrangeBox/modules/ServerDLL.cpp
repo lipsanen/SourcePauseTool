@@ -67,12 +67,6 @@ float __fastcall ServerDLL::HOOKED_TraceFirePortal(void* thisptr,
 	    thisptr, edx, bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, iPlacedBy, bTest);
 }
 
-void __fastcall ServerDLL::HOOKED_SlidingAndOtherStuff(void* thisptr, int edx, void* a, void* b)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_SlidingAndOtherStuff_Func(thisptr, edx, a, b);
-}
-
 int __fastcall ServerDLL::HOOKED_CRestore__ReadAll(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap)
 {
 	TRACE_ENTER();
@@ -93,32 +87,6 @@ int __cdecl ServerDLL::HOOKED_DispatchSpawn(void* pEntity)
 {
 	TRACE_ENTER();
 	return serverDLL.ORIG_DispatchSpawn(pEntity);
-}
-
-__declspec(naked) void ServerDLL::HOOKED_MiddleOfSlidingFunction()
-{
-	/**
-	 * This is a hook in the middle of a function.
-	 * Save all registers and EFLAGS to restore right before jumping out.
-	 * Don't use local variables as they will corrupt the stack.
-	 */
-	__asm {
-		pushad;
-		pushfd;
-	}
-
-	serverDLL.HOOKED_MiddleOfSlidingFunction_Func();
-
-	__asm {
-		popfd;
-		popad;
-		/**
-		 * It's important that nothing modifies the registers, the EFLAGS or the stack past this point,
-		 * or the game won't be able to continue normally.
-		 */
-
-		jmp serverDLL.ORIG_MiddleOfSlidingFunction;
-	}
 }
 
 __declspec(naked) void ServerDLL::HOOKED_MiddleOfTeleportTouchingEntity()
@@ -236,7 +204,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(FinishGravity);
 	DEF_FUTURE(PlayerRunCommand);
 	DEF_FUTURE(CheckStuck);
-	DEF_FUTURE(MiddleOfSlidingFunction);
 	DEF_FUTURE(CheckJumpButton);
 	DEF_FUTURE(CHL2_Player__HandleInteraction);
 	DEF_FUTURE(PerformFlyCollisionResolution);
@@ -254,7 +221,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
-	GET_HOOKEDFUTURE(MiddleOfSlidingFunction);
 	GET_FUTURE(CHL2_Player__HandleInteraction);
 	GET_FUTURE(PerformFlyCollisionResolution);
 	GET_FUTURE(GetStepSoundVelocities);
@@ -425,19 +391,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		Warning("y_spt_stucksave has no effect.\n");
 	}
 
-	// Middle of DMoMM sliding function.
-	if (ORIG_MiddleOfSlidingFunction)
-	{
-		ORIG_SlidingAndOtherStuff = (_SlidingAndOtherStuff)(&ORIG_MiddleOfSlidingFunction - 0x4bb);
-		patternContainer.AddHook(HOOKED_SlidingAndOtherStuff, (PVOID*)ORIG_SlidingAndOtherStuff);
-		DevMsg("[server.dll] Found the sliding function at %p.\n", ORIG_SlidingAndOtherStuff);
-	}
-	else
-	{
-		DevWarning("[server.dll] Could not find the sliding code!\n");
-		Warning("y_spt_on_slide_pause_for has no effect.\n");
-	}
-
 	if (!ORIG_MiddleOfTeleportTouchingEntity || !ORIG_EndOfTeleportTouchingEntity)
 	{
 		DevWarning("[server.dll] Could not find the teleport function!\n");
@@ -498,8 +451,6 @@ void ServerDLL::Clear()
 	ORIG_PlayerRunCommand = nullptr;
 	ORIG_CheckStuck = nullptr;
 	ORIG_AirAccelerate = nullptr;
-	ORIG_SlidingAndOtherStuff = nullptr;
-	ORIG_MiddleOfSlidingFunction = nullptr;
 	ORIG_MiddleOfTeleportTouchingEntity = nullptr;
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
@@ -507,8 +458,6 @@ void ServerDLL::Clear()
 	offM_vecAbsVelocity = 0;
 	ticksPassed = 0;
 	timerRunning = false;
-	sliding = false;
-	wasSliding = false;
 	overrideMinMax = false;
 	commandNumber = 0;
 	offM_vecPunchAngle = 0;
@@ -717,42 +666,6 @@ float __fastcall ServerDLL::HOOKED_TraceFirePortal_Func(void* thisptr,
 	lastPortalTrace = tr;
 
 	return rv;
-}
-
-void __fastcall ServerDLL::HOOKED_SlidingAndOtherStuff_Func(void* thisptr, int edx, void* a, void* b)
-{
-	if (sliding)
-	{
-		sliding = false;
-		wasSliding = true;
-	}
-	else
-	{
-		wasSliding = false;
-	}
-
-	return ORIG_SlidingAndOtherStuff(thisptr, edx, a, b);
-}
-
-void ServerDLL::HOOKED_MiddleOfSlidingFunction_Func()
-{
-	//DevMsg("Sliding!\n");
-
-	sliding = true;
-
-	if (!wasSliding)
-	{
-		const auto pauseFor = y_spt_on_slide_pause_for.GetInt();
-		if (pauseFor > 0)
-		{
-			EngineConCmd("setpause");
-
-			afterframes_entry_t entry;
-			entry.framesLeft = pauseFor;
-			entry.command = "unpause";
-			_afterframes.AddAfterFramesEntry(entry);
-		}
-	}
 }
 
 /**

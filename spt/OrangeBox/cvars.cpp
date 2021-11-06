@@ -18,10 +18,6 @@ ConVar y_spt_pause_demo_on_tick(
     "x > 0 means pause the demo at tick number x.\n"
     "x < 0 means pause the demo at <demo length> + x, so for example -1 will pause the demo at the last tick.\n\n"
     "Demos ending with changelevels report incorrect length; you can obtain the correct demo length using listdemo and then set this CVar to <demo length> - 1 manually.");
-ConVar y_spt_on_slide_pause_for("y_spt_on_slide_pause_for",
-                                "0",
-                                0,
-                                "Whenever sliding occurs in DMoMM, pause for this many ticks.");
 
 ConVar tas_strafe("tas_strafe", "0", FCVAR_TAS_RESET);
 ConVar tas_strafe_type(

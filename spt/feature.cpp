@@ -101,6 +101,13 @@ int Feature::GetPatternIndex(void **origPtr) {
   }
 }
 
+void Feature::AddRawHook(ModuleEnum moduleName, void** origPtr, void* functionHook)
+{
+	auto& hookData = moduleHookData[static_cast<int>(moduleName)];
+	hookData.funcPairs.emplace_back(origPtr, functionHook);
+	hookData.hookedFunctions.emplace_back(origPtr);
+}
+
 void Feature::AddPatternHook(PatternHook hook, ModuleEnum moduleEnum)
 {
 	auto& mhd = moduleHookData[static_cast<int>(moduleEnum)];

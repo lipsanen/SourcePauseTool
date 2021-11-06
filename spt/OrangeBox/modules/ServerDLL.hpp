@@ -31,7 +31,6 @@ typedef float(__fastcall* _TraceFirePortal)(void* thisptr,
                                             int iPlacedBy,
                                             bool bTest);
 typedef void*(__fastcall* _GetActiveWeapon)(void* thisptr);
-typedef void(__fastcall* _SlidingAndOtherStuff)(void* thisptr, int edx, void* a, void* b);
 typedef CBaseEntity*(__cdecl* _CreateEntityByName)(const char* name, int forceEdictIndex);
 typedef int(__fastcall* _CRestore__ReadAll)(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap);
 typedef int(__fastcall* _CRestore__DoReadAll)(void* thisptr,
@@ -114,7 +113,6 @@ public:
 	                                                 datamap_t* pLeafMap,
 	                                                 datamap_t* pCurMap);
 	static int __cdecl HOOKED_DispatchSpawn(void* pEntity);
-	static void HOOKED_MiddleOfSlidingFunction();
 	static void HOOKED_MiddleOfTeleportTouchingEntity();
 	static void HOOKED_EndOfTeleportTouchingEntity();
 	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx);
@@ -139,8 +137,6 @@ public:
 	                                             QAngle& qFinalAngles,
 	                                             int iPlacedBy,
 	                                             bool bTest);
-	void __fastcall HOOKED_SlidingAndOtherStuff_Func(void* thisptr, int edx, void* a, void* b);
-	void HOOKED_MiddleOfSlidingFunction_Func();
 	void HOOKED_EndOfTeleportTouchingEntity_Func();
 	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
 	bool CanTracePlayerBBox();
@@ -208,8 +204,6 @@ protected:
 	_AirAccelerate ORIG_AirAccelerate;
 	_ProcessMovement ORIG_ProcessMovement;
 	_TraceFirePortal ORIG_TraceFirePortal;
-	_SlidingAndOtherStuff ORIG_SlidingAndOtherStuff;
-	void* ORIG_MiddleOfSlidingFunction;
 	void* ORIG_MiddleOfTeleportTouchingEntity;
 	void* ORIG_EndOfTeleportTouchingEntity;
 	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;
@@ -225,9 +219,6 @@ protected:
 
 	unsigned ticksPassed;
 	bool timerRunning;
-
-	bool sliding;
-	bool wasSliding;
 
 	int recursiveTeleportCount;
 };

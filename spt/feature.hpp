@@ -19,6 +19,10 @@ enum class ModuleEnum
 };
 const int HOOKED_MODULE_COUNT = 6;
 
+#define ADD_RAW_HOOK(moduleName, name) \
+	AddRawHook(ModuleEnum::moduleName, \
+	              reinterpret_cast<void**>(&ORIG_##name##), \
+	              reinterpret_cast<void*>(HOOKED_ ##name##));
 #define FIND_PATTERN(moduleName, name) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               ModuleEnum::moduleName, \
@@ -82,6 +86,13 @@ struct OffsetHook
 	void* functionHook;
 };
 
+struct RawHook
+{
+	const char* patternName;
+	void** origPtr;
+	void* functionHook;
+};
+
 struct ModuleHookData
 {
 	std::vector<PatternHook> patternHooks;
@@ -113,6 +124,7 @@ public:
 	                           void** origPtr = nullptr,
 	                           void* functionHook = nullptr,
 	                           _PatternCallback callback = nullptr);
+	static void AddRawHook(ModuleEnum moduleName, void** origPtr, void* functionHook);
 	static void AddPatternHook(PatternHook hook, ModuleEnum moduleEnum);
 	static void AddVFTableHook(VFTableHook hook, ModuleEnum moduleEnum);
 	static void AddOffsetHook(ModuleEnum moduleEnum,
