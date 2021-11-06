@@ -17,24 +17,6 @@
 using std::size_t;
 using std::uintptr_t;
 
-void __cdecl EngineDLL::HOOKED__Host_RunFrame(float time)
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED__Host_RunFrame_Func(time);
-}
-
-void __cdecl EngineDLL::HOOKED__Host_RunFrame_Input(float accumulated_extra_samples, int bFinalTick)
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED__Host_RunFrame_Input_Func(accumulated_extra_samples, bFinalTick);
-}
-
-void __cdecl EngineDLL::HOOKED__Host_RunFrame_Server(int bFinalTick)
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED__Host_RunFrame_Server_Func(bFinalTick);
-}
-
 void __cdecl EngineDLL::HOOKED_Host_AccumulateTime(float dt)
 {
 	if (tas_pause.GetBool())
@@ -44,12 +26,6 @@ void __cdecl EngineDLL::HOOKED_Host_AccumulateTime(float dt)
 	}
 	else
 		engineDLL.ORIG_Host_AccumulateTime(dt);
-}
-
-void __cdecl EngineDLL::HOOKED_Cbuf_Execute()
-{
-	TRACE_ENTER();
-	return engineDLL.HOOKED_Cbuf_Execute_Func();
 }
 
 void __fastcall EngineDLL::HOOKED_StopRecording(void* thisptr, int edx)
@@ -266,10 +242,7 @@ void EngineDLL::Clear()
 {
 	IHookableNameFilter::Clear();
 	ORIG__Host_RunFrame = nullptr;
-	ORIG__Host_RunFrame_Input = nullptr;
-	ORIG__Host_RunFrame_Server = nullptr;
 	ORIG_StopRecording = nullptr;
-	ORIG_Cbuf_Execute = nullptr;
 	ORIG_StopRecording = nullptr;
 	ORIG_SetSignonState = nullptr;
 	ORIG_Stop = nullptr;
@@ -343,54 +316,6 @@ void EngineDLL::Demo_StopRecording()
 bool EngineDLL::Demo_IsAutoRecordingAvailable() const
 {
 	return (ORIG_StopRecording && ORIG_SetSignonState);
-}
-
-void __cdecl EngineDLL::HOOKED__Host_RunFrame_Func(float time)
-{
-	DevMsg("_Host_RunFrame( %.8f ); m_nSignonState = %d;", time, *pM_nSignonState);
-	if (pM_State)
-		DevMsg(" m_State = %d;", *pM_State);
-	DevMsg("\n");
-
-	ORIG__Host_RunFrame(time);
-
-	DevMsg("_Host_RunFrame end.\n");
-}
-
-void __cdecl EngineDLL::HOOKED__Host_RunFrame_Input_Func(float accumulated_extra_samples, int bFinalTick)
-{
-	DevMsg("_Host_RunFrame_Input( %.8f, %d ); m_nSignonState = %d;", time, bFinalTick, *pM_nSignonState);
-	if (pM_State)
-		DevMsg(" m_State = %d;", *pM_State);
-	DevMsg(" host_frametime = %.8f\n", *pHost_Frametime);
-
-	ORIG__Host_RunFrame_Input(accumulated_extra_samples, bFinalTick);
-
-	DevMsg("_Host_RunFrame_Input end.\n");
-}
-
-void __cdecl EngineDLL::HOOKED__Host_RunFrame_Server_Func(int bFinalTick)
-{
-	DevMsg("_Host_RunFrame_Server( %d ); m_nSignonState = %d;", bFinalTick, *pM_nSignonState);
-	if (pM_State)
-		DevMsg(" m_State = %d;", *pM_State);
-	DevMsg(" host_frametime = %.8f\n", *pHost_Frametime);
-
-	ORIG__Host_RunFrame_Server(bFinalTick);
-
-	DevMsg("_Host_RunFrame_Server end.\n");
-}
-
-void __cdecl EngineDLL::HOOKED_Cbuf_Execute_Func()
-{
-	DevMsg("Cbuf_Execute(); m_nSignonState = %d;", *pM_nSignonState);
-	if (pM_State)
-		DevMsg(" m_State = %d;", *pM_State);
-	DevMsg(" host_frametime = %.8f\n", *pHost_Frametime);
-
-	ORIG_Cbuf_Execute();
-
-	DevMsg("Cbuf_Execute() end.\n");
 }
 
 void __fastcall EngineDLL::HOOKED_StopRecording_Func(void* thisptr, int edx)
