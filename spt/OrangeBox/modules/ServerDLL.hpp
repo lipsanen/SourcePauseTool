@@ -19,8 +19,6 @@ typedef void(__fastcall* _PlayerRunCommand)(void* thisptr, int edx, void* ucmd, 
 typedef int(__fastcall* _CheckStuck)(void* thisptr, int edx);
 typedef void(__fastcall* _AirAccelerate)(void* thisptr, int edx, Vector* wishdir, float wishspeed, float accel);
 typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
-typedef void(__fastcall* _SnapEyeAngles)(void* thisptr, int edx, const QAngle& viewAngles);
-typedef void*(__fastcall* _GetActiveWeapon)(void* thisptr);
 typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
 
 class ServerDLL : public IHookableNameFilter
@@ -90,9 +88,6 @@ public:
 	int GetPlayerMoveCollide() const;
 	int GetPlayerCollisionGroup() const;
 
-	_SnapEyeAngles SnapEyeAngles;
-	trace_t lastPortalTrace;
-	_GetActiveWeapon GetActiveWeapon;
 	ptrdiff_t offM_vecPunchAngle;
 	ptrdiff_t offM_vecPunchAngleVel;
 

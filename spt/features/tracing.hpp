@@ -67,6 +67,9 @@ public:
 	_UTIL_TraceRay ORIG_UTIL_TraceRay;
 	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround;
 	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2;
+	_SnapEyeAngles ORIG_SnapEyeAngles;
+	trace_t lastPortalTrace;
+	_GetActiveWeapon ORIG_GetActiveWeapon;
 
 	bool TraceClientRay(const Ray_t& ray,
 	                    unsigned int mask,
@@ -109,7 +112,6 @@ private:
 	bool overrideMinMax;
 	Vector _mins;
 	Vector _maxs;
-	trace_t lastPortalTrace;
 
 	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox;
 	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox;

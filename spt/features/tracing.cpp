@@ -57,7 +57,7 @@ void Tracing::TracePlayerBBox(const Vector& start,
 
 float Tracing::TraceFirePortal(trace_t& tr, const Vector& startPos, const Vector& vDirection)
 {
-	auto weapon = serverDLL.GetActiveWeapon(GetServerPlayer());
+	auto weapon = ORIG_GetActiveWeapon(GetServerPlayer());
 
 	if (!weapon)
 	{
@@ -98,6 +98,8 @@ void Tracing::InitHooks()
 	if (utils::DoesGameLookLikePortal())
 	{
 		AddOffsetHook(ModuleEnum::server, 0x442090, "FirePortal", reinterpret_cast<void**>(&ORIG_FirePortal));
+		AddOffsetHook(ModuleEnum::server, 0x1B92F0, "SnapEyeAngles", reinterpret_cast<void**>(&ORIG_SnapEyeAngles));
+		AddOffsetHook(ModuleEnum::server, 0xCCE90, "GetActiveWeapon", reinterpret_cast<void**>(&ORIG_GetActiveWeapon));
 		AddOffsetHook(ModuleEnum::server,
 		              0x441730,
 		              "TraceFirePortal",
@@ -165,7 +167,7 @@ void setang_exact(const QAngle& angles)
 	    (*reinterpret_cast<uintptr_t**>(player))[105]);
 
 	teleport(player, 0, nullptr, &angles, nullptr);
-	serverDLL.SnapEyeAngles(player, 0, angles);
+	g_Tracing.ORIG_SnapEyeAngles(player, 0, angles);
 }
 
 // Trace as if we were firing a Portal with the given viewangles, return the squared distance to the resulting point and the normal.
@@ -173,10 +175,10 @@ double trace_fire_portal(QAngle angles, Vector& normal)
 {
 	setang_exact(angles);
 
-	g_Tracing.ORIG_FirePortal(serverDLL.GetActiveWeapon(GetServerPlayer()), 0, false, nullptr, true);
+	g_Tracing.ORIG_FirePortal(g_Tracing.ORIG_GetActiveWeapon(GetServerPlayer()), 0, false, nullptr, true);
 
-	normal = serverDLL.lastPortalTrace.plane.normal;
-	return (serverDLL.lastPortalTrace.endpos - serverDLL.lastPortalTrace.startpos).LengthSqr();
+	normal = g_Tracing.lastPortalTrace.plane.normal;
+	return (g_Tracing.lastPortalTrace.endpos - g_Tracing.lastPortalTrace.startpos).LengthSqr();
 }
 
 QAngle firstAngle;
@@ -221,7 +223,7 @@ CON_COMMAND(
 		eps = (args.ArgC() == 5) ? eps : std::pow(atof(args.Arg(5)), 2);
 	}
 
-	if (!serverDLL.GetActiveWeapon(GetServerPlayer()))
+	if (!g_Tracing.ORIG_GetActiveWeapon(GetServerPlayer()))
 	{
 		Msg("You need to be holding a portal gun.\n");
 		return;
