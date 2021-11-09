@@ -52,21 +52,6 @@ void __fastcall ServerDLL::HOOKED_ProcessMovement(void* thisptr, int edx, void* 
 	TRACE_ENTER();
 	return serverDLL.HOOKED_ProcessMovement_Func(thisptr, edx, pPlayer, pMove);
 }
-float __fastcall ServerDLL::HOOKED_TraceFirePortal(void* thisptr,
-                                                   int edx,
-                                                   bool bPortal2,
-                                                   const Vector& vTraceStart,
-                                                   const Vector& vDirection,
-                                                   trace_t& tr,
-                                                   Vector& vFinalPosition,
-                                                   QAngle& qFinalAngles,
-                                                   int iPlacedBy,
-                                                   bool bTest)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_TraceFirePortal_Func(
-	    thisptr, edx, bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, iPlacedBy, bTest);
-}
 
 __declspec(naked) void ServerDLL::HOOKED_MiddleOfTeleportTouchingEntity()
 {
@@ -181,22 +166,10 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(PlayerRunCommand);
 	DEF_FUTURE(CheckStuck);
 	DEF_FUTURE(CheckJumpButton);
-	DEF_FUTURE(TracePlayerBBoxForGround);
-	DEF_FUTURE(TracePlayerBBoxForGround2);
-	DEF_FUTURE(CGameMovement__TracePlayerBBox);
-	DEF_FUTURE(CPortalGameMovement__TracePlayerBBox);
-	DEF_FUTURE(CGameMovement__GetPlayerMaxs);
-	DEF_FUTURE(CGameMovement__GetPlayerMins);
 	DEF_FUTURE(SetPredictionRandomSeed);
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
-	GET_FUTURE(TracePlayerBBoxForGround);
-	GET_FUTURE(TracePlayerBBoxForGround2);
-	GET_FUTURE(CGameMovement__TracePlayerBBox);
-	GET_FUTURE(CPortalGameMovement__TracePlayerBBox);
-	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMaxs);
-	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMins);
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 
 	if (utils::DoesGameLookLikePortal())
@@ -350,22 +323,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		    VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement));
 	}
 
-	if (!CanTracePlayerBBox())
-		Warning("tas_strafe_version 2 not available\n");
-
-		// TODO: remove fixed offsets.
-#ifdef SSDK2007
-	SnapEyeAngles = reinterpret_cast<_SnapEyeAngles>((unsigned int)moduleBase + 0x1B92F0);
-	GetActiveWeapon = reinterpret_cast<_GetActiveWeapon>((unsigned int)moduleBase + 0xCCE90);
-
-	if (utils::DoesGameLookLikePortal())
-	{
-		FirePortal = reinterpret_cast<_FirePortal>((unsigned int)moduleBase + 0x442090);
-		m_hPortalEnvironmentOffsetPtr = reinterpret_cast<int*>((unsigned int)FirePortal + 0xA3);
-		ORIG_TraceFirePortal = reinterpret_cast<_TraceFirePortal>((unsigned int)moduleBase + 0x441730);
-		patternContainer.AddHook(HOOKED_TraceFirePortal, (PVOID*)&ORIG_TraceFirePortal);
-	}
-#endif
 	patternContainer.Hook();
 }
 
@@ -390,7 +347,6 @@ void ServerDLL::Clear()
 	offM_vecAbsVelocity = 0;
 	ticksPassed = 0;
 	timerRunning = false;
-	overrideMinMax = false;
 	commandNumber = 0;
 	offM_vecPunchAngle = 0;
 	offM_vecPunchAngleVel = 0;
@@ -400,64 +356,6 @@ void ServerDLL::Clear()
 int ServerDLL::GetCommandNumber()
 {
 	return commandNumber;
-}
-
-void ServerDLL::TracePlayerBBox(const Vector& start,
-                                const Vector& end,
-                                const Vector& mins,
-                                const Vector& maxs,
-                                unsigned int fMask,
-                                int collisionGroup,
-                                trace_t& pm)
-{
-	extern void* gm;
-	overrideMinMax = true;
-	serverDLL._mins = mins;
-	serverDLL._maxs = maxs;
-
-	if (utils::DoesGameLookLikePortal())
-		ORIG_CPortalGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
-	else
-		ORIG_CGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
-	overrideMinMax = false;
-}
-
-float ServerDLL::TraceFirePortal(trace_t& tr, const Vector& startPos, const Vector& vDirection)
-{
-	auto weapon = serverDLL.GetActiveWeapon(GetServerPlayer());
-
-	if (!weapon)
-	{
-		tr.fraction = 1.0f;
-		return 0;
-	}
-
-	const int PORTAL_PLACED_BY_PLAYER = 2;
-	Vector vFinalPosition;
-	QAngle qFinalAngles;
-
-	return ORIG_TraceFirePortal(
-	    weapon, 0, false, startPos, vDirection, tr, vFinalPosition, qFinalAngles, PORTAL_PLACED_BY_PLAYER, true);
-}
-
-const Vector& __fastcall ServerDLL::HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx)
-{
-	if (serverDLL.overrideMinMax)
-	{
-		return serverDLL._maxs;
-	}
-	else
-		return serverDLL.ORIG_CGameMovement__GetPlayerMaxs(thisptr, edx);
-}
-
-const Vector& __fastcall ServerDLL::HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx)
-{
-	if (serverDLL.overrideMinMax)
-	{
-		return serverDLL._mins;
-	}
-	else
-		return serverDLL.ORIG_CGameMovement__GetPlayerMins(thisptr, edx);
 }
 
 void __cdecl ServerDLL::HOOKED_SetPredictionRandomSeed(void* usercmd)
@@ -581,24 +479,6 @@ void __fastcall ServerDLL::HOOKED_ProcessMovement_Func(void* thisptr, int edx, v
 		       mv->m_vecVelocity.y,
 		       mv->m_vecVelocity.z);
 }
-float __fastcall ServerDLL::HOOKED_TraceFirePortal_Func(void* thisptr,
-                                                        int edx,
-                                                        bool bPortal2,
-                                                        const Vector& vTraceStart,
-                                                        const Vector& vDirection,
-                                                        trace_t& tr,
-                                                        Vector& vFinalPosition,
-                                                        QAngle& qFinalAngles,
-                                                        int iPlacedBy,
-                                                        bool bTest)
-{
-	const auto rv = ORIG_TraceFirePortal(
-	    thisptr, edx, bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, iPlacedBy, bTest);
-
-	lastPortalTrace = tr;
-
-	return rv;
-}
 
 /**
 * A no free edicts crash when trying to do a vag happens when the 2nd teleport places the entity
@@ -641,21 +521,6 @@ void ServerDLL::HOOKED_EndOfTeleportTouchingEntity_Func()
 		recursiveTeleportCount--;
 }
 
-bool ServerDLL::CanTracePlayerBBox()
-{
-	extern void* gm;
-	if (utils::DoesGameLookLikePortal())
-	{
-		return gm != nullptr && ORIG_TracePlayerBBoxForGround2 && ORIG_CGameMovement__TracePlayerBBox
-		       && ORIG_CGameMovement__GetPlayerMaxs && ORIG_CGameMovement__GetPlayerMins;
-	}
-	else
-	{
-		return gm != nullptr && ORIG_TracePlayerBBoxForGround && ORIG_CGameMovement__TracePlayerBBox
-		       && ORIG_CGameMovement__GetPlayerMaxs && ORIG_CGameMovement__GetPlayerMins;
-	}
-}
-
 int ServerDLL::GetPlayerPhysicsFlags() const
 {
 	if (!utils::playerEntityAvailable())
@@ -688,14 +553,3 @@ int ServerDLL::GetPlayerCollisionGroup() const
 		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_collisionGroup));
 }
 
-int ServerDLL::GetEnviromentPortalHandle() const
-{
-	if (!utils::playerEntityAvailable())
-		return -1;
-	else
-	{
-		int offset = *m_hPortalEnvironmentOffsetPtr;
-
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offset));
-	}
-}

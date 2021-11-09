@@ -21,6 +21,7 @@
 #include "game_detection.hpp"
 #include "..\features\playerio.hpp"
 #include "..\features\tickrate.hpp"
+#include "..\features\tracing.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
 
 #undef max
@@ -672,7 +673,7 @@ namespace utils
 		for (int i = 0; i < 4; i++)
 		{
 			trace_t newEdgeTr;
-			serverDLL.TraceFirePortal(newEdgeTr, tr.endpos, checkDirs[i]);
+			g_Tracing.TraceFirePortal(newEdgeTr, tr.endpos, checkDirs[i]);
 
 			if (utils::TraceHit(newEdgeTr, maxDistSqr))
 			{
@@ -714,7 +715,7 @@ namespace utils
 		trace_t seamTrace;
 		Vector dir = seamPos - cameraPos;
 		dir.NormalizeInPlace();
-		serverDLL.TraceFirePortal(seamTrace, cameraPos, dir);
+		g_Tracing.TraceFirePortal(seamTrace, cameraPos, dir);
 
 		if (seamTrace.fraction == 1.0f)
 		{

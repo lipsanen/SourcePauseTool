@@ -19,8 +19,8 @@
 #include "utils\game_detection.hpp"
 #include "utils/math.hpp"
 #include "utils/property_getter.hpp"
-#include "features\generic.hpp"
 #include "features\playerio.hpp"
+#include "features\tracing.hpp"
 #include "OrangeBox\spt-serverplugin.hpp"
 
 #ifndef OE
@@ -58,11 +58,11 @@ namespace Strafe
 
 		if (tas_strafe_version.GetInt() == 1)
 		{
-			return generic_.ORIG_UTIL_TraceRay != nullptr;
+			return g_Tracing.ORIG_UTIL_TraceRay != nullptr;
 		}
 		else
 		{
-			return serverDLL.CanTracePlayerBBox();
+			return g_Tracing.CanTracePlayerBBox();
 		}
 	}
 
@@ -124,7 +124,7 @@ namespace Strafe
 			else
 				ray.Init(start, end, mins, maxs);
 
-			generic_.ORIG_UTIL_TraceRay(ray,
+			g_Tracing.ORIG_UTIL_TraceRay(ray,
 			                             MASK_PLAYERSOLID_BRUSHONLY,
 			                             utils::GetClientEntity(0),
 			                             COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -141,7 +141,7 @@ namespace Strafe
 				mins.z = 36;
 
 			SetMoveData();
-			serverDLL.TracePlayerBBox(start,
+			g_Tracing.TracePlayerBBox(start,
 			                          end,
 			                          mins,
 			                          maxs,
@@ -157,12 +157,12 @@ namespace Strafe
 	void Trace(trace_t& trace, const Vector& start, const Vector& end)
 	{
 #ifndef OE
-		if (!generic_.ORIG_UTIL_TraceRay)
+		if (!g_Tracing.ORIG_UTIL_TraceRay)
 			return;
 
 		Ray_t ray;
 		ray.Init(start, end);
-		generic_.ORIG_UTIL_TraceRay(ray,
+		g_Tracing.ORIG_UTIL_TraceRay(ray,
 		                             MASK_PLAYERSOLID_BRUSHONLY,
 		                             utils::GetClientEntity(0),
 		                             COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -246,7 +246,7 @@ namespace Strafe
 
 			trace_t pm;
 
-			serverDLL.TracePlayerBBox(bumpOrigin,
+			g_Tracing.TracePlayerBBox(bumpOrigin,
 			                          point,
 			                          mins,
 			                          maxs,
@@ -261,7 +261,7 @@ namespace Strafe
 			}
 
 			if (utils::DoesGameLookLikePortal())
-				serverDLL.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
+				g_Tracing.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
 				                                         point,
 				                                         mins,
 				                                         maxs,
@@ -270,7 +270,7 @@ namespace Strafe
 				                                         COLLISION_GROUP_PLAYER_MOVEMENT,
 				                                         pm);
 			else
-				serverDLL.ORIG_TracePlayerBBoxForGround(bumpOrigin,
+				g_Tracing.ORIG_TracePlayerBBoxForGround(bumpOrigin,
 				                                        point,
 				                                        mins,
 				                                        maxs,

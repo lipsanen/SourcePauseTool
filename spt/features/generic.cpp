@@ -3,6 +3,7 @@
 #include "generic.hpp"
 #include "playerio.hpp"
 #include "..\utils\ent_utils.hpp"
+#include "..\utils\game_detection.hpp"
 #include "convar.h"
 
 GenericFeature generic_;
@@ -16,7 +17,7 @@ void GenericFeature::Tick()
 	}
 }
 
-const Vector& GenericFeature::GetCameraOrigin()
+Vector GenericFeature::GetCameraOrigin()
 {
 	if (ORIG_MainViewOrigin)
 		return ORIG_MainViewOrigin();
@@ -36,7 +37,6 @@ void GenericFeature::InitHooks()
 	HOOK_FUNCTION(engine, SetPaused);
 	HOOK_FUNCTION(engine, SV_ActivateServer);
 	FIND_PATTERN(engine, CEngineTrace__PointOutsideWorld);
-	FIND_PATTERN(client, UTIL_TraceRay);
 	FIND_PATTERN(client, CHudDamageIndicator__GetDamagePosition);
 }
 
@@ -56,10 +56,7 @@ void GenericFeature::LoadFeature()
 		DevMsg("[client.dll] Found GetClientModeNormal at %p\n", ORIG_GetClientModeNormal);
 	}
 
-	if (!ORIG_UTIL_TraceRay)
-		Warning("tas_strafe_version 1 not available\n");
-
-	if (!ORIG_MainViewOrigin || !ORIG_UTIL_TraceRay)
+	if (!ORIG_MainViewOrigin || !ORIG_CEngineTrace__PointOutsideWorld)
 		Warning("y_spt_hud_oob 1 has no effect\n");
 }
 

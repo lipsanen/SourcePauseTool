@@ -1382,6 +1382,7 @@
     <ClCompile Include="spt\features\tas.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />
     <ClCompile Include="spt\features\tickrate.cpp" />
+    <ClCompile Include="spt\features\tracing.cpp" />
     <ClCompile Include="spt\features\visual_fixes.cpp" />
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />
     <ClCompile Include="spt\ipc\ipc-spt.cpp" />
@@ -1687,6 +1688,7 @@
     <ClInclude Include="spt\features\shadow.hpp" />
     <ClInclude Include="spt\features\tas.hpp" />
     <ClInclude Include="spt\features\tickrate.hpp" />
+    <ClInclude Include="spt\features\tracing.hpp" />
     <ClInclude Include="spt\ipc\ipc-spt.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
     <ClInclude Include="spt\OrangeBox\module_hooks.hpp" />

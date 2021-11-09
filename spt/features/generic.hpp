@@ -5,11 +5,9 @@
 #if defined(OE)
 #include "vector.h"
 #else
-#include "mathlib/vector.h"
+#include "mathlib\vector.h"
 #endif
-#include "cmodel.h"
 
-class ITraceFilter;
 
 typedef void(__stdcall* _HudUpdate)(bool bActive);
 typedef bool(__cdecl* _SV_ActivateServer)();
@@ -17,11 +15,6 @@ typedef void(__fastcall* _FinishRestore)(void* thisptr, int edx);
 typedef void(__fastcall* _SetPaused)(void* thisptr, int edx, bool paused);
 typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int edx, const Vector& pt);
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
-typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
-                                      unsigned int mask,
-                                      const IHandleEntity* ignore,
-                                      int collisionGroup,
-                                      trace_t* ptr);
 typedef const Vector&(__cdecl* _MainViewOrigin)();
 typedef void*(__cdecl* _GetClientModeNormal)();
 
@@ -41,13 +34,12 @@ public:
 	_SV_ActivateServer ORIG_SV_ActivateServer;
 	_FinishRestore ORIG_FinishRestore;
 	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
-	_UTIL_TraceRay ORIG_UTIL_TraceRay;
 	_MainViewOrigin ORIG_MainViewOrigin;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	bool shouldPreventNextUnpause;
 
 	void Tick();
-	const Vector& GetCameraOrigin();
+	Vector GetCameraOrigin();
 
 protected:
 	virtual bool ShouldLoadFeature() override;

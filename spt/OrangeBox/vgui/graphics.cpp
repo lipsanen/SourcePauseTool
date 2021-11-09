@@ -5,6 +5,7 @@
 #include "..\spt-serverplugin.hpp"
 #include "..\..\sptlib-wrapper.hpp"
 #include "..\..\features\generic.hpp"
+#include "..\..\features\tracing.hpp"
 #include "..\..\features\tickrate.hpp"
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\property_getter.hpp"
@@ -27,7 +28,7 @@ namespace vgui
 		AngleVectors(angles, &vDirection);
 
 		trace_t tr;
-		serverDLL.TraceFirePortal(tr, cameraPosition, vDirection);
+		g_Tracing.TraceFirePortal(tr, cameraPosition, vDirection);
 
 		if (tr.fraction < 1.0f)
 		{
