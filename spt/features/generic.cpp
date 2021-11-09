@@ -16,6 +16,14 @@ void GenericFeature::Tick()
 	}
 }
 
+const Vector& GenericFeature::GetCameraOrigin()
+{
+	if (ORIG_MainViewOrigin)
+		return ORIG_MainViewOrigin();
+	else
+		return Vector(0);
+}
+
 bool GenericFeature::ShouldLoadFeature()
 {
 	return true;
@@ -28,16 +36,34 @@ void GenericFeature::InitHooks()
 	HOOK_FUNCTION(engine, SetPaused);
 	HOOK_FUNCTION(engine, SV_ActivateServer);
 	FIND_PATTERN(engine, CEngineTrace__PointOutsideWorld);
+	FIND_PATTERN(client, UTIL_TraceRay);
+	FIND_PATTERN(client, CHudDamageIndicator__GetDamagePosition);
 }
 
 void GenericFeature::LoadFeature()
 {
+	if (ORIG_CHudDamageIndicator__GetDamagePosition)
+	{
+		int offset = *reinterpret_cast<int*>(ORIG_CHudDamageIndicator__GetDamagePosition + 4);
+		ORIG_MainViewOrigin = (_MainViewOrigin)(offset + ORIG_CHudDamageIndicator__GetDamagePosition + 8);
+		DevMsg("[client.dll] Found MainViewOrigin at %p\n", ORIG_MainViewOrigin);
+	}
 
+	if (ORIG_CHLClient__CanRecordDemo)
+	{
+		int offset = *reinterpret_cast<int*>(ORIG_CHLClient__CanRecordDemo + 1);
+		ORIG_GetClientModeNormal = (_GetClientModeNormal)(offset + ORIG_CHLClient__CanRecordDemo + 5);
+		DevMsg("[client.dll] Found GetClientModeNormal at %p\n", ORIG_GetClientModeNormal);
+	}
+
+	if (!ORIG_UTIL_TraceRay)
+		Warning("tas_strafe_version 1 not available\n");
+
+	if (!ORIG_MainViewOrigin || !ORIG_UTIL_TraceRay)
+		Warning("y_spt_hud_oob 1 has no effect\n");
 }
 
-void GenericFeature::UnloadFeature()
-{
-}
+void GenericFeature::UnloadFeature() {}
 
 void __stdcall GenericFeature::HOOKED_HudUpdate(bool bActive)
 {

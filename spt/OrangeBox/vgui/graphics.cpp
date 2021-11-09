@@ -4,6 +4,7 @@
 #include "..\modules.hpp"
 #include "..\spt-serverplugin.hpp"
 #include "..\..\sptlib-wrapper.hpp"
+#include "..\..\features\generic.hpp"
 #include "..\..\features\tickrate.hpp"
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\property_getter.hpp"
@@ -20,7 +21,7 @@ namespace vgui
 
 		float va[3];
 		EngineGetViewAngles(va);
-		Vector cameraPosition = clientDLL.GetCameraOrigin();
+		Vector cameraPosition = generic_.GetCameraOrigin();
 		QAngle angles(va[0], va[1], va[2]);
 		Vector vDirection;
 		AngleVectors(angles, &vDirection);

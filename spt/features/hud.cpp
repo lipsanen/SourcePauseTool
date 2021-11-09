@@ -628,7 +628,7 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	if (y_spt_hud_oob.GetBool())
 	{
-		Vector v = clientDLL.GetCameraOrigin();
+		Vector v = generic_.GetCameraOrigin();
 		trace_t tr;
 		Strafe::Trace(tr, v, v + Vector(1, 1, 1));
 

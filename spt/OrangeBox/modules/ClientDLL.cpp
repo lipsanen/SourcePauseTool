@@ -91,44 +91,17 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	m_Name = moduleName;
 	m_Base = moduleBase;
 	m_Length = moduleLength;
-	uintptr_t ORIG_CHLClient__CanRecordDemo, ORIG_CHudDamageIndicator__GetDamagePosition;
 
 	patternContainer.Init(moduleName);
 
 	DEF_FUTURE(CViewRender__OnRenderStart);
-	DEF_FUTURE(CHLClient__CanRecordDemo);
-	DEF_FUTURE(UTIL_TraceRay);
-	DEF_FUTURE(CHudDamageIndicator__GetDamagePosition);
 
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
-	GET_FUTURE(CHLClient__CanRecordDemo);
-	GET_FUTURE(UTIL_TraceRay);
-	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
-
-	if (ORIG_CHLClient__CanRecordDemo)
-	{
-		int offset = *reinterpret_cast<int*>(ORIG_CHLClient__CanRecordDemo + 1);
-		ORIG_GetClientModeNormal = (_GetClientModeNormal)(offset + ORIG_CHLClient__CanRecordDemo + 5);
-		DevMsg("[client.dll] Found GetClientModeNormal at %p\n", ORIG_GetClientModeNormal);
-	}
-
-	if (ORIG_CHudDamageIndicator__GetDamagePosition)
-	{
-		int offset = *reinterpret_cast<int*>(ORIG_CHudDamageIndicator__GetDamagePosition + 4);
-		ORIG_MainViewOrigin = (_MainViewOrigin)(offset + ORIG_CHudDamageIndicator__GetDamagePosition + 8);
-		DevMsg("[client.dll] Found MainViewOrigin at %p\n", ORIG_MainViewOrigin);
-	}
 
 	if (!ORIG_CViewRender__OnRenderStart)
 	{
 		Warning("_y_spt_force_fov has no effect.\n");
 	}
-
-	if (!ORIG_UTIL_TraceRay)
-		Warning("tas_strafe_version 1 not available\n");
-
-	if (!ORIG_MainViewOrigin || !ORIG_UTIL_TraceRay)
-		Warning("y_spt_hud_oob 1 has no effect\n");
 
 	patternContainer.Hook();
 }
@@ -142,15 +115,6 @@ void ClientDLL::Unhook()
 void ClientDLL::Clear()
 {
 	IHookableNameFilter::Clear();
-	ORIG_UTIL_TraceRay = nullptr;
-	ORIG_MainViewOrigin = nullptr;
-}
-
-Vector ClientDLL::GetCameraOrigin()
-{
-	if (!ORIG_MainViewOrigin)
-		return Vector();
-	return ORIG_MainViewOrigin();
 }
 
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx)

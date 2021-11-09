@@ -20,6 +20,7 @@
 #include "utils\game_detection.hpp"
 #include "utils/math.hpp"
 #include "utils/property_getter.hpp"
+#include "features\generic.hpp"
 #include "features\playerio.hpp"
 
 #ifndef OE
@@ -57,7 +58,7 @@ namespace Strafe
 
 		if (tas_strafe_version.GetInt() == 1)
 		{
-			return clientDLL.ORIG_UTIL_TraceRay != nullptr;
+			return generic_.ORIG_UTIL_TraceRay != nullptr;
 		}
 		else
 		{
@@ -123,7 +124,7 @@ namespace Strafe
 			else
 				ray.Init(start, end, mins, maxs);
 
-			clientDLL.ORIG_UTIL_TraceRay(ray,
+			generic_.ORIG_UTIL_TraceRay(ray,
 			                             MASK_PLAYERSOLID_BRUSHONLY,
 			                             utils::GetClientEntity(0),
 			                             COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -156,12 +157,12 @@ namespace Strafe
 	void Trace(trace_t& trace, const Vector& start, const Vector& end)
 	{
 #ifndef OE
-		if (!clientDLL.ORIG_UTIL_TraceRay)
+		if (!generic_.ORIG_UTIL_TraceRay)
 			return;
 
 		Ray_t ray;
 		ray.Init(start, end);
-		clientDLL.ORIG_UTIL_TraceRay(ray,
+		generic_.ORIG_UTIL_TraceRay(ray,
 		                             MASK_PLAYERSOLID_BRUSHONLY,
 		                             utils::GetClientEntity(0),
 		                             COLLISION_GROUP_PLAYER_MOVEMENT,

@@ -16,25 +16,6 @@ using std::size_t;
 using std::uintptr_t;
 
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
-typedef void*(__cdecl* _GetClientModeNormal)();
-typedef void(__cdecl* _UTIL_TraceLine)(const Vector& vecAbsStart,
-                                       const Vector& vecAbsEnd,
-                                       unsigned int mask,
-                                       ITraceFilter* pFilter,
-                                       trace_t* ptr);
-typedef void(__fastcall* _UTIL_TracePlayerBBox)(void* thisptr,
-                                                int edx,
-                                                const Vector& vecAbsStart,
-                                                const Vector& vecAbsEnd,
-                                                unsigned int mask,
-                                                int collisionGroup,
-                                                trace_t& ptr);
-typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
-                                      unsigned int mask,
-                                      const IHandleEntity* ignore,
-                                      int collisionGroup,
-                                      trace_t* ptr);
-typedef const Vector&(__cdecl* _MainViewOrigin)();
 
 
 class ClientDLL : public IHookableNameFilter
@@ -49,24 +30,11 @@ public:
 	virtual void Unhook();
 	virtual void Clear();
 
-	static void __cdecl HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, int w, int h);
-	static void __stdcall HOOKED_HudUpdate(bool bActive);
-	static void __fastcall HOOKED_CreateMove(void* thisptr,
-	                                         int edx,
-	                                         int sequence_number,
-	                                         float input_sample_frametime,
-	                                         bool active);
 	static void __fastcall HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx);
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
 
-	Vector GetCameraOrigin();
-
-	_GetClientModeNormal ORIG_GetClientModeNormal;
-	_UTIL_TraceRay ORIG_UTIL_TraceRay;
-
 protected:
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
-	_MainViewOrigin ORIG_MainViewOrigin;
 
 protected:
 	PatternContainer patternContainer;
