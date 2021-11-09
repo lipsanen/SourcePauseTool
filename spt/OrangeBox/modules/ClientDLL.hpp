@@ -34,7 +34,6 @@ typedef void(__cdecl* _UTIL_TraceRay)(const Ray_t& ray,
                                       const IHandleEntity* ignore,
                                       int collisionGroup,
                                       trace_t* ptr);
-typedef bool(__fastcall* _CGameMovement__CanUnDuckJump)(void* thisptr, int edx, trace_t& ptr);
 typedef const Vector&(__cdecl* _MainViewOrigin)();
 
 
@@ -61,14 +60,12 @@ public:
 	void __fastcall HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx);
 
 	Vector GetCameraOrigin();
-	bool CanUnDuckJump(trace_t& ptr);
 
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	_UTIL_TraceRay ORIG_UTIL_TraceRay;
 
 protected:
 	_CViewRender__OnRenderStart ORIG_CViewRender__OnRenderStart;
-	_CGameMovement__CanUnDuckJump ORIG_CGameMovement__CanUnDuckJump;
 	_MainViewOrigin ORIG_MainViewOrigin;
 
 protected:

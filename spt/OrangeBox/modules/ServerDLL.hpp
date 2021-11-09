@@ -31,15 +31,6 @@ typedef float(__fastcall* _TraceFirePortal)(void* thisptr,
                                             int iPlacedBy,
                                             bool bTest);
 typedef void*(__fastcall* _GetActiveWeapon)(void* thisptr);
-typedef CBaseEntity*(__cdecl* _CreateEntityByName)(const char* name, int forceEdictIndex);
-typedef int(__fastcall* _CRestore__ReadAll)(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap);
-typedef int(__fastcall* _CRestore__DoReadAll)(void* thisptr,
-                                              int edx,
-                                              void* pLeafObject,
-                                              datamap_t* pLeafMap,
-                                              datamap_t* pCurMap);
-typedef int(__cdecl* _DispatchSpawn)(void* pEntity);
-typedef string_t(__cdecl* _AllocPooledString)(const char* pszValue, int trash);
 typedef void(__fastcall* _CGameMovement__TracePlayerBBox)(void* thisptr,
                                                           int edx,
                                                           const Vector& start,
@@ -177,12 +168,7 @@ public:
 	_FirePortal FirePortal;
 	trace_t lastPortalTrace;
 	_GetActiveWeapon GetActiveWeapon;
-	_CreateEntityByName ORIG_CreateEntityByName;
 	int* m_hPortalEnvironmentOffsetPtr;
-	_CRestore__ReadAll ORIG_CRestore__ReadAll;
-	_CRestore__DoReadAll ORIG_CRestore__DoReadAll;
-	_DispatchSpawn ORIG_DispatchSpawn;
-	_AllocPooledString ORIG_AllocPooledString;
 	_CGameMovement__GetPlayerMins ORIG_CGameMovement__GetPlayerMins;
 	_CGameMovement__GetPlayerMaxs ORIG_CGameMovement__GetPlayerMaxs;
 	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox;

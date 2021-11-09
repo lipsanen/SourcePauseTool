@@ -67,28 +67,6 @@ float __fastcall ServerDLL::HOOKED_TraceFirePortal(void* thisptr,
 	    thisptr, edx, bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, iPlacedBy, bTest);
 }
 
-int __fastcall ServerDLL::HOOKED_CRestore__ReadAll(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap)
-{
-	TRACE_ENTER();
-	return serverDLL.ORIG_CRestore__ReadAll(thisptr, edx, pLeafObject, pLeafMap);
-}
-
-int __fastcall ServerDLL::HOOKED_CRestore__DoReadAll(void* thisptr,
-                                                     int edx,
-                                                     void* pLeafObject,
-                                                     datamap_t* pLeafMap,
-                                                     datamap_t* pCurMap)
-{
-	TRACE_ENTER();
-	return serverDLL.ORIG_CRestore__DoReadAll(thisptr, edx, pLeafObject, pLeafMap, pCurMap);
-}
-
-int __cdecl ServerDLL::HOOKED_DispatchSpawn(void* pEntity)
-{
-	TRACE_ENTER();
-	return serverDLL.ORIG_DispatchSpawn(pEntity);
-}
-
 __declspec(naked) void ServerDLL::HOOKED_MiddleOfTeleportTouchingEntity()
 {
 	/**
@@ -196,20 +174,12 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	m_Name = moduleName;
 	m_Base = moduleBase;
 	m_Length = moduleLength;
-	uintptr_t ORIG_CHL2_Player__HandleInteraction = NULL, ORIG_PerformFlyCollisionResolution = NULL,
-	          ORIG_GetStepSoundVelocities = NULL, ORIG_CBaseEntity__SetCollisionGroup = NULL,
-	          ORIG_CGameMovement__DecayPunchAngle = NULL;
 	patternContainer.Init(moduleName);
 
 	DEF_FUTURE(FinishGravity);
 	DEF_FUTURE(PlayerRunCommand);
 	DEF_FUTURE(CheckStuck);
 	DEF_FUTURE(CheckJumpButton);
-	DEF_FUTURE(CHL2_Player__HandleInteraction);
-	DEF_FUTURE(PerformFlyCollisionResolution);
-	DEF_FUTURE(GetStepSoundVelocities);
-	DEF_FUTURE(CBaseEntity__SetCollisionGroup);
-	DEF_FUTURE(AllocPooledString);
 	DEF_FUTURE(TracePlayerBBoxForGround);
 	DEF_FUTURE(TracePlayerBBoxForGround2);
 	DEF_FUTURE(CGameMovement__TracePlayerBBox);
@@ -217,15 +187,9 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	DEF_FUTURE(CGameMovement__GetPlayerMaxs);
 	DEF_FUTURE(CGameMovement__GetPlayerMins);
 	DEF_FUTURE(SetPredictionRandomSeed);
-	DEF_FUTURE(CGameMovement__DecayPunchAngle);
 	GET_HOOKEDFUTURE(FinishGravity);
 	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
-	GET_FUTURE(CHL2_Player__HandleInteraction);
-	GET_FUTURE(PerformFlyCollisionResolution);
-	GET_FUTURE(GetStepSoundVelocities);
-	GET_FUTURE(CBaseEntity__SetCollisionGroup);
-	GET_FUTURE(AllocPooledString);
 	GET_FUTURE(TracePlayerBBoxForGround);
 	GET_FUTURE(TracePlayerBBoxForGround2);
 	GET_FUTURE(CGameMovement__TracePlayerBBox);
@@ -233,7 +197,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMaxs);
 	GET_HOOKEDFUTURE(CGameMovement__GetPlayerMins);
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
-	GET_FUTURE(CGameMovement__DecayPunchAngle);
 
 	if (utils::DoesGameLookLikePortal())
 	{
@@ -308,8 +271,13 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		{
 		case 0:
 			offM_vecAbsVelocity = 476;
+			offM_afPhysicsFlags = 2724;
+			offM_moveCollide = 307;
+			offM_moveType = 306;
+			offM_collisionGroup = 420;
+			offM_vecPunchAngle = 2192;
+			offM_vecPunchAngleVel = 2200;
 			break;
-
 		case 1:
 			offM_vecAbsVelocity = 476;
 			break;
@@ -361,30 +329,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		Warning("_y_spt_getvel has no effect.\n");
 	}
 
-	if (ORIG_CHL2_Player__HandleInteraction)
-	{
-		offM_afPhysicsFlags = *reinterpret_cast<int*>(ORIG_CHL2_Player__HandleInteraction + 0x16);
-		DevMsg("Physics flags offset is %d\n", offM_afPhysicsFlags);
-	}
-
-	if (ORIG_PerformFlyCollisionResolution)
-	{
-		offM_moveCollide = *reinterpret_cast<int*>(ORIG_PerformFlyCollisionResolution + 0x8);
-		DevMsg("Move collide offset is %d\n", offM_moveCollide);
-	}
-
-	if (ORIG_GetStepSoundVelocities)
-	{
-		offM_moveType = *reinterpret_cast<int*>(ORIG_GetStepSoundVelocities + 0xB);
-		DevMsg("Move type offset is %d\n", offM_moveType);
-	}
-
-	if (ORIG_CBaseEntity__SetCollisionGroup)
-	{
-		offM_collisionGroup = *reinterpret_cast<int*>(ORIG_CBaseEntity__SetCollisionGroup + 0x5);
-		DevMsg("Collision group offset is %d\n", offM_collisionGroup);
-	}
-
 	// CheckStuck
 	if (!ORIG_CheckStuck)
 	{
@@ -394,19 +338,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	if (!ORIG_MiddleOfTeleportTouchingEntity || !ORIG_EndOfTeleportTouchingEntity)
 	{
 		DevWarning("[server.dll] Could not find the teleport function!\n");
-	}
-
-	if (ORIG_CGameMovement__DecayPunchAngle)
-	{
-		offM_vecPunchAngle = *reinterpret_cast<int*>(ORIG_CGameMovement__DecayPunchAngle + 0x11);
-		offM_vecPunchAngleVel = *reinterpret_cast<int*>(ORIG_CGameMovement__DecayPunchAngle + 0xb);
-
-		DevMsg("vecPunchAngle offset is %d\n", offM_vecPunchAngle);
-		DevMsg("vecPunchAngleVel offset is %d\n", offM_vecPunchAngleVel);
-	}
-	else
-	{
-		Warning("Punch angle compensation is not available for tas_aim!\n");
 	}
 
 	extern void* gm;

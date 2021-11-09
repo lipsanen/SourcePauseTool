@@ -91,21 +91,18 @@ void ClientDLL::Hook(const std::wstring& moduleName,
 	m_Name = moduleName;
 	m_Base = moduleBase;
 	m_Length = moduleLength;
-	uintptr_t ORIG_MiddleOfCAM_Think, ORIG_CHLClient__CanRecordDemo, ORIG_CHudDamageIndicator__GetDamagePosition;
+	uintptr_t ORIG_CHLClient__CanRecordDemo, ORIG_CHudDamageIndicator__GetDamagePosition;
 
 	patternContainer.Init(moduleName);
 
 	DEF_FUTURE(CViewRender__OnRenderStart);
-	DEF_FUTURE(MiddleOfCAM_Think);
 	DEF_FUTURE(CHLClient__CanRecordDemo);
 	DEF_FUTURE(UTIL_TraceRay);
-	DEF_FUTURE(CGameMovement__CanUnDuckJump);
 	DEF_FUTURE(CHudDamageIndicator__GetDamagePosition);
 
 	GET_HOOKEDFUTURE(CViewRender__OnRenderStart);
 	GET_FUTURE(CHLClient__CanRecordDemo);
 	GET_FUTURE(UTIL_TraceRay);
-	GET_FUTURE(CGameMovement__CanUnDuckJump);
 	GET_FUTURE(CHudDamageIndicator__GetDamagePosition);
 
 	if (ORIG_CHLClient__CanRecordDemo)
@@ -154,18 +151,6 @@ Vector ClientDLL::GetCameraOrigin()
 	if (!ORIG_MainViewOrigin)
 		return Vector();
 	return ORIG_MainViewOrigin();
-}
-
-
-bool ClientDLL::CanUnDuckJump(trace_t& ptr)
-{
-	if (!ORIG_CGameMovement__CanUnDuckJump)
-	{
-		Warning("Tried to run CanUnduckJump without the pattern!\n");
-		return false;
-	}
-
-	return ORIG_CGameMovement__CanUnDuckJump(GetGamemovement(), 0, ptr);
 }
 
 void __fastcall ClientDLL::HOOKED_CViewRender__OnRenderStart_Func(void* thisptr, int edx)
