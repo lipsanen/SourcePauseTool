@@ -350,7 +350,6 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	_EngineWarning = Warning;
 	_EngineDevWarning = DevWarning;
 
-	Hooks::AddToHookedModules(&clientDLL);
 	Hooks::AddToHookedModules(&serverDLL);
 	Hooks::Init(true);
 	Feature::LoadFeatures();

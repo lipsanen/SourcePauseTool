@@ -5,7 +5,6 @@
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\math.hpp"
 #include "..\modules.hpp"
-#include "..\modules\ClientDLL.hpp"
 #include "..\..\features\shadow.hpp"
 #include "..\..\features\playerio.hpp"
 #include "overlays.hpp"

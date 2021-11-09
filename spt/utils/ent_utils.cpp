@@ -8,7 +8,6 @@
 
 #include "..\OrangeBox\cvars.hpp"
 #include "..\OrangeBox\modules.hpp"
-#include "..\OrangeBox\modules\ClientDLL.hpp"
 #include "..\OrangeBox\modules\ServerDLL.hpp"
 #include "..\OrangeBox\overlay\portal_camera.hpp"
 #include "..\sptlib-wrapper.hpp"
@@ -22,6 +21,7 @@
 #include "game_detection.hpp"
 #include "..\features\playerio.hpp"
 #include "..\features\tickrate.hpp"
+#include "..\OrangeBox\spt-serverplugin.hpp"
 
 #undef max
 

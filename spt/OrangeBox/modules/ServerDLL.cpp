@@ -12,6 +12,7 @@
 #include "..\..\utils\game_detection.hpp"
 #include "..\..\features\afterframes.hpp"
 #include "..\..\features\autojump.hpp"
+#include "..\spt-serverplugin.hpp"
 
 #ifdef OE
 #include "SDK\usercmd.h"

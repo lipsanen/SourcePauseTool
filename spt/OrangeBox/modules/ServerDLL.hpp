@@ -1,6 +1,7 @@
 #include "..\..\stdafx.hpp"
 #pragma once
 
+#include "cmodel.h"
 #include <SPTLib\IHookableNameFilter.hpp>
 
 #include <SDK\hl_movedata.h>

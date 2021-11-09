@@ -4,7 +4,6 @@
 #include "..\spt-serverplugin.hpp"
 #include "..\cvars.hpp"
 #include "..\modules.hpp"
-#include "..\modules\ClientDLL.hpp"
 #include "SDK\hl_movedata.h"
 #include "overlay-renderer.hpp"
 #include "overlays.hpp"

@@ -135,7 +135,6 @@ ConVar _y_spt_anglesetspeed(
     "Determines how fast the view angle can move per tick while doing _y_spt_setyaw/_y_spt_setpitch.\n");
 ConVar _y_spt_pitchspeed("_y_spt_pitchspeed", "0", FCVAR_TAS_RESET);
 ConVar _y_spt_yawspeed("_y_spt_yawspeed", "0", FCVAR_TAS_RESET);
-ConVar _y_spt_force_fov("_y_spt_force_fov", "0");
 
 ConVar y_spt_prevent_vag_crash(
     "y_spt_prevent_vag_crash",

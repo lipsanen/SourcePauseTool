@@ -3,7 +3,6 @@
 #include "..\..\..\sptlib-wrapper.hpp"
 #include "..\..\..\utils\string_parsing.hpp"
 #include "..\..\modules.hpp"
-#include "..\..\modules\ClientDLL.hpp"
 #include "..\..\..\features\playerio.hpp"
 
 namespace scripts

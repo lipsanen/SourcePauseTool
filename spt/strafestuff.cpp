@@ -12,7 +12,6 @@
 #include "OrangeBox/cvars.hpp"
 #include "OrangeBox/module_hooks.hpp"
 #include "OrangeBox/modules.hpp"
-#include "OrangeBox/modules/ClientDLL.hpp"
 #include "const.h"
 #include "strafe_utils.hpp"
 #include "strafestuff.hpp"
@@ -22,6 +21,7 @@
 #include "utils/property_getter.hpp"
 #include "features\generic.hpp"
 #include "features\playerio.hpp"
+#include "OrangeBox\spt-serverplugin.hpp"
 
 #ifndef OE
 #include "OrangeBox/overlay/portal_camera.hpp"

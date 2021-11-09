@@ -10,9 +10,6 @@
     <ClCompile Include="spt\OrangeBox\modules\ServerDLL.cpp">
       <Filter>spt\OrangeBox\modules</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\ClientDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\stdafx.cpp">
       <Filter>spt</Filter>
     </ClCompile>
@@ -187,6 +184,9 @@
     <ClCompile Include="spt\features\demo.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\fov.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -253,9 +253,6 @@
       <Filter>spt\OrangeBox</Filter>
     </ClInclude>
     <ClInclude Include="spt\OrangeBox\modules\ServerDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\ClientDLL.hpp">
       <Filter>spt\OrangeBox\modules</Filter>
     </ClInclude>
     <ClInclude Include="SDK\igamemovement.h">
