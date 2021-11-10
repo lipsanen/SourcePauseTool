@@ -233,8 +233,6 @@ void ServerDLL::Clear()
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
 	off2M_bDucked = 0;
-	ticksPassed = 0;
-	timerRunning = false;
 	commandNumber = 0;
 	recursiveTeleportCount = 0;
 }

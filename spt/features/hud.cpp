@@ -191,7 +191,7 @@ void HUDFeature::LoadFeature()
 	}
 	else
 	{
-		generic_.TickSignal.Connect(this, &HUDFeature::NewTick);
+		generic_.AdjustAngles.Connect(this, &HUDFeature::NewTick);
 		generic_.OngroundSignal.Connect(this, &HUDFeature::OnGround);
 		_autojump.JumpSignal.Connect(this, &HUDFeature::Jump);
 	}

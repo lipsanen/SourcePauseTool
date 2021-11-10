@@ -38,9 +38,9 @@ namespace ModuleHooks
 		_afterframes.AfterFramesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
 		_afterframes.AfterFramesSignal.Connect(&PauseOnDemoTick);
 
-		generic_.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
+		generic_.AdjustAngles.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
 #ifndef OE
-		generic_.TickSignal.Connect(vgui::DrawLines);
+		generic_.AdjustAngles.Connect(vgui::DrawLines);
 #endif
 	}
 } // namespace ModuleHooks

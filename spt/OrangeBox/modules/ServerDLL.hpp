@@ -48,24 +48,6 @@ public:
 	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
 	int GetCommandNumber();
 
-	void StartTimer()
-	{
-		timerRunning = true;
-	}
-	void StopTimer()
-	{
-		timerRunning = false;
-	}
-	void ResetTimer()
-	{
-		ticksPassed = 0;
-		timerRunning = false;
-	}
-	unsigned int GetTicksPassed() const
-	{
-		return ticksPassed;
-	}
-
 
 protected:
 	PatternContainer patternContainer;
@@ -79,9 +61,6 @@ protected:
 	int commandNumber;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
-
-	unsigned ticksPassed;
-	bool timerRunning;
 
 	int recursiveTeleportCount;
 };

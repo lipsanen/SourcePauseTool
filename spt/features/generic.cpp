@@ -8,12 +8,12 @@
 
 GenericFeature generic_;
 
-void GenericFeature::Tick()
+void GenericFeature::AdjustAngles_hook()
 {
 	if (utils::playerEntityAvailable())
 	{
 		OngroundSignal(playerio::IsGroundEntitySet());
-		TickSignal();
+		AdjustAngles();
 	}
 }
 

@@ -385,6 +385,12 @@ const char* CSourcePauseTool::GetPluginDescription(void)
 	return "SourcePauseTool v" SPT_VERSION ", Ivan \"YaLTeR\" Molodetskikh";
 }
 
+void CSourcePauseTool::GameFrame(bool simulating)
+{
+	if(simulating)
+		generic_.TickSignal();
+}
+
 CON_COMMAND(y_spt_cvar, "CVar manipulation.")
 {
 	if (!engine || !g_pCVar)
@@ -579,27 +585,6 @@ CON_COMMAND(_y_spt_getangles, "Gets the view angles of the player.")
 	Warning("View Angle (y): %f\n", va.y);
 	Warning("View Angle (z): %f\n", va.z);
 	Warning("View Angle (x, y, z): %f %f %f\n", va.x, va.y, va.z);
-}
-
-CON_COMMAND(y_spt_timer_start, "Starts the SPT timer.")
-{
-	serverDLL.StartTimer();
-}
-
-CON_COMMAND(y_spt_timer_stop, "Stops the SPT timer and prints the current time.")
-{
-	serverDLL.StopTimer();
-	Warning("Current time (in ticks): %u\n", serverDLL.GetTicksPassed());
-}
-
-CON_COMMAND(y_spt_timer_reset, "Stops and resets the SPT timer.")
-{
-	serverDLL.ResetTimer();
-}
-
-CON_COMMAND(y_spt_timer_print, "Prints the current time of the SPT timer.")
-{
-	Warning("Current time (in ticks): %u\n", serverDLL.GetTicksPassed());
 }
 
 CON_COMMAND(

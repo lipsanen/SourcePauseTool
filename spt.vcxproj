@@ -1384,6 +1384,7 @@
     <ClCompile Include="spt\features\taslogging.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />
     <ClCompile Include="spt\features\tickrate.cpp" />
+    <ClCompile Include="spt\features\timer.cpp" />
     <ClCompile Include="spt\features\tracing.cpp" />
     <ClCompile Include="spt\features\visual_fixes.cpp" />
     <ClCompile Include="spt\ipc\ipc-commands.cpp" />

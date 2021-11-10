@@ -71,7 +71,7 @@ void __fastcall TASFeature::HOOKED_AdjustAngles_Func(void* thisptr, int edx, flo
 	}
 
 	EngineSetViewAngles(va);
-	generic_.Tick();
+	generic_.AdjustAngles_hook();
 }
 
 void TASFeature::Strafe(float* va, bool yawChanged)

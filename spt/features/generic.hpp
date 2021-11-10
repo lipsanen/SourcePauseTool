@@ -22,9 +22,10 @@ typedef void*(__cdecl* _GetClientModeNormal)();
 class GenericFeature : public Feature
 {
 public:
-	Gallant::Signal0<void> TickSignal;
+	Gallant::Signal0<void> AdjustAngles;
 	Gallant::Signal1<bool> OngroundSignal;
 	Gallant::Signal0<void> FrameSignal;
+	Gallant::Signal0<void> TickSignal;
 	Gallant::Signal1<bool> SV_ActivateServerSignal;
 	Gallant::Signal2<void*, int> FinishRestoreSignal;
 	Gallant::Signal3<void*, int, bool> SetPausedSignal;
@@ -38,7 +39,7 @@ public:
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	bool shouldPreventNextUnpause;
 
-	void Tick();
+	void AdjustAngles_hook();
 	Vector GetCameraOrigin();
 
 protected:
