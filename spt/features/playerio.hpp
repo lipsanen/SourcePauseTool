@@ -52,6 +52,10 @@ public:
 	bool IsGroundEntitySet();
 	bool TryJump();
 	bool PlayerIOAddressesFound();
+	int GetPlayerPhysicsFlags() const;
+	int GetPlayerMoveType() const;
+	int GetPlayerMoveCollide() const;
+	int GetPlayerCollisionGroup() const;
 
 	bool duckspam;
 	bool forceJump;
@@ -60,6 +64,14 @@ public:
 	bool playerioAddressesWereFound;
 	ptrdiff_t offServerAbsOrigin;
 	uintptr_t pCmd;
+
+	ptrdiff_t offM_vecAbsVelocity;
+	ptrdiff_t offM_afPhysicsFlags;
+	ptrdiff_t offM_moveType;
+	ptrdiff_t offM_moveCollide;
+	ptrdiff_t offM_collisionGroup;
+	ptrdiff_t offM_vecPunchAngle;
+	ptrdiff_t offM_vecPunchAngleVel;
 
 	void EnableDuckspam()
 	{
@@ -93,6 +105,7 @@ private:
 	_GetLocalPlayer ORIG_GetLocalPlayer;
 	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity;
 	uintptr_t ORIG_MiddleOfCAM_Think;
+	uintptr_t ORIG_PlayerRunCommand;
 
 	ptrdiff_t offM_pCommands;
 	ptrdiff_t offForwardmove;

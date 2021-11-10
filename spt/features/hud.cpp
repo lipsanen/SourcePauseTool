@@ -587,19 +587,19 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	if (y_spt_hud_moveflags.GetBool())
 	{
-		int flags = serverDLL.GetPlayerMoveType();
+		int flags = _playerio.GetPlayerMoveType();
 		DRAW_FLAGS(L"Move type", MOVETYPE_FLAGS, flags, true);
 	}
 
 	if (y_spt_hud_collisionflags.GetBool())
 	{
-		int flags = serverDLL.GetPlayerCollisionGroup();
+		int flags = _playerio.GetPlayerCollisionGroup();
 		DRAW_FLAGS(L"Collision group", COLLISION_GROUPS, flags, true);
 	}
 
 	if (y_spt_hud_movecollideflags.GetBool())
 	{
-		int flags = serverDLL.GetPlayerMoveCollide();
+		int flags = _playerio.GetPlayerMoveCollide();
 		DRAW_FLAGS(L"Move collide", MOVECOLLIDE_FLAGS, flags, true);
 	}
 

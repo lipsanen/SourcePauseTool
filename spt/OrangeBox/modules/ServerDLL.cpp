@@ -29,12 +29,6 @@ void __fastcall ServerDLL::HOOKED_FinishGravity(void* thisptr, int edx)
 	return serverDLL.HOOKED_FinishGravity_Func(thisptr, edx);
 }
 
-void __fastcall ServerDLL::HOOKED_PlayerRunCommand(void* thisptr, int edx, void* ucmd, void* moveHelper)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_PlayerRunCommand_Func(thisptr, edx, ucmd, moveHelper);
-}
-
 int __fastcall ServerDLL::HOOKED_CheckStuck(void* thisptr, int edx)
 {
 	TRACE_ENTER();
@@ -163,12 +157,10 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	patternContainer.Init(moduleName);
 
 	DEF_FUTURE(FinishGravity);
-	DEF_FUTURE(PlayerRunCommand);
 	DEF_FUTURE(CheckStuck);
 	DEF_FUTURE(CheckJumpButton);
 	DEF_FUTURE(SetPredictionRandomSeed);
 	GET_HOOKEDFUTURE(FinishGravity);
-	GET_HOOKEDFUTURE(PlayerRunCommand);
 	GET_HOOKEDFUTURE(CheckStuck);
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 
@@ -237,72 +229,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		Warning("y_spt_additional_jumpboost has no effect.\n");
 	}
 
-	// PlayerRunCommand
-	if (ORIG_PlayerRunCommand)
-	{
-		int ptnNumber = patternContainer.FindPatternIndex((PVOID*)&ORIG_FinishGravity);
-		switch (ptnNumber)
-		{
-		case 0:
-			offM_vecAbsVelocity = 476;
-			offM_afPhysicsFlags = 2724;
-			offM_moveCollide = 307;
-			offM_moveType = 306;
-			offM_collisionGroup = 420;
-			offM_vecPunchAngle = 2192;
-			offM_vecPunchAngleVel = 2200;
-			break;
-		case 1:
-			offM_vecAbsVelocity = 476;
-			break;
-
-		case 2:
-			offM_vecAbsVelocity = 532;
-			break;
-
-		case 3:
-			offM_vecAbsVelocity = 532;
-			break;
-
-		case 4:
-			offM_vecAbsVelocity = 532;
-			break;
-
-		case 5:
-			offM_vecAbsVelocity = 476;
-			break;
-
-		case 6:
-			offM_vecAbsVelocity = 532;
-			break;
-
-		case 7:
-			offM_vecAbsVelocity = 532;
-			break;
-
-		case 8:
-			offM_vecAbsVelocity = 592;
-			break;
-
-		case 9:
-			offM_vecAbsVelocity = 556;
-			break;
-
-		case 10:
-			offM_vecAbsVelocity = 364;
-			break;
-
-		case 12:
-			offM_vecAbsVelocity = 476;
-			break;
-		}
-	}
-	else
-	{
-		DevWarning("[server dll] Could not find PlayerRunCommand!\n");
-		Warning("_y_spt_getvel has no effect.\n");
-	}
-
 	// CheckStuck
 	if (!ORIG_CheckStuck)
 	{
@@ -344,12 +270,9 @@ void ServerDLL::Clear()
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
 	off2M_bDucked = 0;
-	offM_vecAbsVelocity = 0;
 	ticksPassed = 0;
 	timerRunning = false;
 	commandNumber = 0;
-	offM_vecPunchAngle = 0;
-	offM_vecPunchAngleVel = 0;
 	recursiveTeleportCount = 0;
 }
 
@@ -409,14 +332,6 @@ void __fastcall ServerDLL::HOOKED_FinishGravity_Func(void* thisptr, int edx)
 	}
 
 	return ORIG_FinishGravity(thisptr, edx);
-}
-
-void __fastcall ServerDLL::HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper)
-{
-	ORIG_PlayerRunCommand(thisptr, edx, ucmd, moveHelper);
-
-	if (timerRunning)
-		ticksPassed++;
 }
 
 int __fastcall ServerDLL::HOOKED_CheckStuck_Func(void* thisptr, int edx)
@@ -519,37 +434,5 @@ void ServerDLL::HOOKED_EndOfTeleportTouchingEntity_Func()
 {
 	if (y_spt_prevent_vag_crash.GetBool())
 		recursiveTeleportCount--;
-}
-
-int ServerDLL::GetPlayerPhysicsFlags() const
-{
-	if (!utils::playerEntityAvailable())
-		return -1;
-	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_afPhysicsFlags));
-}
-
-int ServerDLL::GetPlayerMoveType() const
-{
-	if (!utils::playerEntityAvailable())
-		return -1;
-	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveType)) & 0xF;
-}
-
-int ServerDLL::GetPlayerMoveCollide() const
-{
-	if (!utils::playerEntityAvailable())
-		return -1;
-	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveCollide)) & 0x7;
-}
-
-int ServerDLL::GetPlayerCollisionGroup() const
-{
-	if (!utils::playerEntityAvailable())
-		return -1;
-	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_collisionGroup));
 }
 

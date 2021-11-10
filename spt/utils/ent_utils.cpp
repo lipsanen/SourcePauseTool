@@ -560,12 +560,12 @@ namespace utils
 #else
 		auto ply = GetServerEntity(1);
 
-		if (ply && serverDLL.offM_vecPunchAngle != 0 && serverDLL.offM_vecPunchAngleVel != 0)
+		if (ply && _playerio.offM_vecPunchAngle != 0 && _playerio.offM_vecPunchAngleVel != 0)
 		{
 			punchAngle =
-			    *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + serverDLL.offM_vecPunchAngle);
+			    *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + _playerio.offM_vecPunchAngle);
 			punchAngleVel =
-			    *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + serverDLL.offM_vecPunchAngleVel);
+			    *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + _playerio.offM_vecPunchAngleVel);
 			return true;
 		}
 		else

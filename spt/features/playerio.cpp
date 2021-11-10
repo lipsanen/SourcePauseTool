@@ -28,6 +28,7 @@ void PlayerIOFeature::InitHooks()
 	FIND_PATTERN(client, CalcAbsoluteVelocity);
 	FIND_PATTERN_WITH_CALLBACK(client, GetGroundEntity, GetGroundEntity_callback);
 	FIND_PATTERN_WITH_CALLBACK(client, MiddleOfCAM_Think, MiddleOfCAM_Think_callback);
+	FIND_PATTERN(server, PlayerRunCommand);
 }
 
 void PlayerIOFeature::LoadFeature()
@@ -40,6 +41,79 @@ void PlayerIOFeature::LoadFeature()
 	else
 	{
 		sizeofCUserCmd = 84;
+	}
+
+	offM_vecAbsVelocity = 0;
+	offM_afPhysicsFlags = 0;
+	offM_moveCollide = 0;
+	offM_moveType = 0;
+	offM_collisionGroup = 0;
+	offM_vecPunchAngle = 0;
+	offM_vecPunchAngleVel = 0;
+
+	if(ORIG_PlayerRunCommand)
+	{
+		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_PlayerRunCommand);
+		switch (ptnNumber)
+		{
+		case 0:
+			offM_vecAbsVelocity = 476;
+			offM_afPhysicsFlags = 2724;
+			offM_moveCollide = 307;
+			offM_moveType = 306;
+			offM_collisionGroup = 420;
+			offM_vecPunchAngle = 2192;
+			offM_vecPunchAngleVel = 2200;
+			break;
+		case 1:
+			offM_vecAbsVelocity = 476;
+			break;
+
+		case 2:
+			offM_vecAbsVelocity = 532;
+			break;
+
+		case 3:
+			offM_vecAbsVelocity = 532;
+			break;
+
+		case 4:
+			offM_vecAbsVelocity = 532;
+			break;
+
+		case 5:
+			offM_vecAbsVelocity = 476;
+			break;
+
+		case 6:
+			offM_vecAbsVelocity = 532;
+			break;
+
+		case 7:
+			offM_vecAbsVelocity = 532;
+			break;
+
+		case 8:
+			offM_vecAbsVelocity = 592;
+			break;
+
+		case 9:
+			offM_vecAbsVelocity = 556;
+			break;
+
+		case 10:
+			offM_vecAbsVelocity = 364;
+			break;
+
+		case 12:
+			offM_vecAbsVelocity = 476;
+			break;
+		}
+	}
+	else
+	{
+		DevWarning("[server dll] Could not find PlayerRunCommand!\n");
+		Warning("_y_spt_getvel has no effect.\n");
 	}
 }
 
@@ -538,6 +612,44 @@ double PlayerIOFeature::GetDuckJumpTime()
 	auto player = ORIG_GetLocalPlayer();
 	return *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offDuckJumpTime);
 }
+
+
+int PlayerIOFeature::GetPlayerPhysicsFlags() const
+{
+	auto player = GetServerPlayer();
+	if (!player || offM_afPhysicsFlags == 0)
+		return -1;
+	else
+		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_afPhysicsFlags));
+}
+
+int PlayerIOFeature::GetPlayerMoveType() const
+{
+	auto player = GetServerPlayer();
+	if (!player || offM_moveType == 0)
+		return -1;
+	else
+		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveType)) & 0xF;
+}
+
+int PlayerIOFeature::GetPlayerMoveCollide() const
+{
+	auto player = GetServerPlayer();
+	if (!player || offM_moveCollide == 0)
+		return -1;
+	else
+		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveCollide)) & 0x7;
+}
+
+int PlayerIOFeature::GetPlayerCollisionGroup() const
+{
+	auto player = GetServerPlayer();
+	if (!player || offM_collisionGroup == 0)
+		return -1;
+	else
+		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_collisionGroup));
+}
+
 
 #if defined(OE)
 static void DuckspamDown()

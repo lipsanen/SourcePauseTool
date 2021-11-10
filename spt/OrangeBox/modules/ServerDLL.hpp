@@ -34,7 +34,6 @@ public:
 	virtual void Clear();
 
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
-	static void __fastcall HOOKED_PlayerRunCommand(void* thisptr, int edx, void* ucmd, void* moveHelper);
 	static int __fastcall HOOKED_CheckStuck(void* thisptr, int edx);
 	static void __fastcall HOOKED_AirAccelerate(void* thisptr,
 	                                            int edx,
@@ -54,7 +53,6 @@ public:
 	static void HOOKED_EndOfTeleportTouchingEntity();
 	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
-	void __fastcall HOOKED_PlayerRunCommand_Func(void* thisptr, int edx, void* ucmd, void* moveHelper);
 	int __fastcall HOOKED_CheckStuck_Func(void* thisptr, int edx);
 	void __fastcall HOOKED_AirAccelerate_Func(void* thisptr,
 	                                          int edx,
@@ -83,13 +81,7 @@ public:
 	{
 		return ticksPassed;
 	}
-	int GetPlayerPhysicsFlags() const;
-	int GetPlayerMoveType() const;
-	int GetPlayerMoveCollide() const;
-	int GetPlayerCollisionGroup() const;
 
-	ptrdiff_t offM_vecPunchAngle;
-	ptrdiff_t offM_vecPunchAngleVel;
 
 protected:
 	PatternContainer patternContainer;
@@ -106,11 +98,6 @@ protected:
 	int commandNumber;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
-	ptrdiff_t offM_vecAbsVelocity;
-	ptrdiff_t offM_afPhysicsFlags;
-	ptrdiff_t offM_moveType;
-	ptrdiff_t offM_moveCollide;
-	ptrdiff_t offM_collisionGroup;
 
 	unsigned ticksPassed;
 	bool timerRunning;
