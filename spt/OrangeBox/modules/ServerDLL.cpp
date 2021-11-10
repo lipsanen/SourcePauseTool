@@ -35,18 +35,6 @@ int __fastcall ServerDLL::HOOKED_CheckStuck(void* thisptr, int edx)
 	return serverDLL.HOOKED_CheckStuck_Func(thisptr, edx);
 }
 
-void __fastcall ServerDLL::HOOKED_AirAccelerate(void* thisptr, int edx, Vector* wishdir, float wishspeed, float accel)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_AirAccelerate_Func(thisptr, edx, wishdir, wishspeed, accel);
-}
-
-void __fastcall ServerDLL::HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_ProcessMovement_Func(thisptr, edx, pPlayer, pMove);
-}
-
 __declspec(naked) void ServerDLL::HOOKED_MiddleOfTeleportTouchingEntity()
 {
 	/**
@@ -240,15 +228,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		DevWarning("[server.dll] Could not find the teleport function!\n");
 	}
 
-	extern void* gm;
-	if (gm)
-	{
-		auto vftable = *reinterpret_cast<void***>(gm);
-		//ORIG_AirAccelerate = reinterpret_cast<_AirAccelerate>(MemUtils::HookVTable(vftable, 17, reinterpret_cast<uintptr_t>(HOOKED_AirAccelerate)));
-		patternContainer.AddVFTableHook(
-		    VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement));
-	}
-
 	patternContainer.Hook();
 }
 
@@ -265,7 +244,6 @@ void ServerDLL::Clear()
 	ORIG_FinishGravity = nullptr;
 	ORIG_PlayerRunCommand = nullptr;
 	ORIG_CheckStuck = nullptr;
-	ORIG_AirAccelerate = nullptr;
 	ORIG_MiddleOfTeleportTouchingEntity = nullptr;
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
@@ -347,52 +325,6 @@ int __fastcall ServerDLL::HOOKED_CheckStuck_Func(void* thisptr, int edx)
 	}
 
 	return ret;
-}
-
-void __fastcall ServerDLL::HOOKED_AirAccelerate_Func(void* thisptr,
-                                                     int edx,
-                                                     Vector* wishdir,
-                                                     float wishspeed,
-                                                     float accel)
-{
-	const double M_RAD2DEG = 180 / M_PI;
-
-	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
-	DevMsg("[AA Pre ] velocity: %.8f %.8f %.8f\n", mv->m_vecVelocity.x, mv->m_vecVelocity.y, mv->m_vecVelocity.z);
-	DevMsg("[AA Pre ] speed = %.8f; wishspeed = %.8f; accel = %.8f; wishdir = %.8f; surface friction = %.8f\n",
-	       mv->m_vecVelocity.Length2D(),
-	       wishspeed,
-	       accel,
-	       atan2(wishdir->y, wishdir->x) * M_RAD2DEG,
-	       *(float*)(*(uintptr_t*)((uintptr_t)thisptr + 4) + 3812));
-
-	ORIG_AirAccelerate(thisptr, edx, wishdir, wishspeed, accel);
-
-	DevMsg("[AA Post] speed = %.8f\n", mv->m_vecVelocity.Length2D());
-}
-
-void __fastcall ServerDLL::HOOKED_ProcessMovement_Func(void* thisptr, int edx, void* pPlayer, void* pMove)
-{
-	CHLMoveData* mv = reinterpret_cast<CHLMoveData*>(pMove);
-	if (tas_log.GetBool())
-		DevMsg("[ProcessMovement PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
-		       mv->GetAbsOrigin().x,
-		       mv->GetAbsOrigin().y,
-		       mv->GetAbsOrigin().z,
-		       mv->m_vecVelocity.x,
-		       mv->m_vecVelocity.y,
-		       mv->m_vecVelocity.z);
-
-	ORIG_ProcessMovement(thisptr, edx, pPlayer, pMove);
-
-	if (tas_log.GetBool())
-		DevMsg("[ProcessMovement POST] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
-		       mv->GetAbsOrigin().x,
-		       mv->GetAbsOrigin().y,
-		       mv->GetAbsOrigin().z,
-		       mv->m_vecVelocity.x,
-		       mv->m_vecVelocity.y,
-		       mv->m_vecVelocity.z);
 }
 
 /**

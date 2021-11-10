@@ -17,8 +17,6 @@ typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 typedef void(__fastcall* _PlayerRunCommand)(void* thisptr, int edx, void* ucmd, void* moveHelper);
 typedef int(__fastcall* _CheckStuck)(void* thisptr, int edx);
-typedef void(__fastcall* _AirAccelerate)(void* thisptr, int edx, Vector* wishdir, float wishspeed, float accel);
-typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
 typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
 
 class ServerDLL : public IHookableNameFilter
@@ -35,12 +33,6 @@ public:
 
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
 	static int __fastcall HOOKED_CheckStuck(void* thisptr, int edx);
-	static void __fastcall HOOKED_AirAccelerate(void* thisptr,
-	                                            int edx,
-	                                            Vector* wishdir,
-	                                            float wishspeed,
-	                                            float accel);
-	static void __fastcall HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove);
 	static void __fastcall HOOKED_SlidingAndOtherStuff(void* thisptr, int edx, void* a, void* b);
 	static int __fastcall HOOKED_CRestore__ReadAll(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap);
 	static int __fastcall HOOKED_CRestore__DoReadAll(void* thisptr,
@@ -54,12 +46,6 @@ public:
 	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	int __fastcall HOOKED_CheckStuck_Func(void* thisptr, int edx);
-	void __fastcall HOOKED_AirAccelerate_Func(void* thisptr,
-	                                          int edx,
-	                                          Vector* wishdir,
-	                                          float wishspeed,
-	                                          float accel);
-	void __fastcall HOOKED_ProcessMovement_Func(void* thisptr, int edx, void* pPlayer, void* pMove);
 	void HOOKED_EndOfTeleportTouchingEntity_Func();
 	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
 	int GetCommandNumber();
@@ -89,8 +75,6 @@ protected:
 	_FinishGravity ORIG_FinishGravity;
 	_PlayerRunCommand ORIG_PlayerRunCommand;
 	_CheckStuck ORIG_CheckStuck;
-	_AirAccelerate ORIG_AirAccelerate;
-	_ProcessMovement ORIG_ProcessMovement;
 	void* ORIG_MiddleOfTeleportTouchingEntity;
 	void* ORIG_EndOfTeleportTouchingEntity;
 	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;

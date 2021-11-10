@@ -1380,6 +1380,7 @@
     <ClCompile Include="spt\features\playerio.cpp" />
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
+    <ClCompile Include="spt\features\taslogging.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />
     <ClCompile Include="spt\features\tickrate.cpp" />
     <ClCompile Include="spt\features\tracing.cpp" />
