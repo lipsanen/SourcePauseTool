@@ -6,7 +6,6 @@
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\property_getter.hpp"
 #include "..\cvars.hpp"
-#include "..\modules.hpp"
 #include "cdll_int.h"
 #include "client_class.h"
 #include "edict.h"

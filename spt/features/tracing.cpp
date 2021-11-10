@@ -2,7 +2,6 @@
 #include "tracing.hpp"
 #include "..\utils\game_detection.hpp"
 #include "..\utils\math.hpp"
-#include "..\OrangeBox\modules.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
 #include "convar.h"
 

@@ -1,3 +1,5 @@
+#include "..\stdafx.hpp"
+
 #include <chrono>
 #include <functional>
 #include <sstream>
@@ -14,7 +16,6 @@
 #include "..\features\playerio.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
-#include "modules.hpp"
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "..\ipc\ipc-spt.hpp"
@@ -30,6 +31,8 @@
 #include "vgui\iinput.h"
 #include "vgui\isystem.h"
 #include "vgui\ivgui.h"
+#include "SDK\hl_movedata.h"
+#include "igamemovement.h"
 
 #if SSDK2007
 #include "mathlib\vmatrix.h"
@@ -350,8 +353,6 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	_EngineWarning = Warning;
 	_EngineDevWarning = DevWarning;
 
-	Hooks::AddToHookedModules(&serverDLL);
-	Hooks::Init(true);
 	Feature::LoadFeatures();
 	ipc::Init();
 	ModuleHooks::ConnectSignals();

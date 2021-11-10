@@ -2,7 +2,6 @@
 #include "tracker.hpp"
 #include "..\..\..\sptlib-wrapper.hpp"
 #include "..\..\..\utils\string_parsing.hpp"
-#include "..\..\modules.hpp"
 #include "..\..\..\features\playerio.hpp"
 
 namespace scripts

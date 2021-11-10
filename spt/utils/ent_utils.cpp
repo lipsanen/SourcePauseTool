@@ -7,8 +7,6 @@
 #include <vector>
 
 #include "..\OrangeBox\cvars.hpp"
-#include "..\OrangeBox\modules.hpp"
-#include "..\OrangeBox\modules\ServerDLL.hpp"
 #include "..\OrangeBox\overlay\portal_camera.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "..\strafestuff.hpp"

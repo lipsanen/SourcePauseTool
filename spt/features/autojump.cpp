@@ -10,6 +10,10 @@
 AutojumpFeature _autojump;
 ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_CHEAT);
+ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",
+                                  "0",
+                                  0,
+                                  "1 = Add in ABH movement mechanic, 2 = Add in OE movement mechanic.\n");
 
 bool AutojumpFeature::ShouldLoadFeature()
 {
@@ -20,6 +24,7 @@ void AutojumpFeature::InitHooks()
 {
 	HOOK_FUNCTION(server, CheckJumpButton);
 	HOOK_FUNCTION(client, CheckJumpButton_client);
+	HOOK_FUNCTION(server, FinishGravity);
 }
 
 void AutojumpFeature::LoadFeature()
@@ -129,6 +134,64 @@ void AutojumpFeature::LoadFeature()
 	else
 	{
 		Warning("y_spt_autojump has no effect.\n");
+	}
+
+	if (ORIG_FinishGravity)
+	{
+		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_FinishGravity);
+		switch (ptnNumber)
+		{
+		case 0:
+			off1M_bDucked = 1;
+			off2M_bDucked = 2128;
+			break;
+
+		case 1:
+			off1M_bDucked = 2;
+			off2M_bDucked = 3120;
+			break;
+
+		case 2:
+			off1M_bDucked = 2;
+			off2M_bDucked = 3184;
+			break;
+
+		case 3:
+			off1M_bDucked = 2;
+			off2M_bDucked = 3376;
+			break;
+
+		case 4:
+			off1M_bDucked = 1;
+			off2M_bDucked = 3440;
+			break;
+
+		case 5:
+			off1M_bDucked = 1;
+			off2M_bDucked = 3500;
+			break;
+
+		case 6:
+			off1M_bDucked = 1;
+			off2M_bDucked = 3724;
+			break;
+
+		case 7:
+			off1M_bDucked = 2;
+			off2M_bDucked = 3112;
+			break;
+
+		case 8:
+			off1M_bDucked = 1;
+			off2M_bDucked = 3416;
+			break;
+		}
+	}
+	else
+	{
+		Warning("y_spt_additional_jumpboost has no effect.\n");
+		off1M_bDucked = 0;
+		off2M_bDucked = 0;
 	}
 }
 
@@ -248,4 +311,46 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 	DevMsg("Engine call: [client dll] CheckJumpButton() => %s\n", (rv ? "true" : "false"));
 
 	return rv;
+}
+
+void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
+{
+	if (_autojump.insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
+	{
+		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
+		bool ducked = *(bool*)(*((uintptr_t*)thisptr + _autojump.off1M_bDucked) + _autojump.off2M_bDucked);
+
+		// <stolen from gamemovement.cpp>
+		{
+			Vector vecForward;
+			AngleVectors(mv->m_vecViewAngles, &vecForward);
+			vecForward.z = 0;
+			VectorNormalize(vecForward);
+
+			// We give a certain percentage of the current forward movement as a bonus to the jump speed.  That bonus is clipped
+			// to not accumulate over time.
+			float flSpeedBoostPerc = (!mv->m_bIsSprinting && !ducked) ? 0.5f : 0.1f;
+			float flSpeedAddition = fabs(mv->m_flForwardMove * flSpeedBoostPerc);
+			float flMaxSpeed = mv->m_flMaxSpeed + (mv->m_flMaxSpeed * flSpeedBoostPerc);
+			float flNewSpeed = (flSpeedAddition + mv->m_vecVelocity.Length2D());
+
+			// If we're over the maximum, we want to only boost as much as will get us to the goal speed
+			if (y_spt_additional_jumpboost.GetInt() == 1)
+			{
+				if (flNewSpeed > flMaxSpeed)
+				{
+					flSpeedAddition -= flNewSpeed - flMaxSpeed;
+				}
+
+				if (mv->m_flForwardMove < 0.0f)
+					flSpeedAddition *= -1.0f;
+			}
+
+			// Add it on
+			VectorAdd((vecForward * flSpeedAddition), mv->m_vecVelocity, mv->m_vecVelocity);
+		}
+		// </stolen from gamemovement.cpp>
+	}
+
+	return _autojump.ORIG_FinishGravity(thisptr, edx);
 }

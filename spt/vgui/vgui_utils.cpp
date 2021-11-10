@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include "..\OrangeBox\modules.hpp"
 #include "..\features\generic.hpp"
 #include "tier1\tier1.h"
 #include "tier2\tier2.h"

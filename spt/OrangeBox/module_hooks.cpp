@@ -4,7 +4,6 @@
 #include "..\sptlib-wrapper.hpp"
 #include "..\utils\ent_utils.hpp"
 #include "cvars.hpp"
-#include "modules.hpp"
 #include "scripts\srctas_reader.hpp"
 #include "scripts\tests\test.hpp"
 #include "vgui\graphics.hpp"

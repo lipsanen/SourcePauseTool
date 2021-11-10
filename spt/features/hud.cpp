@@ -16,7 +16,6 @@
 #include "isg.hpp"
 #include "overlay.hpp"
 #include "playerio.hpp"
-#include "..\OrangeBox\modules.hpp"
 #include "..\OrangeBox\overlay\portal_camera.hpp"
 #include "..\OrangeBox\spt-serverplugin.hpp"
 

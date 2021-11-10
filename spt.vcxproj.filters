@@ -7,14 +7,8 @@
     <ClCompile Include="spt\OrangeBox\cvars.cpp">
       <Filter>spt\OrangeBox</Filter>
     </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules\ServerDLL.cpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClCompile>
     <ClCompile Include="spt\stdafx.cpp">
       <Filter>spt</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\OrangeBox\modules.cpp">
-      <Filter>spt\OrangeBox</Filter>
     </ClCompile>
     <ClCompile Include="sptlib\Hooks.cpp">
       <Filter>SPTLib</Filter>
@@ -270,9 +264,6 @@
     <ClInclude Include="spt\OrangeBox\cvars.hpp">
       <Filter>spt\OrangeBox</Filter>
     </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules\ServerDLL.hpp">
-      <Filter>spt\OrangeBox\modules</Filter>
-    </ClInclude>
     <ClInclude Include="SDK\igamemovement.h">
       <Filter>SDK</Filter>
     </ClInclude>
@@ -283,9 +274,6 @@
       <Filter>SDK</Filter>
     </ClInclude>
     <ClInclude Include="spt\OrangeBox\patterns.hpp">
-      <Filter>spt\OrangeBox</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\OrangeBox\modules.hpp">
       <Filter>spt\OrangeBox</Filter>
     </ClInclude>
     <ClInclude Include="sptlib\Hooks.hpp">
@@ -492,9 +480,6 @@
     </Filter>
     <Filter Include="spt\OrangeBox">
       <UniqueIdentifier>{74a03d34-0969-405d-838c-fa6350306ddf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="spt\OrangeBox\modules">
-      <UniqueIdentifier>{28768b27-be51-439b-aaa3-cf347347da1b}</UniqueIdentifier>
     </Filter>
     <Filter Include="SDK">
       <UniqueIdentifier>{78e5a6c2-53a8-40e3-be19-b7e7bc33f3c9}</UniqueIdentifier>

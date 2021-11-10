@@ -7,7 +7,6 @@
 #include "..\..\utils\ent_utils.hpp"
 #include "..\..\utils\math.hpp"
 #include "..\..\utils\property_getter.hpp"
-#include "..\modules.hpp"
 #include "..\..\features\playerio.hpp"
 
 namespace scripts

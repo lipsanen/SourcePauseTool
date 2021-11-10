@@ -1,12 +1,7 @@
 #include "cvars.hpp"
 
 #include "convar.h"
-#include "modules.hpp"
 
-ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",
-                                  "0",
-                                  0,
-                                  "1 = Add in ABH movement mechanic, 2 = Add in OE movement mechanic.\n");
 ConVar y_spt_pause_demo_on_tick(
     "y_spt_pause_demo_on_tick",
     "0",

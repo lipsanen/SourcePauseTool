@@ -9,7 +9,6 @@
 #include "..\..\utils\math.hpp"
 #include "..\..\utils\string_parsing.hpp"
 #include "..\cvars.hpp"
-#include "..\modules.hpp"
 #include "..\..\features\tickrate.hpp"
 #include "framebulk_handler.hpp"
 #include "..\..\features\afterframes.hpp"

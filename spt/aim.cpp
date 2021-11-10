@@ -3,7 +3,6 @@
 #include "aim.hpp"
 
 #include "convar.h"
-#include "OrangeBox/modules.hpp"
 #include "utils/math.hpp"
 #include "utils/ent_utils.hpp"
 #include "OrangeBox/cvars.hpp"
