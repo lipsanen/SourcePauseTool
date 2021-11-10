@@ -16,7 +16,6 @@ using std::uintptr_t;
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 typedef void(__fastcall* _PlayerRunCommand)(void* thisptr, int edx, void* ucmd, void* moveHelper);
-typedef int(__fastcall* _CheckStuck)(void* thisptr, int edx);
 typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
 
 class ServerDLL : public IHookableNameFilter
@@ -32,7 +31,6 @@ public:
 	virtual void Clear();
 
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
-	static int __fastcall HOOKED_CheckStuck(void* thisptr, int edx);
 	static void __fastcall HOOKED_SlidingAndOtherStuff(void* thisptr, int edx, void* a, void* b);
 	static int __fastcall HOOKED_CRestore__ReadAll(void* thisptr, int edx, void* pLeafObject, datamap_t* pLeafMap);
 	static int __fastcall HOOKED_CRestore__DoReadAll(void* thisptr,
@@ -74,7 +72,6 @@ protected:
 	_CheckJumpButton ORIG_CheckJumpButton;
 	_FinishGravity ORIG_FinishGravity;
 	_PlayerRunCommand ORIG_PlayerRunCommand;
-	_CheckStuck ORIG_CheckStuck;
 	void* ORIG_MiddleOfTeleportTouchingEntity;
 	void* ORIG_EndOfTeleportTouchingEntity;
 	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;

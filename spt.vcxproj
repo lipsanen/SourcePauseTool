@@ -1379,6 +1379,7 @@
     <ClCompile Include="spt\features\pause.cpp" />
     <ClCompile Include="spt\features\playerio.cpp" />
     <ClCompile Include="spt\features\shadow.cpp" />
+    <ClCompile Include="spt\features\stucksave.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
     <ClCompile Include="spt\features\taslogging.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />

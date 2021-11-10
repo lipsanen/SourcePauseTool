@@ -29,12 +29,6 @@ void __fastcall ServerDLL::HOOKED_FinishGravity(void* thisptr, int edx)
 	return serverDLL.HOOKED_FinishGravity_Func(thisptr, edx);
 }
 
-int __fastcall ServerDLL::HOOKED_CheckStuck(void* thisptr, int edx)
-{
-	TRACE_ENTER();
-	return serverDLL.HOOKED_CheckStuck_Func(thisptr, edx);
-}
-
 __declspec(naked) void ServerDLL::HOOKED_MiddleOfTeleportTouchingEntity()
 {
 	/**
@@ -145,11 +139,9 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 	patternContainer.Init(moduleName);
 
 	DEF_FUTURE(FinishGravity);
-	DEF_FUTURE(CheckStuck);
 	DEF_FUTURE(CheckJumpButton);
 	DEF_FUTURE(SetPredictionRandomSeed);
 	GET_HOOKEDFUTURE(FinishGravity);
-	GET_HOOKEDFUTURE(CheckStuck);
 	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 
 	if (utils::DoesGameLookLikePortal())
@@ -217,12 +209,6 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 		Warning("y_spt_additional_jumpboost has no effect.\n");
 	}
 
-	// CheckStuck
-	if (!ORIG_CheckStuck)
-	{
-		Warning("y_spt_stucksave has no effect.\n");
-	}
-
 	if (!ORIG_MiddleOfTeleportTouchingEntity || !ORIG_EndOfTeleportTouchingEntity)
 	{
 		DevWarning("[server.dll] Could not find the teleport function!\n");
@@ -243,7 +229,6 @@ void ServerDLL::Clear()
 	ORIG_CheckJumpButton = nullptr;
 	ORIG_FinishGravity = nullptr;
 	ORIG_PlayerRunCommand = nullptr;
-	ORIG_CheckStuck = nullptr;
 	ORIG_MiddleOfTeleportTouchingEntity = nullptr;
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
@@ -310,21 +295,6 @@ void __fastcall ServerDLL::HOOKED_FinishGravity_Func(void* thisptr, int edx)
 	}
 
 	return ORIG_FinishGravity(thisptr, edx);
-}
-
-int __fastcall ServerDLL::HOOKED_CheckStuck_Func(void* thisptr, int edx)
-{
-	auto ret = ORIG_CheckStuck(thisptr, edx);
-
-	if (ret && y_spt_stucksave.GetString()[0] != '\0')
-	{
-		std::ostringstream oss;
-		oss << "save " << y_spt_stucksave.GetString();
-		EngineConCmd(oss.str().c_str());
-		y_spt_stucksave.SetValue("");
-	}
-
-	return ret;
 }
 
 /**

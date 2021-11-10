@@ -37,9 +37,6 @@ namespace ModuleHooks
 		_afterframes.AfterFramesSignal.Connect(&scripts::g_TASReader, &scripts::SourceTASReader::OnAfterFrames);
 		_afterframes.AfterFramesSignal.Connect(&scripts::g_Tester, &scripts::Tester::OnAfterFrames);
 		_afterframes.AfterFramesSignal.Connect(&PauseOnDemoTick);
-#if !defined(OE) && !defined(P2)
-		_afterframes.AfterFramesSignal.Connect(&utils::CheckPiwSave);
-#endif
 
 		generic_.TickSignal.Connect(&scripts::g_Tester, &scripts::Tester::DataIteration);
 #ifndef OE
