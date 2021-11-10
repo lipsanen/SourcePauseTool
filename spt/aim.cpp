@@ -8,7 +8,7 @@
 #include "utils/ent_utils.hpp"
 #include "OrangeBox/cvars.hpp"
 #include "spt/sptlib-wrapper.hpp"
-#include "tier1/checksum_md5.h"
+#include "features\rng.hpp"
 
 ConVar tas_anglespeed("tas_anglespeed",
                       "5",
@@ -325,9 +325,7 @@ namespace aim
 		float shotBias = ((shotBiasMax - shotBiasMin) * bias) + shotBiasMin;
 		float flatness = (fabsf(shotBias) * 0.5);
 
-		int command_number = serverDLL.GetCommandNumber() + commandOffset;
-		int predictionRandomSeed = MD5_PseudoRandom(command_number) & 0x7fffffff;
-		int seed = predictionRandomSeed & 255;
+		int seed = _rng.GetPredictionRandomSeed(commandOffset) & 255;
 		random.SetSeed(seed);
 
 		do

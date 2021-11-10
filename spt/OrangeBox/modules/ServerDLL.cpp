@@ -140,9 +140,7 @@ void ServerDLL::Hook(const std::wstring& moduleName,
 
 	DEF_FUTURE(FinishGravity);
 	DEF_FUTURE(CheckJumpButton);
-	DEF_FUTURE(SetPredictionRandomSeed);
 	GET_HOOKEDFUTURE(FinishGravity);
-	GET_HOOKEDFUTURE(SetPredictionRandomSeed);
 
 	if (utils::DoesGameLookLikePortal())
 	{
@@ -233,24 +231,7 @@ void ServerDLL::Clear()
 	ORIG_EndOfTeleportTouchingEntity = nullptr;
 	off1M_bDucked = 0;
 	off2M_bDucked = 0;
-	commandNumber = 0;
 	recursiveTeleportCount = 0;
-}
-
-int ServerDLL::GetCommandNumber()
-{
-	return commandNumber;
-}
-
-void __cdecl ServerDLL::HOOKED_SetPredictionRandomSeed(void* usercmd)
-{
-	CUserCmd* ptr = reinterpret_cast<CUserCmd*>(usercmd);
-	if (ptr)
-	{
-		serverDLL.commandNumber = ptr->command_number;
-	}
-
-	serverDLL.ORIG_SetPredictionRandomSeed(usercmd);
 }
 
 void __fastcall ServerDLL::HOOKED_FinishGravity_Func(void* thisptr, int edx)

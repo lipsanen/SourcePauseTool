@@ -199,6 +199,9 @@
     <ClCompile Include="spt\features\timer.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\rng.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -454,6 +457,9 @@
       <Filter>spt\features</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\tracing.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\rng.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>

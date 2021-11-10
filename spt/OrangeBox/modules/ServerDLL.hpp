@@ -16,7 +16,6 @@ using std::uintptr_t;
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 typedef void(__fastcall* _PlayerRunCommand)(void* thisptr, int edx, void* ucmd, void* moveHelper);
-typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
 
 class ServerDLL : public IHookableNameFilter
 {
@@ -41,12 +40,10 @@ public:
 	static int __cdecl HOOKED_DispatchSpawn(void* pEntity);
 	static void HOOKED_MiddleOfTeleportTouchingEntity();
 	static void HOOKED_EndOfTeleportTouchingEntity();
-	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	int __fastcall HOOKED_CheckStuck_Func(void* thisptr, int edx);
 	void HOOKED_EndOfTeleportTouchingEntity_Func();
 	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
-	int GetCommandNumber();
 
 
 protected:
@@ -56,9 +53,7 @@ protected:
 	_PlayerRunCommand ORIG_PlayerRunCommand;
 	void* ORIG_MiddleOfTeleportTouchingEntity;
 	void* ORIG_EndOfTeleportTouchingEntity;
-	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;
 
-	int commandNumber;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
 
