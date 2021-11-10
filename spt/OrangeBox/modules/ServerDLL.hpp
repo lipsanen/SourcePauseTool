@@ -38,24 +38,15 @@ public:
 	                                                 datamap_t* pLeafMap,
 	                                                 datamap_t* pCurMap);
 	static int __cdecl HOOKED_DispatchSpawn(void* pEntity);
-	static void HOOKED_MiddleOfTeleportTouchingEntity();
-	static void HOOKED_EndOfTeleportTouchingEntity();
 	void __fastcall HOOKED_FinishGravity_Func(void* thisptr, int edx);
 	int __fastcall HOOKED_CheckStuck_Func(void* thisptr, int edx);
-	void HOOKED_EndOfTeleportTouchingEntity_Func();
-	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
-
 
 protected:
 	PatternContainer patternContainer;
 	_CheckJumpButton ORIG_CheckJumpButton;
 	_FinishGravity ORIG_FinishGravity;
 	_PlayerRunCommand ORIG_PlayerRunCommand;
-	void* ORIG_MiddleOfTeleportTouchingEntity;
-	void* ORIG_EndOfTeleportTouchingEntity;
 
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
-
-	int recursiveTeleportCount;
 };

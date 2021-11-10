@@ -133,12 +133,6 @@ ConVar _y_spt_anglesetspeed(
 ConVar _y_spt_pitchspeed("_y_spt_pitchspeed", "0", FCVAR_TAS_RESET);
 ConVar _y_spt_yawspeed("_y_spt_yawspeed", "0", FCVAR_TAS_RESET);
 
-ConVar y_spt_prevent_vag_crash(
-    "y_spt_prevent_vag_crash",
-    "0",
-    FCVAR_CHEAT | FCVAR_DONTRECORD,
-    "Prevents the game from crashing from too many recursive teleports (useful when searching for vertical angle glitches).\n");
-
 ConVar _y_spt_overlay("_y_spt_overlay",
                       "0",
                       FCVAR_CHEAT,
