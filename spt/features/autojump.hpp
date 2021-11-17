@@ -3,6 +3,12 @@
 #include "..\feature.hpp"
 #include "thirdparty\Signal.h"
 
+#if defined(OE)
+#include "vector.h"
+#else
+#include "mathlib\vector.h"
+#endif
+
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
 typedef bool(__fastcall* _CheckJumpButton_client)(void* thisptr, int edx);
 typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
@@ -34,6 +40,7 @@ private:
 	_CheckJumpButton ORIG_CheckJumpButton;
 	_CheckJumpButton_client ORIG_CheckJumpButton_client;
 	_FinishGravity ORIG_FinishGravity;
+	Vector oldVel;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
 

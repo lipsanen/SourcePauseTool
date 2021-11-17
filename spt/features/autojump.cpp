@@ -288,6 +288,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 	_autojump.client_cantJumpNextTime = false;
 
 	_autojump.client_insideCheckJumpButton = true;
+	_autojump.oldVel = ((CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons)))->m_vecVelocity;
 	bool rv = _autojump.ORIG_CheckJumpButton_client(thisptr, edx); // This function can only change the jump bit.
 	_autojump.client_insideCheckJumpButton = false;
 
@@ -332,7 +333,7 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 			float flSpeedBoostPerc = (!mv->m_bIsSprinting && !ducked) ? 0.5f : 0.1f;
 			float flSpeedAddition = fabs(mv->m_flForwardMove * flSpeedBoostPerc);
 			float flMaxSpeed = mv->m_flMaxSpeed + (mv->m_flMaxSpeed * flSpeedBoostPerc);
-			float flNewSpeed = (flSpeedAddition + mv->m_vecVelocity.Length2D());
+			float flNewSpeed = (flSpeedAddition + _autojump.oldVel.Length2D());
 
 			// If we're over the maximum, we want to only boost as much as will get us to the goal speed
 			if (y_spt_additional_jumpboost.GetInt() == 1)
@@ -347,7 +348,7 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 			}
 
 			// Add it on
-			VectorAdd((vecForward * flSpeedAddition), mv->m_vecVelocity, mv->m_vecVelocity);
+			VectorAdd((vecForward * flSpeedAddition), _autojump.oldVel, mv->m_vecVelocity);
 		}
 		// </stolen from gamemovement.cpp>
 	}
