@@ -5,7 +5,7 @@
 #include "dbg.h"
 #include "SPTLib\Windows\detoursutils.hpp"
 
-static ModuleHookData moduleHookData[HOOKED_MODULE_COUNT];
+static std::unordered_map<std::string, ModuleHookData> moduleHookData;
 static std::unordered_map<uintptr_t, int> patternIndices;
 
 static std::vector<Feature*>& GetFeatures()
@@ -20,7 +20,18 @@ void Feature::LoadFeatures()
 	{
 		if (!feature->moduleLoaded && feature->ShouldLoadFeature())
 		{
+			feature->startedLoading = true;
 			feature->InitHooks();
+		}
+	}
+
+	InitModules();
+
+	for (auto feature : GetFeatures())
+	{
+		if (!feature->moduleLoaded && feature->startedLoading)
+		{
+			feature->PreHook();
 		}
 	}
 
@@ -28,7 +39,7 @@ void Feature::LoadFeatures()
 
 	for (auto feature : GetFeatures())
 	{
-		if (!feature->moduleLoaded && feature->ShouldLoadFeature())
+		if (!feature->moduleLoaded && feature->startedLoading)
 		{
 			feature->LoadFeature();
 			feature->moduleLoaded = true;
@@ -50,45 +61,60 @@ void Feature::UnloadFeatures()
 	Unhook();
 }
 
-void Feature::AddVFTableHook(VFTableHook hook, ModuleEnum moduleEnum)
+void Feature::AddVFTableHook(VFTableHook hook, std::string moduleEnum)
 {
-	auto& mhd = moduleHookData[static_cast<int>(moduleEnum)];
+	if (moduleHookData.find(moduleEnum) == moduleHookData.end())
+	{
+		moduleHookData[moduleEnum] = ModuleHookData();
+	}
+
+	auto& mhd = moduleHookData[moduleEnum];
 	mhd.vftableHooks.push_back(hook);
 }
 
 Feature::Feature()
 {
 	moduleLoaded = false;
+	startedLoading = false;
 	GetFeatures().push_back(this);
+}
+
+void Feature::InitModules()
+{
+	for (auto& pair : moduleHookData)
+	{
+		pair.second.InitModule(Convert(pair.first + ".dll"));
+	}
 }
 
 void Feature::Hook()
 {
-	moduleHookData[static_cast<int>(ModuleEnum::client)].HookModule(L"client.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::engine)].HookModule(L"engine.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::inputsystem)].HookModule(L"inputsystem.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::server)].HookModule(L"server.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::vguimatsurface)].HookModule(L"vguimatsurface.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::vphysics)].HookModule(L"vphysics.dll");
+	for (auto& pair : moduleHookData)
+	{
+		pair.second.HookModule(Convert(pair.first + ".dll"));
+	}
 }
 
 void Feature::Unhook()
 {
-	moduleHookData[static_cast<int>(ModuleEnum::client)].UnhookModule(L"client.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::engine)].UnhookModule(L"engine.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::inputsystem)].UnhookModule(L"inputsystem.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::server)].UnhookModule(L"server.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::vguimatsurface)].UnhookModule(L"vguimatsurface.dll");
-	moduleHookData[static_cast<int>(ModuleEnum::vphysics)].UnhookModule(L"vphysics.dll");
+	for (auto& pair : moduleHookData)
+	{
+		pair.second.UnhookModule(Convert(pair.first + ".dll"));
+	}
 }
 
-void Feature::AddOffsetHook(ModuleEnum moduleEnum,
+void Feature::AddOffsetHook(std::string moduleEnum,
                             int offset,
                             const char* patternName,
                             void** origPtr,
                             void* functionHook)
 {
-	auto& mhd = moduleHookData[static_cast<int>(moduleEnum)];
+	if (moduleHookData.find(moduleEnum) == moduleHookData.end())
+	{
+		moduleHookData[moduleEnum] = ModuleHookData();
+	}
+
+	auto& mhd = moduleHookData[moduleEnum];
 	mhd.offsetHooks.push_back(OffsetHook{offset, patternName, origPtr, functionHook});
 }
 
@@ -101,16 +127,26 @@ int Feature::GetPatternIndex(void **origPtr) {
   }
 }
 
-void Feature::AddRawHook(ModuleEnum moduleName, void** origPtr, void* functionHook)
+void Feature::AddRawHook(std::string moduleName, void** origPtr, void* functionHook)
 {
-	auto& hookData = moduleHookData[static_cast<int>(moduleName)];
+	if (moduleHookData.find(moduleName) == moduleHookData.end())
+	{
+		moduleHookData[moduleName] = ModuleHookData();
+	}
+
+	auto& hookData = moduleHookData[moduleName];
 	hookData.funcPairs.emplace_back(origPtr, functionHook);
 	hookData.hookedFunctions.emplace_back(origPtr);
 }
 
-void Feature::AddPatternHook(PatternHook hook, ModuleEnum moduleEnum)
+void Feature::AddPatternHook(PatternHook hook, std::string moduleName)
 {
-	auto& mhd = moduleHookData[static_cast<int>(moduleEnum)];
+	if (moduleHookData.find(moduleName) == moduleHookData.end())
+	{
+		moduleHookData[moduleName] = ModuleHookData();
+	}
+
+	auto& mhd = moduleHookData[moduleName];
 	mhd.patternHooks.push_back(hook);
 }
 
@@ -122,7 +158,7 @@ void ModuleHookData::UnhookModule(const std::wstring& moduleName)
 		MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, *vft_hook.origPtr);
 }
 
-void ModuleHookData::HookModule(const std::wstring& moduleName)
+void ModuleHookData::InitModule(const std::wstring& moduleName)
 {
 	void* handle;
 	void* moduleStart;
@@ -179,11 +215,6 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 		{
 			DevWarning("[%s] Could not find %s.\n", Convert(moduleName).c_str(), modulePattern.patternName);
 		}
-
-		if (modulePattern.callback)
-		{
-			modulePattern.callback(foundPattern, foundPattern - modulePattern.patternArr);
-		}
 	}
 
 	for (auto& offset : offsetHooks)
@@ -201,11 +232,17 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 			hookedFunctions.emplace_back(offset.origPtr);
 		}
 	}
+}
 
+void ModuleHookData::HookModule(const std::wstring& moduleName)
+{
 	if (!vftableHooks.empty())
 	{
 		for (auto& vft_hook : vftableHooks)
-			MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, *vft_hook.origPtr);
+		{
+			*vft_hook.origPtr = vft_hook.vftable[vft_hook.index];
+			MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, vft_hook.functionToHook);
+		}
 	}
 
 	if (!funcPairs.empty())

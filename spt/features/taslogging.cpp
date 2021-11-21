@@ -39,7 +39,7 @@ void TASLogging::InitHooks()
 	if (gm)
 	{
 		auto vftable = *reinterpret_cast<void***>(gm);
-		AddVFTableHook(VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement), ModuleEnum::server);
+		AddVFTableHook(VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement), "server");
 	}
 	else
 	{

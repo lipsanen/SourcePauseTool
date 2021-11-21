@@ -14,7 +14,7 @@ ConVar y_spt_on_slide_pause_for("y_spt_on_slide_pause_for",
                                 0,
                                 "Whenever sliding occurs in DMoMM, pause for this many ticks.");
 
-// Feature description
+// DMoMM stuff
 class DMoMM : public Feature
 {
 public:
@@ -22,6 +22,8 @@ protected:
 	virtual bool ShouldLoadFeature() override;
 
 	virtual void InitHooks() override;
+
+	virtual void PreHook() override;
 
 	virtual void LoadFeature() override;
 
@@ -46,23 +48,24 @@ bool DMoMM::ShouldLoadFeature()
 
 void DMoMM::InitHooks()
 {
-	auto callback = PATTERN_CALLBACK
+	HOOK_FUNCTION(server, MiddleOfSlidingFunction);
+}
+
+void DMoMM::PreHook()
+{
+	// Middle of DMoMM sliding function.
+	if (ORIG_MiddleOfSlidingFunction)
 	{
-		// Middle of DMoMM sliding function.
-		if (ORIG_MiddleOfSlidingFunction)
-		{
-			ORIG_SlidingAndOtherStuff = (_SlidingAndOtherStuff)(&ORIG_MiddleOfSlidingFunction - 0x4bb);
-			ADD_RAW_HOOK(server, SlidingAndOtherStuff);
-			DevMsg("[server.dll] Found the sliding function at %p.\n", ORIG_SlidingAndOtherStuff);
-		}
-		else
-		{
-			ORIG_SlidingAndOtherStuff = nullptr;
-			DevWarning("[server.dll] Could not find the sliding code!\n");
-			Warning("y_spt_on_slide_pause_for has no effect.\n");
-		}
-	};
-	HOOK_FUNCTION_WITH_CALLBACK(server, MiddleOfSlidingFunction, callback);
+		ORIG_SlidingAndOtherStuff = (_SlidingAndOtherStuff)(&ORIG_MiddleOfSlidingFunction - 0x4bb);
+		ADD_RAW_HOOK(server, SlidingAndOtherStuff);
+		DevMsg("[server.dll] Found the sliding function at %p.\n", ORIG_SlidingAndOtherStuff);
+	}
+	else
+	{
+		ORIG_SlidingAndOtherStuff = nullptr;
+		DevWarning("[server.dll] Could not find the sliding code!\n");
+		Warning("y_spt_on_slide_pause_for has no effect.\n");
+	}
 }
 
 void DMoMM::LoadFeature()

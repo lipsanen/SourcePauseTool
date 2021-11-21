@@ -53,76 +53,72 @@ bool DemoStuff::ShouldLoadFeature()
 	return true;
 }
 
+void DemoStuff::PreHook()
+{
+	// Move 1 byte since the pattern starts a byte before the function
+	if (ORIG_SetSignonState)
+		ORIG_SetSignonState = (_SetSignonState)((uint32_t)ORIG_SetSignonState + 1);
+
+	// CDemoRecorder::StopRecording
+	if (ORIG_StopRecording)
+	{
+		int index = GetPatternIndex((void**)&ORIG_StopRecording);
+		if (index == 0)
+		{
+			m_bRecording_Offset = *(int*)((uint32_t)ORIG_StopRecording + 65);
+			m_nDemoNumber_Offset = *(int*)((uint32_t)ORIG_StopRecording + 72);
+		}
+		else if (index == 1)
+		{
+			m_bRecording_Offset = *(int*)((uint32_t)ORIG_StopRecording + 70);
+			m_nDemoNumber_Offset = *(int*)((uint32_t)ORIG_StopRecording + 77);
+		}
+		else
+		{
+			Warning("StopRecording had no matching offset clause.\n");
+		}
+
+		DevMsg("Found CDemoRecorder offsets m_nDemoNumber %d, m_bRecording %d.\n",
+			m_nDemoNumber_Offset,
+			m_bRecording_Offset);
+	}
+
+	if (ORIG_Record)
+	{
+		int index = GetPatternIndex((void**)&ORIG_Record);
+		if (index == 0)
+		{
+			pDemoplayer = *reinterpret_cast<void***>(ORIG_Record + 132);
+
+			// vftable offsets
+			GetPlaybackTick_Offset = 2;
+			GetTotalTicks_Offset = 3;
+			IsPlaybackPaused_Offset = 5;
+			IsPlayingBack_Offset = 6;
+		}
+		else if (index == 1)
+		{
+			pDemoplayer = *reinterpret_cast<void***>(ORIG_Record + 0xA2);
+
+			// vftable offsets
+			GetPlaybackTick_Offset = 3;
+			GetTotalTicks_Offset = 4;
+			IsPlaybackPaused_Offset = 6;
+			IsPlayingBack_Offset = 7;
+		}
+		else
+			Warning(
+				"Record pattern had no matching clause for catching the demoplayer. y_spt_pause_demo_on_tick unavailable.\n");
+
+		DevMsg("Found demoplayer at %p, record is at %p.\n", pDemoplayer, ORIG_Record);
+	}
+}
+
 void DemoStuff::InitHooks()
 {
-	auto callback = PATTERN_CALLBACK
-	{
-		// Move 1 byte since the pattern starts a byte before the function
-		if (ORIG_SetSignonState)
-			ORIG_SetSignonState = (_SetSignonState)((uint32_t)ORIG_SetSignonState + 1);
-	};
-
-	auto stoprecording_callback = PATTERN_CALLBACK
-	{
-		// CDemoRecorder::StopRecording
-		if (ORIG_StopRecording)
-		{
-			if (index == 0)
-			{
-				m_bRecording_Offset = *(int*)((uint32_t)ORIG_StopRecording + 65);
-				m_nDemoNumber_Offset = *(int*)((uint32_t)ORIG_StopRecording + 72);
-			}
-			else if (index == 1)
-			{
-				m_bRecording_Offset = *(int*)((uint32_t)ORIG_StopRecording + 70);
-				m_nDemoNumber_Offset = *(int*)((uint32_t)ORIG_StopRecording + 77);
-			}
-			else
-			{
-				Warning("StopRecording had no matching offset clause.\n");
-			}
-
-			DevMsg("Found CDemoRecorder offsets m_nDemoNumber %d, m_bRecording %d.\n",
-			       m_nDemoNumber_Offset,
-			       m_bRecording_Offset);
-		}
-	};
-
-	auto stop_callback = PATTERN_CALLBACK
-	{
-		if (ORIG_Record)
-		{
-			if (index == 0)
-			{
-				pDemoplayer = *reinterpret_cast<void***>(ORIG_Record + 132);
-
-				// vftable offsets
-				GetPlaybackTick_Offset = 2;
-				GetTotalTicks_Offset = 3;
-				IsPlaybackPaused_Offset = 5;
-				IsPlayingBack_Offset = 6;
-			}
-			else if (index == 1)
-			{
-				pDemoplayer = *reinterpret_cast<void***>(ORIG_Record + 0xA2);
-
-				// vftable offsets
-				GetPlaybackTick_Offset = 3;
-				GetTotalTicks_Offset = 4;
-				IsPlaybackPaused_Offset = 6;
-				IsPlayingBack_Offset = 7;
-			}
-			else
-				Warning(
-				    "Record pattern had no matching clause for catching the demoplayer. y_spt_pause_demo_on_tick unavailable.\n");
-
-			DevMsg("Found demoplayer at %p, record is at %p.\n", pDemoplayer, ORIG_Record);
-		}
-	};
-
-	HOOK_FUNCTION_WITH_CALLBACK(engine, StopRecording, stoprecording_callback);
-	HOOK_FUNCTION_WITH_CALLBACK(engine, SetSignonState, callback);
-	HOOK_FUNCTION_WITH_CALLBACK(engine, Stop, stop_callback);
+	HOOK_FUNCTION(engine, StopRecording);
+	HOOK_FUNCTION(engine, SetSignonState);
+	HOOK_FUNCTION(engine, Stop);
 }
 
 void DemoStuff::LoadFeature()

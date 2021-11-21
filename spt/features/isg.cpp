@@ -25,14 +25,15 @@ protected:
 
 	virtual void InitHooks() override
 	{
-		auto callback = PATTERN_CALLBACK
-		{
-			if (ORIG_MiddleOfRecheck_ov_element)
-				this->isgFlagPtr = *(bool**)(ORIG_MiddleOfRecheck_ov_element + 2);
-			else
-				Warning("y_spt_hud_isg 1 and y_spt_set_isg have no effect\n");
-		};
-		FIND_PATTERN_WITH_CALLBACK(vphysics, MiddleOfRecheck_ov_element, callback);
+		FIND_PATTERN(vphysics, MiddleOfRecheck_ov_element);
+	}
+
+	virtual void PreHook() override
+	{
+		if (ORIG_MiddleOfRecheck_ov_element)
+			this->isgFlagPtr = *(bool**)(ORIG_MiddleOfRecheck_ov_element + 2);
+		else
+			Warning("y_spt_hud_isg 1 and y_spt_set_isg have no effect\n");
 	}
 
 	virtual void LoadFeature() override;

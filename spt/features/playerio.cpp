@@ -23,11 +23,11 @@ bool PlayerIOFeature::ShouldLoadFeature()
 
 void PlayerIOFeature::InitHooks()
 {
-	HOOK_FUNCTION_WITH_CALLBACK(client, CreateMove, CreateMove_callback);
+	HOOK_FUNCTION(client, CreateMove);
 	HOOK_FUNCTION(client, GetButtonBits);
 	FIND_PATTERN(client, CalcAbsoluteVelocity);
-	FIND_PATTERN_WITH_CALLBACK(client, GetGroundEntity, GetGroundEntity_callback);
-	FIND_PATTERN_WITH_CALLBACK(client, MiddleOfCAM_Think, MiddleOfCAM_Think_callback);
+	FIND_PATTERN(client, GetGroundEntity);
+	FIND_PATTERN(client, MiddleOfCAM_Think);
 	FIND_PATTERN(server, PlayerRunCommand);
 }
 
@@ -42,7 +42,12 @@ void PlayerIOFeature::LoadFeature()
 	{
 		sizeofCUserCmd = 84;
 	}
+}
 
+void PlayerIOFeature::UnloadFeature() {}
+
+void PlayerIOFeature::PreHook()
+{
 	offM_vecAbsVelocity = 0;
 	offM_afPhysicsFlags = 0;
 	offM_moveCollide = 0;
@@ -51,13 +56,27 @@ void PlayerIOFeature::LoadFeature()
 	offM_vecPunchAngle = 0;
 	offM_vecPunchAngleVel = 0;
 
-	if(ORIG_PlayerRunCommand)
+	offM_pCommands = 0;
+	offForwardmove = 0;
+	offSidemove = 0;
+
+	offMaxspeed = 0;
+	offFlags = 0;
+	offAbsVelocity = 0;
+	offDucking = 0;
+	offDuckJumpTime = 0;
+	offServerSurfaceFriction = 0;
+	offServerPreviouslyPredictedOrigin = 0;
+	offServerAbsOrigin = 0;
+	ORIG_GetLocalPlayer = nullptr;
+
+	if (ORIG_PlayerRunCommand)
 	{
 		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_PlayerRunCommand);
 		switch (ptnNumber)
 		{
 		case 0:
-			offM_vecAbsVelocity = 476;
+			offM_vecAbsVelocity = 476; // 5135 pattern has some other offsets added
 			offM_afPhysicsFlags = 2724;
 			offM_moveCollide = 307;
 			offM_moveType = 306;
@@ -115,9 +134,157 @@ void PlayerIOFeature::LoadFeature()
 		DevWarning("[server dll] Could not find PlayerRunCommand!\n");
 		Warning("_y_spt_getvel has no effect.\n");
 	}
-}
 
-void PlayerIOFeature::UnloadFeature() {}
+	if (ORIG_CreateMove)
+	{
+		int index = GetPatternIndex((void**)&ORIG_CreateMove);
+
+		switch (index)
+		{
+		case 0:
+			offM_pCommands = 180;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+
+		case 1:
+			offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+
+		case 2:
+			offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+
+		case 3:
+			offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+
+		case 4:
+			offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+
+		case 5:
+			offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
+			break;
+		default:
+			offM_pCommands = 0;
+			offForwardmove = 0;
+			offSidemove = 0;
+			break;
+		}
+	}
+
+	if (ORIG_GetGroundEntity)
+	{
+		int index = GetPatternIndex((void**)&ORIG_GetGroundEntity);
+
+		switch (index)
+		{
+		case 0:
+			offMaxspeed = 4136;
+			offFlags = 736;
+			offAbsVelocity = 248;
+			offDucking = 3545;
+			offDuckJumpTime = 3552;
+			offServerSurfaceFriction = 3812;
+			offServerPreviouslyPredictedOrigin = 3692;
+			offServerAbsOrigin = 580;
+			break;
+
+		case 1:
+			offMaxspeed = 4076;
+			offFlags = 732;
+			offAbsVelocity = 244;
+			offDucking = 3489;
+			offDuckJumpTime = 3496;
+			offServerSurfaceFriction = 3752;
+			offServerPreviouslyPredictedOrigin = 3628;
+			offServerAbsOrigin = 580;
+			break;
+
+		case 2:
+			offMaxspeed = 4312;
+			offFlags = 844;
+			offAbsVelocity = 300;
+			offDucking = 3713;
+			offDuckJumpTime = 3720;
+			offServerSurfaceFriction = 3872;
+			offServerPreviouslyPredictedOrigin = 3752;
+			offServerAbsOrigin = 636;
+			break;
+
+		case 3:
+			offMaxspeed = 4320;
+			offFlags = 844;
+			offAbsVelocity = 300;
+			offDucking = 3721;
+			offDuckJumpTime = 3728;
+			offServerSurfaceFriction = 3872;
+			offServerPreviouslyPredictedOrigin = 3752;
+			offServerAbsOrigin = 636;
+			break;
+		default:
+			offMaxspeed = 0;
+			offFlags = 0;
+			offAbsVelocity = 0;
+			offDucking = 0;
+			offDuckJumpTime = 0;
+			offServerSurfaceFriction = 0;
+			offServerPreviouslyPredictedOrigin = 0;
+			offServerAbsOrigin = 0;
+			Warning("GetGroundEntity did not contain matching if statement for pattern!\n");
+			break;
+		}
+	}
+
+	if (ORIG_MiddleOfCAM_Think)
+	{
+		int index = GetPatternIndex((void**)&ORIG_MiddleOfCAM_Think);
+
+		switch (index)
+		{
+		case 0:
+			ORIG_GetLocalPlayer =
+				(_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 29)
+					+ ORIG_MiddleOfCAM_Think + 33);
+			break;
+
+		case 1:
+			ORIG_GetLocalPlayer =
+				(_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 30)
+					+ ORIG_MiddleOfCAM_Think + 34);
+			break;
+
+		case 2:
+			ORIG_GetLocalPlayer =
+				(_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 21)
+					+ ORIG_MiddleOfCAM_Think + 25);
+			break;
+
+		case 3:
+			ORIG_GetLocalPlayer =
+				(_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 23)
+					+ ORIG_MiddleOfCAM_Think + 27);
+			break;
+		default:
+			ORIG_GetLocalPlayer = nullptr;
+			break;
+		}
+
+		if (ORIG_GetLocalPlayer)
+			DevMsg("[client.dll] Found GetLocalPlayer at %p.\n", ORIG_GetLocalPlayer);
+	}
+}
 
 void PlayerIOFeature::HandleAiming(float* va, bool& yawChanged)
 {
@@ -338,159 +505,6 @@ int __fastcall PlayerIOFeature::HOOKED_GetButtonBits_Func(void* thisptr, int edx
 int __fastcall PlayerIOFeature::HOOKED_GetButtonBits(void* thisptr, int edx, int bResetState)
 {
 	return _playerio.HOOKED_GetButtonBits_Func(thisptr, edx, bResetState);
-}
-
-void PlayerIOFeature::GetGroundEntity_callback(patterns::PatternWrapper* found, int index)
-{
-	if (!_playerio.ORIG_GetGroundEntity)
-		return;
-
-	switch (index)
-	{
-	case 0:
-		_playerio.offMaxspeed = 4136;
-		_playerio.offFlags = 736;
-		_playerio.offAbsVelocity = 248;
-		_playerio.offDucking = 3545;
-		_playerio.offDuckJumpTime = 3552;
-		_playerio.offServerSurfaceFriction = 3812;
-		_playerio.offServerPreviouslyPredictedOrigin = 3692;
-		_playerio.offServerAbsOrigin = 580;
-		break;
-
-	case 1:
-		_playerio.offMaxspeed = 4076;
-		_playerio.offFlags = 732;
-		_playerio.offAbsVelocity = 244;
-		_playerio.offDucking = 3489;
-		_playerio.offDuckJumpTime = 3496;
-		_playerio.offServerSurfaceFriction = 3752;
-		_playerio.offServerPreviouslyPredictedOrigin = 3628;
-		_playerio.offServerAbsOrigin = 580;
-		break;
-
-	case 2:
-		_playerio.offMaxspeed = 4312;
-		_playerio.offFlags = 844;
-		_playerio.offAbsVelocity = 300;
-		_playerio.offDucking = 3713;
-		_playerio.offDuckJumpTime = 3720;
-		_playerio.offServerSurfaceFriction = 3872;
-		_playerio.offServerPreviouslyPredictedOrigin = 3752;
-		_playerio.offServerAbsOrigin = 636;
-		break;
-
-	case 3:
-		_playerio.offMaxspeed = 4320;
-		_playerio.offFlags = 844;
-		_playerio.offAbsVelocity = 300;
-		_playerio.offDucking = 3721;
-		_playerio.offDuckJumpTime = 3728;
-		_playerio.offServerSurfaceFriction = 3872;
-		_playerio.offServerPreviouslyPredictedOrigin = 3752;
-		_playerio.offServerAbsOrigin = 636;
-		break;
-	default:
-		_playerio.offMaxspeed = 0;
-		_playerio.offFlags = 0;
-		_playerio.offAbsVelocity = 0;
-		_playerio.offDucking = 0;
-		_playerio.offDuckJumpTime = 0;
-		_playerio.offServerSurfaceFriction = 0;
-		_playerio.offServerPreviouslyPredictedOrigin = 0;
-		_playerio.offServerAbsOrigin = 0;
-		Warning("GetGroundEntity did not contain matching if statement for pattern!\n");
-		break;
-	}
-}
-
-void PlayerIOFeature::MiddleOfCAM_Think_callback(patterns::PatternWrapper* found, int index)
-{
-	if (!_playerio.ORIG_MiddleOfCAM_Think)
-		return;
-
-	switch (index)
-	{
-	case 0:
-		_playerio.ORIG_GetLocalPlayer =
-		    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(_playerio.ORIG_MiddleOfCAM_Think + 29)
-		                      + _playerio.ORIG_MiddleOfCAM_Think + 33);
-		break;
-
-	case 1:
-		_playerio.ORIG_GetLocalPlayer =
-		    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(_playerio.ORIG_MiddleOfCAM_Think + 30)
-		                      + _playerio.ORIG_MiddleOfCAM_Think + 34);
-		break;
-
-	case 2:
-		_playerio.ORIG_GetLocalPlayer =
-		    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(_playerio.ORIG_MiddleOfCAM_Think + 21)
-		                      + _playerio.ORIG_MiddleOfCAM_Think + 25);
-		break;
-
-	case 3:
-		_playerio.ORIG_GetLocalPlayer =
-		    (_GetLocalPlayer)(*reinterpret_cast<uintptr_t*>(_playerio.ORIG_MiddleOfCAM_Think + 23)
-		                      + _playerio.ORIG_MiddleOfCAM_Think + 27);
-		break;
-	default:
-		_playerio.ORIG_GetLocalPlayer = nullptr;
-		break;
-	}
-
-	if (_playerio.ORIG_GetLocalPlayer)
-		DevMsg("[client.dll] Found GetLocalPlayer at %p.\n", _playerio.ORIG_GetLocalPlayer);
-}
-
-void PlayerIOFeature::CreateMove_callback(patterns::PatternWrapper* found, int index)
-{
-	if (!_playerio.ORIG_CreateMove)
-		return;
-
-	switch (index)
-	{
-	case 0:
-		_playerio.offM_pCommands = 180;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-
-	case 1:
-		_playerio.offM_pCommands = 196;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-
-	case 2:
-		_playerio.offM_pCommands = 196;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-
-	case 3:
-		_playerio.offM_pCommands = 196;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-
-	case 4:
-		_playerio.offM_pCommands = 196;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-
-	case 5:
-		_playerio.offM_pCommands = 196;
-		_playerio.offForwardmove = 24;
-		_playerio.offSidemove = 28;
-		break;
-	default:
-		_playerio.offM_pCommands = 0;
-		_playerio.offForwardmove = 0;
-		_playerio.offSidemove = 0;
-		break;
-	}
 }
 
 bool PlayerIOFeature::GetFlagsDucking()

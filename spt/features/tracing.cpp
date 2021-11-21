@@ -96,10 +96,10 @@ void Tracing::InitHooks()
 #ifdef SSDK2007
 	if (utils::DoesGameLookLikePortal())
 	{
-		AddOffsetHook(ModuleEnum::server, 0x442090, "FirePortal", reinterpret_cast<void**>(&ORIG_FirePortal));
-		AddOffsetHook(ModuleEnum::server, 0x1B92F0, "SnapEyeAngles", reinterpret_cast<void**>(&ORIG_SnapEyeAngles));
-		AddOffsetHook(ModuleEnum::server, 0xCCE90, "GetActiveWeapon", reinterpret_cast<void**>(&ORIG_GetActiveWeapon));
-		AddOffsetHook(ModuleEnum::server,
+		AddOffsetHook("server", 0x442090, "FirePortal", reinterpret_cast<void**>(&ORIG_FirePortal));
+		AddOffsetHook("server", 0x1B92F0, "SnapEyeAngles", reinterpret_cast<void**>(&ORIG_SnapEyeAngles));
+		AddOffsetHook("server", 0xCCE90, "GetActiveWeapon", reinterpret_cast<void**>(&ORIG_GetActiveWeapon));
+		AddOffsetHook("server",
 		              0x441730,
 		              "TraceFirePortal",
 		              reinterpret_cast<void**>(&ORIG_TraceFirePortal),

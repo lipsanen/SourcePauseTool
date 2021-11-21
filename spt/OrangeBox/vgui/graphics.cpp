@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "graphics.hpp"
 #include "convar.h"
-#include "..\modules.hpp"
 #include "..\spt-serverplugin.hpp"
 #include "..\..\sptlib-wrapper.hpp"
 #include "..\..\features\generic.hpp"

@@ -34,10 +34,6 @@ private:
 	int __fastcall HOOKED_GetButtonBits_Func(void* thisptr, int edx, int bResetState);
 	static int __fastcall HOOKED_GetButtonBits(void* thisptr, int edx, int bResetState);
 
-	static void GetGroundEntity_callback(patterns::PatternWrapper* found, int index);
-	static void MiddleOfCAM_Think_callback(patterns::PatternWrapper* found, int index);
-	static void CreateMove_callback(patterns::PatternWrapper* found, int index);
-
 public:
 	void SetTASInput(float* va, const Strafe::ProcessedFrame& out);
 	void HandleAiming(float* va, bool& yawChanged);
@@ -127,6 +123,8 @@ protected:
 	virtual void LoadFeature() override;
 
 	virtual void UnloadFeature() override;
+
+	virtual void PreHook() override;
 };
 
 extern PlayerIOFeature _playerio;

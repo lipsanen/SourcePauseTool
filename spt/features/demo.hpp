@@ -20,6 +20,7 @@ public:
 protected:
 	virtual bool ShouldLoadFeature() override;
 	virtual void InitHooks() override;
+	virtual void PreHook() override;
 	virtual void LoadFeature() override;
 	virtual void UnloadFeature() override;
 
