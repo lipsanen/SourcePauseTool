@@ -22,7 +22,7 @@ Vector GenericFeature::GetCameraOrigin()
 	if (ORIG_MainViewOrigin)
 		return ORIG_MainViewOrigin();
 	else
-		return Vector(0);
+		return Vector(0, 0, 0);
 }
 
 bool GenericFeature::ShouldLoadFeature()

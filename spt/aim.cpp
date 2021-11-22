@@ -8,6 +8,10 @@
 #include "OrangeBox/cvars.hpp"
 #include "spt/sptlib-wrapper.hpp"
 #include "features\rng.hpp"
+#include "OrangeBox\spt-serverplugin.hpp"
+
+#undef max
+#undef min
 
 ConVar tas_anglespeed("tas_anglespeed",
                       "5",

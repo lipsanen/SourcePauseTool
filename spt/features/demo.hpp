@@ -43,6 +43,7 @@ private:
 	static void __fastcall HOOKED_StopRecording(void* thisptr, int edx);
 	static void __fastcall HOOKED_SetSignonState(void* thisptr, int edx, int state);
 	static void __cdecl HOOKED_Stop();
+	void OnTick();
 };
 
 extern DemoStuff g_Demostuff;

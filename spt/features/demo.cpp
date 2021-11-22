@@ -1,10 +1,24 @@
 #include "stdafx.h"
 #include "demo.hpp"
+#include "generic.hpp"
+#include "..\OrangeBox\cvars.hpp"
 #include "..\feature.hpp"
 #include "..\OrangeBox\scripts\srctas_reader.hpp"
+#include "..\sptlib-wrapper.hpp"
 #include "dbg.h"
 
 DemoStuff g_Demostuff;
+
+ConVar y_spt_pause_demo_on_tick(
+	"y_spt_pause_demo_on_tick",
+	"0",
+	0,
+	"Invokes the demo_pause command on the specified demo tick.\n"
+	"Zero means do nothing.\n"
+	"x > 0 means pause the demo at tick number x.\n"
+	"x < 0 means pause the demo at <demo length> + x, so for example -1 will pause the demo at the last tick.\n\n"
+	"Demos ending with changelevels report incorrect length; you can obtain the correct demo length using listdemo and then set this CVar to <demo length> - 1 manually.");
+
 
 void DemoStuff::Demo_StopRecording()
 {
@@ -139,6 +153,9 @@ void DemoStuff::LoadFeature()
 	{
 		Warning("Manually stopping a TAS demo recording won't stop autorecording.\n");
 	}
+#ifdef OE
+	generic_.TickSignal.Connect(this, &DemoStuff::OnTick);
+#endif
 }
 
 void DemoStuff::UnloadFeature() {}
@@ -212,4 +229,22 @@ void __cdecl DemoStuff::HOOKED_Stop()
 	g_Demostuff.isAutoRecordingDemo = false;
 	if (g_Demostuff.ORIG_Stop)
 		g_Demostuff.ORIG_Stop();
+}
+
+void DemoStuff::OnTick()
+{
+#ifdef OE
+	if (Demo_IsPlayingBack() && !Demo_IsPlaybackPaused())
+	{
+		auto tick = y_spt_pause_demo_on_tick.GetInt();
+		if (tick != 0)
+		{
+			if (tick < 0)
+				tick += Demo_GetTotalTicks();
+
+			if (tick == Demo_GetPlaybackTick())
+				EngineConCmd("demo_pause");
+		}
+	}
+#endif
 }

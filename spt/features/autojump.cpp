@@ -7,6 +7,10 @@
 #include "dbg.h"
 #include "..\OrangeBox\cvars.hpp"
 
+#ifdef OE
+#include "mathlib.h"
+#endif
+
 AutojumpFeature _autojump;
 ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_CHEAT);

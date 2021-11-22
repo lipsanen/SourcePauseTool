@@ -8,7 +8,9 @@
 #include "..\utils\math.hpp"
 #include "playerio.hpp"
 
+#ifdef SSDK2007
 #include "mathlib\vmatrix.h"
+#endif
 
 #undef max
 #undef min
@@ -688,7 +690,7 @@ static ConCommand DuckspamUp_Command("-y_spt_duckspam", DuckspamUp, "Disables th
 CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
 {
 #if defined(OE)
-	ArgsWrapper args(engine.get());
+	ArgsWrapper args;
 #endif
 
 	if (args.ArgC() != 2)
@@ -703,7 +705,7 @@ CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
 CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
 {
 #if defined(OE)
-	ArgsWrapper args(engine.get());
+	ArgsWrapper args;
 #endif
 
 	if (args.ArgC() != 2)
@@ -723,7 +725,7 @@ CON_COMMAND(_y_spt_resetpitchyaw, "Resets pitch/yaw commands.")
 CON_COMMAND(_y_spt_setangles, "Sets the angles. Usage: _y_spt_setangles <pitch> <yaw>")
 {
 #if defined(OE)
-	ArgsWrapper args(engine.get());
+	ArgsWrapper args;
 #endif
 
 	if (args.ArgC() != 3)
@@ -748,10 +750,7 @@ CON_COMMAND(_y_spt_setangle,
             "Sets the yaw/pitch angle required to look at the given position from player's current position.")
 {
 #if defined(OE)
-	if (!engine)
-		return;
-
-	ArgsWrapper args(engine.get());
+	ArgsWrapper args;
 #endif
 	Vector target;
 

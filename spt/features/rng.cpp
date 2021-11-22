@@ -2,7 +2,12 @@
 #include "rng.hpp"
 #include "tier1/checksum_md5.h"
 #include "cmodel.h"
+
+#ifdef OE
+#include "..\game_shared\usercmd.h"
+#else
 #include "usercmd.h"
+#endif
 
 RNGStuff _rng;
 

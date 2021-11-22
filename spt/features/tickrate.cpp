@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "..\OrangeBox\spt-serverplugin.hpp"
 #include "tickrate.hpp"
 #include "convar.h"
 #include "dbg.h"
@@ -67,7 +68,7 @@ CON_COMMAND(_y_spt_tickrate, "Get or set the tickrate. Usage: _y_spt_tickrate [t
 	if (!engine)
 		return;
 
-	ArgsWrapper args(engine.get());
+	ArgsWrapper args;
 #endif
 
 	switch (args.ArgC())

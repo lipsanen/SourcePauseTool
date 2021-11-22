@@ -32,7 +32,7 @@
 #include "vgui\isystem.h"
 #include "vgui\ivgui.h"
 #include "SDK\hl_movedata.h"
-#include "igamemovement.h"
+#include "SDK\igamemovement.h"
 
 #if SSDK2007
 #include "mathlib\vmatrix.h"

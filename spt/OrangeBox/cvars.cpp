@@ -2,16 +2,6 @@
 
 #include "convar.h"
 
-ConVar y_spt_pause_demo_on_tick(
-    "y_spt_pause_demo_on_tick",
-    "0",
-    0,
-    "Invokes the demo_pause command on the specified demo tick.\n"
-    "Zero means do nothing.\n"
-    "x > 0 means pause the demo at tick number x.\n"
-    "x < 0 means pause the demo at <demo length> + x, so for example -1 will pause the demo at the last tick.\n\n"
-    "Demos ending with changelevels report incorrect length; you can obtain the correct demo length using listdemo and then set this CVar to <demo length> - 1 manually.");
-
 ConVar tas_strafe("tas_strafe", "0", FCVAR_TAS_RESET);
 ConVar tas_strafe_type(
     "tas_strafe_type",
