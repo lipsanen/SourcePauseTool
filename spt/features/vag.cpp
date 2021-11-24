@@ -42,7 +42,7 @@ static VAG _vag;
 
 bool VAG::ShouldLoadFeature()
 {
-	return utils::DoesGameLookLikePortal();
+	return false;
 }
 
 void VAG::InitHooks()

@@ -4,6 +4,7 @@
 #include "SPTLib\sptlib.hpp"
 #include "dbg.h"
 #include "SPTLib\Windows\detoursutils.hpp"
+#include "SPTLib\Hooks.hpp"
 
 static std::unordered_map<std::string, ModuleHookData> moduleHookData;
 static std::unordered_map<uintptr_t, int> patternIndices;
@@ -16,6 +17,8 @@ static std::vector<Feature*>& GetFeatures()
 
 void Feature::LoadFeatures()
 {
+	Hooks::InitInterception(true);
+
 	for (auto feature : GetFeatures())
 	{
 		if (!feature->moduleLoaded && feature->ShouldLoadFeature())
