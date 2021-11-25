@@ -33,7 +33,7 @@ private:
 	int recursiveTeleportCount;
 
 	static void HOOKED_MiddleOfTeleportTouchingEntity();
-	void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
+	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
 	static void HOOKED_EndOfTeleportTouchingEntity();
 	void HOOKED_EndOfTeleportTouchingEntity_Func();
 };
@@ -42,7 +42,7 @@ static VAG _vag;
 
 bool VAG::ShouldLoadFeature()
 {
-	return false;
+	return utils::DoesGameLookLikePortal();
 }
 
 void VAG::InitHooks()
@@ -64,6 +64,11 @@ void VAG::UnloadFeature() {}
 
 __declspec(naked) void VAG::HOOKED_MiddleOfTeleportTouchingEntity()
 {
+	/**
+	* We want a pointer to the portal and the coords of whatever is being teleported.
+	* The former is currently in ebp (which is not used here as the stack frame pointer), and the latter
+	* is somewhere on the stack.
+	*/
 	__asm {
 		pushad;
 		pushfd;
