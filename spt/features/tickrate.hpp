@@ -22,4 +22,4 @@ private:
 	float* pIntervalPerTick;
 };
 
-extern TickrateMod _tickrate;
+extern TickrateMod spt_tickrate;

@@ -1,11 +1,11 @@
 #include "stdafx.h"
 
 #ifndef OE
-#include "..\..\sptlib-wrapper.hpp"
-#include "..\..\utils\ent_utils.hpp"
-#include "..\..\utils\math.hpp"
-#include "..\..\features\shadow.hpp"
-#include "..\..\features\playerio.hpp"
+#include "..\sptlib-wrapper.hpp"
+#include "ent_utils.hpp"
+#include "math.hpp"
+#include "..\features\shadow.hpp"
+#include "..\features\playerio.hpp"
 #include "overlays.hpp"
 #include "portal_camera.hpp"
 
@@ -32,7 +32,7 @@ CameraInformation havokViewMirrorOverlay()
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;
 
-	auto ducked = playerio::GetFlagsDucking();
+	auto ducked = spt_playerio.GetFlagsDucking();
 	auto angles = utils::GetPlayerEyeAngles();
 
 	info.x = havokpos.x;

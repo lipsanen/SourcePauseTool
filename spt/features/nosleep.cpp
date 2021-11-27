@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
-#include "convar.h"
+#include "convar.hpp"
 
 typedef void(__fastcall* _CInputSystem__SleepUntilInput)(void* thisptr, int edx, int nMaxSleepTimeMS);
 ConVar y_spt_focus_nosleep("y_spt_focus_nosleep", "0", 0, "Improves FPS while alt-tabbed.");

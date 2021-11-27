@@ -1,7 +1,7 @@
 #pragma once
 
 #include "..\feature.hpp"
-#include "..\strafestuff.hpp"
+#include "..\strafe\strafestuff.hpp"
 
 
 typedef void(__fastcall* _CalcAbsoluteVelocity)(void* thisptr, int edx);
@@ -52,6 +52,7 @@ public:
 	int GetPlayerMoveType() const;
 	int GetPlayerMoveCollide() const;
 	int GetPlayerCollisionGroup() const;
+	void Set_cinput_thisptr(void* thisptr);
 
 	bool duckspam;
 	bool forceJump;
@@ -127,21 +128,4 @@ protected:
 	virtual void PreHook() override;
 };
 
-extern PlayerIOFeature _playerio;
-
-
-namespace playerio
-{
-	void SetTASInput(float* va, const Strafe::ProcessedFrame& out);
-	void HandleAiming(float* va, bool& yawChanged);
-	bool TryJump();
-	void Set_cinput_thisptr(void* thisptr);
-	Strafe::PlayerData GetPlayerData();
-	Strafe::MovementVars GetMovementVars();
-	bool PlayerIOAddressesWereFound();
-	Vector GetPlayerVelocity();
-	Vector GetPlayerEyePos();
-	int GetPlayerFlags();
-	bool GetFlagsDucking();
-	bool IsGroundEntitySet();
-} // namespace playerio
+extern PlayerIOFeature spt_playerio;

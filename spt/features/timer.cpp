@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
 #include "generic.hpp"
+#include "signals.hpp"
 
 #include "convar.h"
 
@@ -39,7 +40,7 @@ private:
 	bool timerRunning;
 };
 
-static Timer _timer;
+static Timer spt_timer;
 
 bool Timer::ShouldLoadFeature()
 {
@@ -53,7 +54,7 @@ void Timer::LoadFeature()
 {
 	ticksPassed = 0;
 	timerRunning = false;
-	generic_.TickSignal.Connect(this, &Timer::Tick);
+	TickSignal.Connect(this, &Timer::Tick);
 }
 
 void Timer::UnloadFeature() {}
@@ -67,21 +68,21 @@ void Timer::Tick()
 
 CON_COMMAND(y_spt_timer_start, "Starts the SPT timer.")
 {
-	_timer.StartTimer();
+	spt_timer.StartTimer();
 }
 
 CON_COMMAND(y_spt_timer_stop, "Stops the SPT timer and prints the current time.")
 {
-	_timer.StopTimer();
-	Warning("Current time (in ticks): %u\n", _timer.GetTicksPassed());
+	spt_timer.StopTimer();
+	Warning("Current time (in ticks): %u\n", spt_timer.GetTicksPassed());
 }
 
 CON_COMMAND(y_spt_timer_reset, "Stops and resets the SPT timer.")
 {
-	_timer.ResetTimer();
+	spt_timer.ResetTimer();
 }
 
 CON_COMMAND(y_spt_timer_print, "Prints the current time of the SPT timer.")
 {
-	Warning("Current time (in ticks): %u\n", _timer.GetTicksPassed());
+	Warning("Current time (in ticks): %u\n", spt_timer.GetTicksPassed());
 }

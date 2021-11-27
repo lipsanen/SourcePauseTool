@@ -3,15 +3,16 @@
 
 #include "basehandle.h"
 #include "SDK\hl_movedata.h"
-#include "convar.h"
+#include "convar.hpp"
 #include "dbg.h"
-#include "..\OrangeBox\cvars.hpp"
+#include "..\cvars.hpp"
+#include "signals.hpp"
 
 #ifdef OE
 #include "mathlib.h"
 #endif
 
-AutojumpFeature _autojump;
+AutojumpFeature spt_autojump;
 ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
 ConVar _y_spt_autojump_ensure_legit("_y_spt_autojump_ensure_legit", "1", FCVAR_CHEAT);
 ConVar y_spt_additional_jumpboost("y_spt_additional_jumpboost",
@@ -36,7 +37,7 @@ void AutojumpFeature::LoadFeature()
 	// Server-side CheckJumpButton
 	if (ORIG_CheckJumpButton)
 	{
-		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_CheckJumpButton);
+		int ptnNumber = GetPatternIndex((void**)&ORIG_CheckJumpButton);
 		switch (ptnNumber)
 		{
 		case 0:
@@ -142,7 +143,7 @@ void AutojumpFeature::LoadFeature()
 
 	if (ORIG_FinishGravity)
 	{
-		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_FinishGravity);
+		int ptnNumber = GetPatternIndex((void**)&ORIG_FinishGravity);
 		switch (ptnNumber)
 		{
 		case 0:
@@ -208,7 +209,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	int* pM_nOldButtons = NULL;
 	int origM_nOldButtons = 0;
 
-	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
+	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons));
 	if (tas_log.GetBool())
 		DevMsg("[CheckJumpButton PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
 		       mv->GetAbsOrigin().x,
@@ -221,20 +222,20 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	if (y_spt_autojump.GetBool())
 	{
 		pM_nOldButtons =
-		    (int*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons) + _autojump.off2M_nOldButtons);
+		    (int*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons) + spt_autojump.off2M_nOldButtons);
 		origM_nOldButtons = *pM_nOldButtons;
 
-		if (!_autojump.cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
+		if (!spt_autojump.cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
 		{
 			*pM_nOldButtons &= ~IN_JUMP; // Reset the jump button state as if it wasn't pressed.
 		}
 	}
 
-	_autojump.cantJumpNextTime = false;
+	spt_autojump.cantJumpNextTime = false;
 
-	_autojump.insideCheckJumpButton = true;
-	bool rv = _autojump.ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
-	_autojump.insideCheckJumpButton = false;
+	spt_autojump.insideCheckJumpButton = true;
+	bool rv = spt_autojump.ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
+	spt_autojump.insideCheckJumpButton = false;
 
 	if (y_spt_autojump.GetBool())
 	{
@@ -249,8 +250,8 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 		// We jumped.
 		if (_y_spt_autojump_ensure_legit.GetBool())
 		{
-			_autojump.JumpSignal();
-			_autojump.cantJumpNextTime = true; // Prevent consecutive jumps.
+			JumpSignal();
+			spt_autojump.cantJumpNextTime = true; // Prevent consecutive jumps.
 		}
 	}
 
@@ -280,21 +281,21 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 	if (y_spt_autojump.GetBool())
 	{
 		pM_nOldButtons =
-		    (int*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons) + _autojump.off2M_nOldButtons);
+		    (int*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons) + spt_autojump.off2M_nOldButtons);
 		origM_nOldButtons = *pM_nOldButtons;
 
-		if (!_autojump.client_cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
+		if (!spt_autojump.client_cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
 		{
 			*pM_nOldButtons &= ~IN_JUMP; // Reset the jump button state as if it wasn't pressed.
 		}
 	}
 
-	_autojump.client_cantJumpNextTime = false;
+	spt_autojump.client_cantJumpNextTime = false;
 
-	_autojump.client_insideCheckJumpButton = true;
-	_autojump.oldVel = ((CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons)))->m_vecVelocity;
-	bool rv = _autojump.ORIG_CheckJumpButton_client(thisptr, edx); // This function can only change the jump bit.
-	_autojump.client_insideCheckJumpButton = false;
+	spt_autojump.client_insideCheckJumpButton = true;
+	spt_autojump.oldVel = ((CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons)))->m_vecVelocity;
+	bool rv = spt_autojump.ORIG_CheckJumpButton_client(thisptr, edx); // This function can only change the jump bit.
+	spt_autojump.client_insideCheckJumpButton = false;
 
 	if (y_spt_autojump.GetBool())
 	{
@@ -309,7 +310,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 		// We jumped.
 		if (_y_spt_autojump_ensure_legit.GetBool())
 		{
-			_autojump.client_cantJumpNextTime = true; // Prevent consecutive jumps.
+			spt_autojump.client_cantJumpNextTime = true; // Prevent consecutive jumps.
 		}
 	}
 
@@ -320,10 +321,10 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 
 void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 {
-	if (_autojump.insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
+	if (spt_autojump.insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
 	{
-		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + _autojump.off1M_nOldButtons));
-		bool ducked = *(bool*)(*((uintptr_t*)thisptr + _autojump.off1M_bDucked) + _autojump.off2M_bDucked);
+		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons));
+		bool ducked = *(bool*)(*((uintptr_t*)thisptr + spt_autojump.off1M_bDucked) + spt_autojump.off2M_bDucked);
 
 		// <stolen from gamemovement.cpp>
 		{
@@ -337,7 +338,7 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 			float flSpeedBoostPerc = (!mv->m_bIsSprinting && !ducked) ? 0.5f : 0.1f;
 			float flSpeedAddition = fabs(mv->m_flForwardMove * flSpeedBoostPerc);
 			float flMaxSpeed = mv->m_flMaxSpeed + (mv->m_flMaxSpeed * flSpeedBoostPerc);
-			float flNewSpeed = (flSpeedAddition + _autojump.oldVel.Length2D());
+			float flNewSpeed = (flSpeedAddition + spt_autojump.oldVel.Length2D());
 
 			// If we're over the maximum, we want to only boost as much as will get us to the goal speed
 			if (y_spt_additional_jumpboost.GetInt() == 1)
@@ -352,10 +353,10 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 			}
 
 			// Add it on
-			VectorAdd((vecForward * flSpeedAddition), _autojump.oldVel, mv->m_vecVelocity);
+			VectorAdd((vecForward * flSpeedAddition), spt_autojump.oldVel, mv->m_vecVelocity);
 		}
 		// </stolen from gamemovement.cpp>
 	}
 
-	return _autojump.ORIG_FinishGravity(thisptr, edx);
+	return spt_autojump.ORIG_FinishGravity(thisptr, edx);
 }

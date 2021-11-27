@@ -2,7 +2,8 @@
 #include "..\feature.hpp"
 #include "cmodel.h"
 #include "SDK\hl_movedata.h"
-#include "convar.h"
+#include "convar.hpp"
+#include "interfaces.hpp"
 
 typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
 
@@ -26,20 +27,19 @@ private:
 	static void __fastcall HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove);
 };
 
-static TASLogging _taslogging;
+static TASLogging spt_taslogging;
 
 bool TASLogging::ShouldLoadFeature()
 {
 	return true;
 }
 
-void TASLogging::InitHooks() 
+void TASLogging::InitHooks()
 {
-	extern void* gm;
-	if (gm)
+	if (interfaces::gm)
 	{
-		auto vftable = *reinterpret_cast<void***>(gm);
-		AddVFTableHook(VFTableHook(vftable, 1, (PVOID)HOOKED_ProcessMovement, (PVOID*)&ORIG_ProcessMovement), "server");
+		auto vftable = *reinterpret_cast<void***>(interfaces::gm);
+		AddVFTableHook(VFTableHook(vftable, 1, (void*)HOOKED_ProcessMovement, (void**)&ORIG_ProcessMovement), "server");
 	}
 	else
 	{
@@ -63,7 +63,7 @@ void __fastcall TASLogging::HOOKED_ProcessMovement(void* thisptr, int edx, void*
 			mv->m_vecVelocity.y,
 			mv->m_vecVelocity.z);
 
-	_taslogging.ORIG_ProcessMovement(thisptr, edx, pPlayer, pMove);
+	spt_taslogging.ORIG_ProcessMovement(thisptr, edx, pPlayer, pMove);
 
 	if (tas_log.GetBool())
 		DevMsg("[ProcessMovement POST] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",

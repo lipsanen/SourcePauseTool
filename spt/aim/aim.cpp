@@ -2,21 +2,17 @@
 
 #include "aim.hpp"
 
-#include "convar.h"
-#include "utils/math.hpp"
-#include "utils/ent_utils.hpp"
-#include "OrangeBox/cvars.hpp"
+#include "convar.hpp"
+#include "..\cvars.hpp"
+#include "math.hpp"
+#include "ent_utils.hpp"
+#include "..\cvars.hpp"
 #include "spt/sptlib-wrapper.hpp"
-#include "features\rng.hpp"
-#include "OrangeBox\spt-serverplugin.hpp"
+#include "..\features\rng.hpp"
+#include "..\spt-serverplugin.hpp"
 
 #undef max
 #undef min
-
-ConVar tas_anglespeed("tas_anglespeed",
-                      "5",
-                      FCVAR_CHEAT,
-                      "Determines the speed of angle changes when using tas_aim or when TAS strafing\n");
 
 namespace aim
 {
@@ -328,7 +324,7 @@ namespace aim
 		float shotBias = ((shotBiasMax - shotBiasMin) * bias) + shotBiasMin;
 		float flatness = (fabsf(shotBias) * 0.5);
 
-		int seed = _rng.GetPredictionRandomSeed(commandOffset) & 255;
+		int seed = spt_rng.GetPredictionRandomSeed(commandOffset) & 255;
 		random.SetSeed(seed);
 
 		do
@@ -426,10 +422,6 @@ namespace aim
 
 	CON_COMMAND(tas_aim, "Aims at a point.")
 	{
-#ifdef OE
-		ArgsWrapper args;
-#endif
-
 		if (args.ArgC() < 3)
 		{
 			Msg("Usage: tas_aim <pitch> <yaw> [ticks] [cone]\nWeapon cones(in degrees):\n\t- AR2: 3\n\t- Pistol & SMG: 5\n");

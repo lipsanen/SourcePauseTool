@@ -4,7 +4,7 @@
 
 #include "..\feature.hpp"
 #include "..\utils\game_detection.hpp"
-#include "..\OrangeBox\cvars.hpp"
+#include "..\cvars.hpp"
 
 #include "dbg.h"
 
@@ -38,7 +38,7 @@ private:
 	void HOOKED_EndOfTeleportTouchingEntity_Func();
 };
 
-static VAG _vag;
+static VAG spt_vag;
 
 bool VAG::ShouldLoadFeature()
 {
@@ -78,7 +78,7 @@ __declspec(naked) void VAG::HOOKED_MiddleOfTeleportTouchingEntity()
 		call VAG::HOOKED_MiddleOfTeleportTouchingEntity_Func;
 		popfd;
 		popad;
-		jmp _vag.ORIG_MiddleOfTeleportTouchingEntity;
+		jmp spt_vag.ORIG_MiddleOfTeleportTouchingEntity;
 	}
 }
 
@@ -88,11 +88,11 @@ __declspec(naked) void VAG::HOOKED_EndOfTeleportTouchingEntity()
 		pushad;
 		pushfd;
 	}
-	_vag.HOOKED_EndOfTeleportTouchingEntity_Func();
+	spt_vag.HOOKED_EndOfTeleportTouchingEntity_Func();
 	__asm {
 		popfd;
 		popad;
-		jmp _vag.ORIG_EndOfTeleportTouchingEntity;
+		jmp spt_vag.ORIG_EndOfTeleportTouchingEntity;
 	}
 }
 
@@ -108,9 +108,9 @@ __declspec(naked) void VAG::HOOKED_EndOfTeleportTouchingEntity()
 */
 void __fastcall VAG::HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer)
 {
-	if (!_vag.ORIG_EndOfTeleportTouchingEntity || !y_spt_prevent_vag_crash.GetBool())
+	if (!spt_vag.ORIG_EndOfTeleportTouchingEntity || !y_spt_prevent_vag_crash.GetBool())
 		return;
-	if (_vag.recursiveTeleportCount++ > 2)
+	if (spt_vag.recursiveTeleportCount++ > 2)
 	{
 		Msg("spt: nudging entity to prevent more recursive teleports!\n");
 		Vector* entPos = (Vector*)((uint32_t*)tpStackPointer + 26);
@@ -123,7 +123,7 @@ void __fastcall VAG::HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr,
 		    portalNorm->x,
 		    portalNorm->y,
 		    portalNorm->z,
-		    _vag.recursiveTeleportCount);
+		    spt_vag.recursiveTeleportCount);
 		// push entity further into the portal so it comes further out after the teleport
 		entPos->x -= portalNorm->x;
 		entPos->y -= portalNorm->y;

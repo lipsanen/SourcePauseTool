@@ -2,22 +2,25 @@
 #ifdef SSDK2007
 #include <algorithm>
 #include "..\feature.hpp"
-#include "convar.h"
+#include "convar.hpp"
+#include "interfaces.hpp"
 #include "tier0\basetypes.h"
 #include "vgui\ischeme.h"
 #include "vguimatsurface\imatsystemsurface.h"
 #include "..\utils\ent_utils.hpp"
 #include "..\utils\property_getter.hpp"
 #include "..\utils\string_parsing.hpp"
-#include "..\vgui\vgui_utils.hpp"
-#include "..\OrangeBox\scripts\srctas_reader.hpp"
+#include "vgui_utils.hpp"
+#include "..\scripts\srctas_reader.hpp"
 #include "autojump.hpp"
 #include "generic.hpp"
 #include "isg.hpp"
 #include "overlay.hpp"
 #include "playerio.hpp"
-#include "..\OrangeBox\overlay\portal_camera.hpp"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "signals.hpp"
+#include "..\overlay\portal_camera.hpp"
+#include "..\cvars.hpp"
+#include "tracing.hpp"
 
 #undef max
 #undef min
@@ -49,10 +52,22 @@ ConVar y_spt_hud_ent_info(
     FCVAR_CHEAT,
     "Display entity info on HUD. Format is \"[ent index],[prop regex],[prop regex],...,[prop regex];[ent index],...,[prop regex]\".\n");
 ConVar y_spt_hud_left("y_spt_hud_left", "0", FCVAR_CHEAT, "When set to 1, displays SPT HUD on the left.\n");
-ConVar y_spt_hud_oob("y_spt_hud_oob", "0", FCVAR_CHEAT, "Is the player OoB?");
 ConVar y_spt_hud_isg("y_spt_hud_isg", "0", FCVAR_CHEAT, "Is the ISG flag set?\n");
+ConVar y_spt_hud_hops("y_spt_hud_hops", "0", FCVAR_CHEAT, "When set to 1, displays the hop practice HUD.");
+ConVar y_spt_hud_hops_x("y_spt_hud_hops_x", "-85", FCVAR_CHEAT, "Hops HUD x offset");
+ConVar y_spt_hud_hops_y("y_spt_hud_hops_y", "100", FCVAR_CHEAT, "Hops HUD y offset");
+ConVar y_spt_hud_velocity_angles("y_spt_hud_velocity_angles", "0", FCVAR_CHEAT, "Display velocity Euler angles.");
+ConVar _y_spt_overlay_crosshair_size("_y_spt_overlay_crosshair_size", "10", FCVAR_CHEAT, "Overlay crosshair size.");
+ConVar _y_spt_overlay_crosshair_thickness("_y_spt_overlay_crosshair_thickness",
+                                          "1",
+                                          FCVAR_CHEAT,
+                                          "Overlay crosshair thickness.");
+ConVar _y_spt_overlay_crosshair_color("_y_spt_overlay_crosshair_color",
+                                      "0 255 0 255",
+                                      FCVAR_CHEAT,
+                                      "Overlay crosshair RGBA color.");
 
-// Feature description
+// HUD stuff
 class HUDFeature : public Feature
 {
 public:
@@ -88,7 +103,6 @@ private:
 	float maxVel;
 
 	int sinceLanded;
-	PatternContainer patternContainer;
 	ConVar* cl_showpos;
 	ConVar* cl_showfps;
 	vgui::HFont font;
@@ -145,21 +159,7 @@ private:
 	                      wchar* buffer);
 };
 
-static HUDFeature _hud;
-
-ConVar y_spt_hud_hops("y_spt_hud_hops", "0", FCVAR_CHEAT, "When set to 1, displays the hop practice HUD.");
-ConVar y_spt_hud_hops_x("y_spt_hud_hops_x", "-85", FCVAR_CHEAT, "Hops HUD x offset");
-ConVar y_spt_hud_hops_y("y_spt_hud_hops_y", "100", FCVAR_CHEAT, "Hops HUD y offset");
-ConVar y_spt_hud_velocity_angles("y_spt_hud_velocity_angles", "0", FCVAR_CHEAT, "Display velocity Euler angles.");
-ConVar _y_spt_overlay_crosshair_size("_y_spt_overlay_crosshair_size", "10", FCVAR_CHEAT, "Overlay crosshair size.");
-ConVar _y_spt_overlay_crosshair_thickness("_y_spt_overlay_crosshair_thickness",
-                                          "1",
-                                          FCVAR_CHEAT,
-                                          "Overlay crosshair thickness.");
-ConVar _y_spt_overlay_crosshair_color("_y_spt_overlay_crosshair_color",
-                                      "0 255 0 255",
-                                      FCVAR_CHEAT,
-                                      "Overlay crosshair RGBA color.");
+static HUDFeature spt_hud;
 
 const int INDEX_MASK = MAX_EDICTS - 1;
 
@@ -177,9 +177,8 @@ void HUDFeature::InitHooks()
 
 void HUDFeature::LoadFeature()
 {
-	auto icvar = GetCvarInterface();
-	cl_showpos = icvar->FindVar("cl_showpos");
-	cl_showfps = icvar->FindVar("cl_showfps");
+	cl_showpos = interfaces::g_pCVar->FindVar("cl_showpos");
+	cl_showfps = interfaces::g_pCVar->FindVar("cl_showfps");
 	auto scheme = vgui::GetScheme();
 	font = scheme->GetFont("DefaultFixedOutline", false);
 	hopsFont = scheme->GetFont("Trebuchet24", false);
@@ -190,9 +189,9 @@ void HUDFeature::LoadFeature()
 	}
 	else
 	{
-		generic_.AdjustAngles.Connect(this, &HUDFeature::NewTick);
-		generic_.OngroundSignal.Connect(this, &HUDFeature::OnGround);
-		_autojump.JumpSignal.Connect(this, &HUDFeature::Jump);
+		AdjustAngles.Connect(this, &HUDFeature::NewTick);
+		OngroundSignal.Connect(this, &HUDFeature::OnGround);
+		JumpSignal.Connect(this, &HUDFeature::Jump);
 	}
 }
 
@@ -227,7 +226,7 @@ void HUDFeature::OnGround(bool onground)
 			if (lastHop > 15)
 				return;
 
-			auto vel = playerio::GetPlayerVelocity().Length2D();
+			auto vel = spt_playerio.GetPlayerVelocity().Length2D();
 			loss = maxVel - vel;
 			percentage = (vel / maxVel) * 100;
 			displayHop = lastHop - 1;
@@ -311,10 +310,10 @@ void HUDFeature::DrawCrosshair(vrect_t* screen)
 
 void HUDFeature::CalculateAbhVel()
 {
-	auto vel = playerio::GetPlayerVelocity().Length2D();
-	auto ducked = playerio::GetFlagsDucking();
+	auto vel = spt_playerio.GetPlayerVelocity().Length2D();
+	auto ducked = spt_playerio.GetFlagsDucking();
 	auto sprinting = utils::GetProperty<bool>(0, "m_fIsSprinting");
-	auto vars = playerio::GetMovementVars();
+	auto vars = spt_playerio.GetMovementVars();
 
 	float modifier;
 
@@ -336,15 +335,15 @@ void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 #ifndef OE
 	if (mode == 2 && !g_Overlay.renderingOverlay)
 	{
-		_hud.DrawHUD((vrect_t*)g_Overlay.screenRect);
+		spt_hud.DrawHUD((vrect_t*)g_Overlay.screenRect);
 	}
 
 	if (g_Overlay.renderingOverlay)
-		_hud.DrawCrosshair((vrect_t*)g_Overlay.screenRect);
+		spt_hud.DrawCrosshair((vrect_t*)g_Overlay.screenRect);
 
 #endif
 
-	_hud.ORIG_VGui_Paint(thisptr, edx, mode);
+	spt_hud.ORIG_VGui_Paint(thisptr, edx, mode);
 }
 
 const wchar* FLAGS[] = {L"FL_ONGROUND",
@@ -517,7 +516,7 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	const int BUFFER_SIZE = 256;
 	wchar_t buffer[BUFFER_SIZE];
-	currentVel = playerio::GetPlayerVelocity();
+	currentVel = spt_playerio.GetPlayerVelocity();
 	Vector accel = currentVel - previousVel;
 	std::string info(y_spt_hud_ent_info.GetString());
 
@@ -580,31 +579,31 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	if (y_spt_hud_flags.GetBool())
 	{
-		int flags = playerio::GetPlayerFlags();
+		int flags = spt_playerio.GetPlayerFlags();
 		DRAW_FLAGS(NULL, FLAGS, flags, false);
 	}
 
 	if (y_spt_hud_moveflags.GetBool())
 	{
-		int flags = _playerio.GetPlayerMoveType();
+		int flags = spt_playerio.GetPlayerMoveType();
 		DRAW_FLAGS(L"Move type", MOVETYPE_FLAGS, flags, true);
 	}
 
 	if (y_spt_hud_collisionflags.GetBool())
 	{
-		int flags = _playerio.GetPlayerCollisionGroup();
+		int flags = spt_playerio.GetPlayerCollisionGroup();
 		DRAW_FLAGS(L"Collision group", COLLISION_GROUPS, flags, true);
 	}
 
 	if (y_spt_hud_movecollideflags.GetBool())
 	{
-		int flags = _playerio.GetPlayerMoveCollide();
+		int flags = spt_playerio.GetPlayerMoveCollide();
 		DRAW_FLAGS(L"Move collide", MOVECOLLIDE_FLAGS, flags, true);
 	}
 
 	if (y_spt_hud_vars.GetBool() && utils::playerEntityAvailable())
 	{
-		auto vars = playerio::GetMovementVars();
+		auto vars = spt_playerio.GetMovementVars();
 		DRAW_FLOAT(L"accelerate", vars.Accelerate);
 		DRAW_FLOAT(L"airaccelerate", vars.Airaccelerate);
 		DRAW_FLOAT(L"ent friction", vars.EntFriction);
@@ -618,7 +617,7 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	if (y_spt_hud_ag_sg_tester.GetBool() && utils::playerEntityAvailable())
 	{
-		Vector v = playerio::GetPlayerEyePos();
+		Vector v = spt_playerio.GetPlayerEyePos();
 		QAngle q;
 
 		std::wstring result = calculateWillAGSG(v, q);
@@ -628,11 +627,11 @@ void HUDFeature::DrawTopHUD(vrect_t* screen, vgui::IScheme* scheme, IMatSystemSu
 
 	if (y_spt_hud_oob.GetBool())
 	{
-		Vector v = generic_.GetCameraOrigin();
+		Vector v = spt_generic.GetCameraOrigin();
 		trace_t tr;
 		Strafe::Trace(tr, v, v + Vector(1, 1, 1));
 
-		bool oob = generic_.ORIG_CEngineTrace__PointOutsideWorld(nullptr, 0, v) && !tr.startsolid;
+		bool oob = spt_tracing.ORIG_CEngineTrace__PointOutsideWorld(nullptr, 0, v) && !tr.startsolid;
 		swprintf_s(buffer, BUFFER_SIZE, L"oob: %d", oob);
 		DRAW();
 	}

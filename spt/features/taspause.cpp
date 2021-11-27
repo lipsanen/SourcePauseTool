@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
-#include "convar.h"
+#include "convar.hpp"
 
 typedef void(__cdecl* _Host_AccumulateTime)(float dt);
 ConVar tas_pause("tas_pause", "0", 0, "Does a pause where you can look around when the game is paused.\n");
@@ -26,14 +26,14 @@ private:
 	static void __cdecl HOOKED_Host_AccumulateTime(float dt);
 };
 
-static TASPause _taspause;
+static TASPause spt_taspause;
 
 bool TASPause::ShouldLoadFeature()
 {
 	return true;
 }
 
-void TASPause::InitHooks() 
+void TASPause::InitHooks()
 {
 	FIND_PATTERN(engine, _Host_RunFrame);
 	HOOK_FUNCTION(engine, Host_AccumulateTime);
@@ -64,11 +64,11 @@ void TASPause::UnloadFeature() {}
 
 void __cdecl TASPause::HOOKED_Host_AccumulateTime(float dt)
 {
-	if (tas_pause.GetBool() && _taspause.pHost_Realtime && _taspause.pHost_Frametime)
+	if (tas_pause.GetBool() && spt_taspause.pHost_Realtime && spt_taspause.pHost_Frametime)
 	{
-		*_taspause.pHost_Realtime += dt;
-		*_taspause.pHost_Frametime = 0;
+		*spt_taspause.pHost_Realtime += dt;
+		*spt_taspause.pHost_Frametime = 0;
 	}
 	else
-		_taspause.ORIG_Host_AccumulateTime(dt);
+		spt_taspause.ORIG_Host_AccumulateTime(dt);
 }

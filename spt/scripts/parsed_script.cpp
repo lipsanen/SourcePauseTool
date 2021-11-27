@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "parsed_script.hpp"
 #include "..\spt-serverplugin.hpp"
-#include "..\..\utils\file.hpp"
+#include "file.hpp"
 #include "..\cvars.hpp"
-#include "..\..\features\demo.hpp"
+#include "..\features\demo.hpp"
 #include "framebulk_handler.hpp"
 #include "thirdparty\md5.hpp"
 
@@ -72,7 +72,7 @@ namespace scripts
 		AddAfterFramesEntry(afterFramesTick,
 		                    "save " + sName + "; load " + sName + +";  _y_spt_afterframes_await_load");
 		// Only manually record if autorecording isn't available
-		if (!g_Demostuff.Demo_IsAutoRecordingAvailable() && !demoName.empty())
+		if (!spt_demostuff.Demo_IsAutoRecordingAvailable() && !demoName.empty())
 			AddAfterFramesEntry(afterFramesTick + 1,
 			                    "record " + demoName + "-" + std::to_string(demoCount));
 		++afterFramesTick;

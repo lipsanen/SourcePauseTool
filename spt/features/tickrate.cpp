@@ -1,10 +1,10 @@
 #include "stdafx.h"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "..\spt-serverplugin.hpp"
 #include "tickrate.hpp"
-#include "convar.h"
+#include "convar.hpp"
 #include "dbg.h"
 
-TickrateMod _tickrate;
+TickrateMod spt_tickrate;
 
 float TickrateMod::GetTickrate()
 {
@@ -35,7 +35,7 @@ void TickrateMod::LoadFeature()
 	// interval_per_tick
 	if (ORIG_MiddleOfSV_InitGameDLL)
 	{
-		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_MiddleOfSV_InitGameDLL);
+		int ptnNumber = GetPatternIndex((void**)&ORIG_MiddleOfSV_InitGameDLL);
 
 		switch (ptnNumber)
 		{
@@ -64,18 +64,14 @@ void TickrateMod::UnloadFeature() {}
 
 CON_COMMAND(_y_spt_tickrate, "Get or set the tickrate. Usage: _y_spt_tickrate [tickrate]")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
-
 	switch (args.ArgC())
 	{
 	case 1:
-		Msg("Current tickrate: %f\n", _tickrate.GetTickrate());
+		Msg("Current tickrate: %f\n", spt_tickrate.GetTickrate());
 		break;
 
 	case 2:
-		_tickrate.SetTickrate(atof(args.Arg(1)));
+		spt_tickrate.SetTickrate(atof(args.Arg(1)));
 		break;
 
 	default:

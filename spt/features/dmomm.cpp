@@ -1,9 +1,10 @@
 #include "stdafx.h"
+#ifdef OE
 #include "..\feature.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "..\utils\game_detection.hpp"
 #include "afterframes.hpp"
-#include "convar.h"
+#include "convar.hpp"
 #include "dbg.h"
 
 typedef void(__fastcall* _)(void* thisptr, int edx, void* a, void* b);
@@ -39,7 +40,7 @@ private:
 	void HOOKED_MiddleOfSlidingFunction_Func();
 };
 
-static DMoMM _dmomm;
+static DMoMM spt_dmomm;
 
 bool DMoMM::ShouldLoadFeature()
 {
@@ -64,7 +65,6 @@ void DMoMM::PreHook()
 	{
 		ORIG_SlidingAndOtherStuff = nullptr;
 		DevWarning("[server.dll] Could not find the sliding code!\n");
-		Warning("y_spt_on_slide_pause_for has no effect.\n");
 	}
 }
 
@@ -78,17 +78,17 @@ void DMoMM::UnloadFeature() {}
 
 void __fastcall DMoMM::HOOKED_SlidingAndOtherStuff(void* thisptr, int edx, void* a, void* b)
 {
-	if (_dmomm.sliding)
+	if (spt_dmomm.sliding)
 	{
-		_dmomm.sliding = false;
-		_dmomm.wasSliding = true;
+		spt_dmomm.sliding = false;
+		spt_dmomm.wasSliding = true;
 	}
 	else
 	{
-		_dmomm.wasSliding = false;
+		spt_dmomm.wasSliding = false;
 	}
 
-	return _dmomm.ORIG_SlidingAndOtherStuff(thisptr, edx, a, b);
+	return spt_dmomm.ORIG_SlidingAndOtherStuff(thisptr, edx, a, b);
 }
 
 void DMoMM::HOOKED_MiddleOfSlidingFunction_Func()
@@ -105,7 +105,7 @@ void DMoMM::HOOKED_MiddleOfSlidingFunction_Func()
 			afterframes_entry_t entry;
 			entry.framesLeft = pauseFor;
 			entry.command = "unpause";
-			_afterframes.AddAfterFramesEntry(entry);
+			spt_afterframes.AddAfterFramesEntry(entry);
 		}
 	}
 }
@@ -122,7 +122,7 @@ __declspec(naked) void DMoMM::HOOKED_MiddleOfSlidingFunction()
 			pushfd;
 	}
 
-	_dmomm.HOOKED_MiddleOfSlidingFunction_Func();
+	spt_dmomm.HOOKED_MiddleOfSlidingFunction_Func();
 
 	__asm {
 			popfd;
@@ -132,6 +132,7 @@ __declspec(naked) void DMoMM::HOOKED_MiddleOfSlidingFunction()
 			 * or the game won't be able to continue normally.
 			 */
 
-			jmp _dmomm.ORIG_MiddleOfSlidingFunction;
+			jmp spt_dmomm.ORIG_MiddleOfSlidingFunction;
 	}
 }
+#endif

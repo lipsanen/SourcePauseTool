@@ -17,7 +17,6 @@ typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 class AutojumpFeature : public Feature
 {
 public:
-	Gallant::Signal0<void> JumpSignal;
 	ptrdiff_t off1M_nOldButtons;
 	ptrdiff_t off2M_nOldButtons;
 	bool cantJumpNextTime;
@@ -48,4 +47,4 @@ private:
 	bool client_insideCheckJumpButton;
 };
 
-extern AutojumpFeature _autojump;
+extern AutojumpFeature spt_autojump;

@@ -2,7 +2,7 @@
 
 #include "framebulk_handler.hpp"
 
-#include "..\..\utils\string_parsing.hpp"
+#include "..\utils\string_parsing.hpp"
 
 namespace scripts
 {

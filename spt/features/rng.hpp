@@ -23,4 +23,4 @@ private:
 	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
 };
 
-extern RNGStuff _rng;
+extern RNGStuff spt_rng;

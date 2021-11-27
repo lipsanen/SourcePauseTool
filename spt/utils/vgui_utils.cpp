@@ -11,8 +11,8 @@ namespace vgui
 #ifndef OE
 	IClientMode* GetClientMode()
 	{
-		if(generic_.ORIG_GetClientModeNormal)
-			return (IClientMode*)generic_.ORIG_GetClientModeNormal();
+		if(spt_generic.ORIG_GetClientModeNormal)
+			return (IClientMode*)spt_generic.ORIG_GetClientModeNormal();
 		else
 			return nullptr;
 	}

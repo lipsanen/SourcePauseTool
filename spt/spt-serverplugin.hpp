@@ -91,35 +91,3 @@ public:
 #endif
 };
 
-IServerUnknown* GetServerPlayer();
-IVEngineServer* GetEngine();
-IVDebugOverlay* GetDebugOverlay();
-void* GetGamemovement();
-ICvar* GetCvarInterface();
-std::string GetGameDir();
-EngineClientWrapper* GetEngineClient();
-bool FoundEngineServer();
-
-#if defined(OE)
-struct ArgsWrapper
-{
-	EngineClientWrapper* engine_pointer;
-
-	ArgsWrapper(EngineClientWrapper* engine)
-	{
-		this->engine_pointer = engine;
-	};
-
-	ArgsWrapper();
-
-	int ArgC()
-	{
-		return engine_pointer->Cmd_Argc();
-	};
-
-	const char* Arg(int arg)
-	{
-		return engine_pointer->Cmd_Argv(arg);
-	};
-};
-#endif

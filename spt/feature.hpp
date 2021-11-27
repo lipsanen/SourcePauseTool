@@ -1,30 +1,37 @@
 #pragma once
+#include "interface.h"
 #include <array>
 #include <vector>
 #include <functional>
 #include <unordered_map>
 #include "SPTLib\patterns.hpp"
-#include "utils\patterncontainer.hpp"
-#include "OrangeBox\patterns.hpp"
-
-const int HOOKED_MODULE_COUNT = 6;
+#include "convar.hpp"
+#include "patterns.hpp"
 
 #define ADD_RAW_HOOK(moduleName, name) \
-	AddRawHook(#moduleName, \
-	              reinterpret_cast<void**>(&ORIG_##name##), \
-	              reinterpret_cast<void*>(HOOKED_ ##name##));
+	AddRawHook(#moduleName, reinterpret_cast<void**>(&ORIG_##name##), reinterpret_cast<void*>(HOOKED_##name##));
 #define FIND_PATTERN(moduleName, name) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               #moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&ORIG_ ##name##), \
+	               reinterpret_cast<void**>(&ORIG_##name##), \
 	               nullptr);
 #define HOOK_FUNCTION(moduleName, name) \
 	AddPatternHook(patterns::##moduleName## ::##name##, \
 	               #moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&ORIG_ ##name##), \
-	               reinterpret_cast<void*>(HOOKED_ ##name##));
+	               reinterpret_cast<void**>(&ORIG_##name##), \
+	               reinterpret_cast<void*>(HOOKED_##name##));
+
+struct VFTableHook
+{
+	VFTableHook(void** vftable, int index, void* functionToHook, void** origPtr);
+
+	void** vftable;
+	int index;
+	void* functionToHook;
+	void** origPtr;
+};
 
 struct PatternHook
 {
@@ -80,12 +87,15 @@ struct ModuleHookData
 class Feature
 {
 public:
-	virtual ~Feature() { };
-	virtual bool ShouldLoadFeature() { return true; };
-	virtual void InitHooks() { };
-	virtual void PreHook() {};
-	virtual void LoadFeature() { };
-	virtual void UnloadFeature() { };
+	virtual ~Feature(){};
+	virtual bool ShouldLoadFeature()
+	{
+		return true;
+	};
+	virtual void InitHooks(){};
+	virtual void PreHook(){};
+	virtual void LoadFeature(){};
+	virtual void UnloadFeature(){};
 
 	static void LoadFeatures();
 	static void UnloadFeatures();

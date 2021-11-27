@@ -2,12 +2,12 @@
 #include "afterframes.hpp"
 #include "generic.hpp"
 #include "..\sptlib-wrapper.hpp"
-#include "..\OrangeBox\cvars.hpp"
+#include "..\cvars.hpp"
+#include "signals.hpp"
 #include "dbg.h"
-#include "..\OrangeBox\spt-serverplugin.hpp"
 #include <sstream>
 
-AfterframesFeature _afterframes;
+AfterframesFeature spt_afterframes;
 
 ConVar _y_spt_afterframes_await_legacy("_y_spt_afterframes_await_legacy",
 	"0",
@@ -46,23 +46,19 @@ bool AfterframesFeature::ShouldLoadFeature()
 	return true;
 }
 
-void AfterframesFeature::InitHooks()
-{
-}
-
 void AfterframesFeature::LoadFeature()
 {
-	generic_.SV_ActivateServerSignal.Connect(this, &AfterframesFeature::SV_ActivateServer);
-	generic_.SetPausedSignal.Connect(this, &AfterframesFeature::SetPaused);
-	generic_.FinishRestoreSignal.Connect(this, &AfterframesFeature::FinishRestore);
+	SV_ActivateServerSignal.Connect(this, &AfterframesFeature::SV_ActivateServer);
+	SetPausedSignal.Connect(this, &AfterframesFeature::SetPaused);
+	FinishRestoreSignal.Connect(this, &AfterframesFeature::FinishRestore);
 
-	if (!generic_.ORIG_HudUpdate)
+	if (!spt_generic.ORIG_HudUpdate)
 	{
 		Warning("_y_spt_afterframes has no effect.\n");
 	}
 	else
 	{
-		generic_.FrameSignal.Connect(this, &AfterframesFeature::OnFrame);
+		FrameSignal.Connect(this, &AfterframesFeature::OnFrame);
 		afterframesPaused = false;
 		afterframesDelay = 0;
 		afterframesQueue.clear();
@@ -122,13 +118,6 @@ void AfterframesFeature::SetPaused(void* thisptr, int edx, bool paused)
 
 CON_COMMAND(_y_spt_afterframes_wait, "Delays the afterframes queue. Usage: _y_spt_afterframes_wait <delay>")
 {
-#if defined(OE)
-	auto engine = GetEngineClient();
-	if (!engine)
-		return;
-	ArgsWrapper args(engine);
-#endif
-
 	if (args.ArgC() != 2)
 	{
 		Msg("Usage: _y_spt_afterframes_wait <delay>\n");
@@ -137,18 +126,11 @@ CON_COMMAND(_y_spt_afterframes_wait, "Delays the afterframes queue. Usage: _y_sp
 
 	int delay = std::stoi(args.Arg(1));
 
-	_afterframes.DelayAfterframesQueue(delay);
+	spt_afterframes.DelayAfterframesQueue(delay);
 }
 
 CON_COMMAND(_y_spt_afterframes, "Add a command into an afterframes queue. Usage: _y_spt_afterframes <count> <command>")
 {
-#if defined(OE)
-	auto engine = GetEngineClient();
-	if (!engine)
-		return;
-	ArgsWrapper args(engine);
-#endif
-
 	if (args.ArgC() != 3)
 	{
 		Msg("Usage: _y_spt_afterframes <count> <command>\n");
@@ -161,10 +143,10 @@ CON_COMMAND(_y_spt_afterframes, "Add a command into an afterframes queue. Usage:
 	ss >> entry.framesLeft;
 	entry.command.assign(args.Arg(2));
 
-	_afterframes.AddAfterFramesEntry(entry);
+	spt_afterframes.AddAfterFramesEntry(entry);
 }
 
-#if !defined(OE)
+#ifndef OE
 CON_COMMAND(
 	_y_spt_afterframes2,
 	"Add everything after count as a command into the queue. Do not insert the command in quotes. Usage: _y_spt_afterframes2 <count> <command>")
@@ -182,7 +164,7 @@ CON_COMMAND(
 	const char* cmd = args.ArgS() + strlen(args.Arg(1)) + 1;
 	entry.command.assign(cmd);
 
-	_afterframes.AddAfterFramesEntry(entry);
+	spt_afterframes.AddAfterFramesEntry(entry);
 }
 #endif
 
@@ -190,10 +172,10 @@ CON_COMMAND(
 	_y_spt_afterframes_await_load,
 	"Pause reading from the afterframes queue until the next load or changelevel. Useful for writing scripts spanning multiple maps or save-load segments.")
 {
-	_afterframes.PauseAfterframesQueue();
+	spt_afterframes.PauseAfterframesQueue();
 }
 
 CON_COMMAND(_y_spt_afterframes_reset, "Reset the afterframes queue.")
 {
-	_afterframes.ResetAfterframesQueue();
+	spt_afterframes.ResetAfterframesQueue();
 }

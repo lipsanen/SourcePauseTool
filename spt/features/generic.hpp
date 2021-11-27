@@ -13,7 +13,6 @@ typedef void(__stdcall* _HudUpdate)(bool bActive);
 typedef bool(__cdecl* _SV_ActivateServer)();
 typedef void(__fastcall* _FinishRestore)(void* thisptr, int edx);
 typedef void(__fastcall* _SetPaused)(void* thisptr, int edx, bool paused);
-typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int edx, const Vector& pt);
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
 typedef const Vector&(__cdecl* _MainViewOrigin)();
 typedef void*(__cdecl* _GetClientModeNormal)();
@@ -22,19 +21,11 @@ typedef void*(__cdecl* _GetClientModeNormal)();
 class GenericFeature : public Feature
 {
 public:
-	Gallant::Signal0<void> AdjustAngles;
-	Gallant::Signal1<bool> OngroundSignal;
-	Gallant::Signal0<void> FrameSignal;
-	Gallant::Signal0<void> TickSignal;
-	Gallant::Signal1<bool> SV_ActivateServerSignal;
-	Gallant::Signal2<void*, int> FinishRestoreSignal;
-	Gallant::Signal3<void*, int, bool> SetPausedSignal;
 
 	_HudUpdate ORIG_HudUpdate;
 	_SetPaused ORIG_SetPaused;
 	_SV_ActivateServer ORIG_SV_ActivateServer;
 	_FinishRestore ORIG_FinishRestore;
-	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
 	_MainViewOrigin ORIG_MainViewOrigin;
 	_GetClientModeNormal ORIG_GetClientModeNormal;
 	bool shouldPreventNextUnpause;
@@ -58,4 +49,4 @@ private:
 	static void __fastcall HOOKED_SetPaused(void* thisptr, int edx, bool paused);
 };
 
-extern GenericFeature generic_;
+extern GenericFeature spt_generic;

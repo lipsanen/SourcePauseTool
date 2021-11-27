@@ -1,23 +1,20 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
 #include "generic.hpp"
-#include "convar.h"
+#include "convar.hpp"
+#include "signals.hpp"
 #include "dbg.h"
 
 ConVar y_spt_pause("y_spt_pause", "0", FCVAR_ARCHIVE);
 
-// Feature description
+// y_spt_pause stuff
 class PauseFeature : public Feature
 {
 public:
 protected:
-	virtual bool ShouldLoadFeature() override;
-
 	virtual void InitHooks() override;
 
 	virtual void LoadFeature() override;
-
-	virtual void UnloadFeature() override;
 private:
 	uintptr_t ORIG_SpawnPlayer;
 	bool* pM_bLoadgame;
@@ -30,11 +27,6 @@ private:
 
 static PauseFeature _pause;
 
-bool PauseFeature::ShouldLoadFeature()
-{
-	return true;
-}
-
 void PauseFeature::InitHooks()
 {
 	FIND_PATTERN(engine, SpawnPlayer);
@@ -44,9 +36,9 @@ void PauseFeature::LoadFeature()
 {
 	pM_bLoadgame = nullptr;
 	pGameServer = nullptr;
-	generic_.SV_ActivateServerSignal.Connect(this, &PauseFeature::SV_ActivateServer);
-	generic_.SetPausedSignal.Connect(this, &PauseFeature::SetPaused);
-	generic_.FinishRestoreSignal.Connect(this, &PauseFeature::FinishRestore);
+	SV_ActivateServerSignal.Connect(this, &PauseFeature::SV_ActivateServer);
+	SetPausedSignal.Connect(this, &PauseFeature::SetPaused);
+	FinishRestoreSignal.Connect(this, &PauseFeature::FinishRestore);
 
 	if (ORIG_SpawnPlayer)
 	{
@@ -97,13 +89,13 @@ void PauseFeature::LoadFeature()
 	}
 
 	// SV_ActivateServer
-	if (generic_.ORIG_SV_ActivateServer)
+	if (spt_generic.ORIG_SV_ActivateServer)
 	{
-		int ptnNumber = GetPatternIndex((void**)&generic_.ORIG_SV_ActivateServer);
+		int ptnNumber = GetPatternIndex((void**)&spt_generic.ORIG_SV_ActivateServer);
 		switch (ptnNumber)
 		{
 		case 3:
-			pGameServer = (*(void**)((int)generic_.ORIG_SV_ActivateServer + 223));
+			pGameServer = (*(void**)((int)spt_generic.ORIG_SV_ActivateServer + 223));
 			break;
 		}
 
@@ -112,39 +104,40 @@ void PauseFeature::LoadFeature()
 #endif
 	}
 
-	if (!ORIG_SpawnPlayer || !generic_.ORIG_SV_ActivateServer)
-	{
-		Warning("y_spt_pause 2 has no effect.\n");
-	}
+	bool pause1_works = spt_generic.ORIG_FinishRestore;
+	bool pause2_works = ORIG_SpawnPlayer && spt_generic.ORIG_SV_ActivateServer;
+	bool pause_works = spt_generic.ORIG_SetPaused && (pause1_works || pause2_works);
 
-	// FinishRestore
-	if (!generic_.ORIG_FinishRestore)
-	{
-		Warning("y_spt_pause 1 has no effect.\n");
-	}
-
-	// SetPaused
-	if (!generic_.ORIG_SetPaused)
+	if (!pause_works)
 	{
 		Warning("y_spt_pause has no effect.\n");
 	}
+	else
+	{
+		if (!pause1_works)
+		{
+			Warning("y_spt_pause 2 has no effect.\n");
+		}
 
+		if (!pause2_works)
+		{
+			Warning("y_spt_pause 1 has no effect.\n");
+		}
+	}
 }
-
-void PauseFeature::UnloadFeature() {}
 
 void PauseFeature::SV_ActivateServer(bool result)
 {
 	DevMsg("Engine call: SV_ActivateServer() => %s;\n", (result ? "true" : "false"));
 
-	if (generic_.ORIG_SetPaused && pM_bLoadgame && pGameServer)
+	if (spt_generic.ORIG_SetPaused && pM_bLoadgame && pGameServer)
 	{
 		if ((y_spt_pause.GetInt() == 2) && *pM_bLoadgame)
 		{
-			generic_.ORIG_SetPaused((void*)pGameServer, 0, true);
+			spt_generic.ORIG_SetPaused((void*)pGameServer, 0, true);
 			DevMsg("Pausing...\n");
 
-			generic_.shouldPreventNextUnpause = true;
+			spt_generic.shouldPreventNextUnpause = true;
 		}
 	}
 }
@@ -153,12 +146,12 @@ void PauseFeature::FinishRestore(void* thisptr, int edx)
 {
 	DevMsg("Engine call: FinishRestore();\n");
 
-	if (generic_.ORIG_SetPaused && (y_spt_pause.GetInt() == 1))
+	if (spt_generic.ORIG_SetPaused && (y_spt_pause.GetInt() == 1))
 	{
-		generic_.ORIG_SetPaused(thisptr, 0, true);
+		spt_generic.ORIG_SetPaused(thisptr, 0, true);
 		DevMsg("Pausing...\n");
 
-		generic_.shouldPreventNextUnpause = true;
+		spt_generic.shouldPreventNextUnpause = true;
 	}
 }
 

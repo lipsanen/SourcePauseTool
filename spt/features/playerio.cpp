@@ -1,12 +1,13 @@
 #include "stdafx.h"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "..\cvars.hpp"
 #include "..\sptlib-wrapper.hpp"
-#include "..\aim.hpp"
-#include "..\strafestuff.hpp"
-#include "..\OrangeBox\cvars.hpp"
-#include "..\utils\game_detection.hpp"
-#include "..\utils\math.hpp"
+#include "..\aim\aim.hpp"
+#include "..\strafe\strafestuff.hpp"
+#include "game_detection.hpp"
+#include "math.hpp"
 #include "playerio.hpp"
+#include "ent_utils.hpp"
+#include "interfaces.hpp"
 
 #ifdef SSDK2007
 #include "mathlib\vmatrix.h"
@@ -15,12 +16,21 @@
 #undef max
 #undef min
 
-PlayerIOFeature _playerio;
+ConVar _y_spt_anglesetspeed(
+	"_y_spt_anglesetspeed",
+	"360",
+	FCVAR_TAS_RESET,
+	"Determines how fast the view angle can move per tick while doing _y_spt_setyaw/_y_spt_setpitch.\n");
+ConVar _y_spt_pitchspeed("_y_spt_pitchspeed", "0", FCVAR_TAS_RESET);
+ConVar _y_spt_yawspeed("_y_spt_yawspeed", "0", FCVAR_TAS_RESET);
+
+
+PlayerIOFeature spt_playerio;
 static void* cinput_thisptr = nullptr;
 
 bool PlayerIOFeature::ShouldLoadFeature()
 {
-	return GetEngine() != nullptr;
+	return interfaces::engine != nullptr;
 }
 
 void PlayerIOFeature::InitHooks()
@@ -74,7 +84,7 @@ void PlayerIOFeature::PreHook()
 
 	if (ORIG_PlayerRunCommand)
 	{
-		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_PlayerRunCommand);
+		int ptnNumber = GetPatternIndex((void**)&ORIG_PlayerRunCommand);
 		switch (ptnNumber)
 		{
 		case 0:
@@ -382,8 +392,7 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 	else
 		vars.WishspeedCap = 30;
 
-	extern IServerUnknown* GetServerPlayer();
-	auto server_player = GetServerPlayer();
+	auto server_player = utils::GetServerPlayer();
 
 	auto previouslyPredictedOrigin =
 	    reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(server_player) + offServerPreviouslyPredictedOrigin);
@@ -464,7 +473,7 @@ void __fastcall PlayerIOFeature::HOOKED_CreateMove(void* thisptr,
                                                    float input_sample_frametime,
                                                    bool active)
 {
-	_playerio.HOOKED_CreateMove_Func(thisptr, edx, sequence_number, input_sample_frametime, active);
+	spt_playerio.HOOKED_CreateMove_Func(thisptr, edx, sequence_number, input_sample_frametime, active);
 }
 
 int __fastcall PlayerIOFeature::HOOKED_GetButtonBits_Func(void* thisptr, int edx, int bResetState)
@@ -506,7 +515,7 @@ int __fastcall PlayerIOFeature::HOOKED_GetButtonBits_Func(void* thisptr, int edx
 
 int __fastcall PlayerIOFeature::HOOKED_GetButtonBits(void* thisptr, int edx, int bResetState)
 {
-	return _playerio.HOOKED_GetButtonBits_Func(thisptr, edx, bResetState);
+	return spt_playerio.HOOKED_GetButtonBits_Func(thisptr, edx, bResetState);
 }
 
 bool PlayerIOFeature::GetFlagsDucking()
@@ -534,7 +543,7 @@ Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 	data.Ducking = GetFlagsDucking();
 	data.DuckPressed = (ORIG_GetButtonBits(cinput_thisptr, 0, 0) & IN_DUCK);
 	data.UnduckedOrigin =
-	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + offServerAbsOrigin);
+	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
 	data.Velocity = GetPlayerVelocity();
 	data.Basevelocity = Vector();
 
@@ -562,7 +571,7 @@ Vector PlayerIOFeature::GetPlayerVelocity()
 
 Vector PlayerIOFeature::GetPlayerEyePos()
 {
-	Vector rval = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + offServerAbsOrigin);
+	Vector rval = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;
 
@@ -597,7 +606,7 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 {
 	return ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits && ORIG_GetLocalPlayer
 	       && ORIG_CalcAbsoluteVelocity && ORIG_MiddleOfCAM_Think && _sv_airaccelerate && _sv_accelerate
-	       && _sv_friction && _sv_maxspeed && _sv_stopspeed && FoundEngineServer();
+	       && _sv_friction && _sv_maxspeed && _sv_stopspeed && interfaces::engine_server != nullptr;
 }
 
 void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
@@ -632,38 +641,43 @@ double PlayerIOFeature::GetDuckJumpTime()
 
 int PlayerIOFeature::GetPlayerPhysicsFlags() const
 {
-	auto player = GetServerPlayer();
+	auto player = utils::GetServerPlayer();
 	if (!player || offM_afPhysicsFlags == 0)
 		return -1;
 	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_afPhysicsFlags));
+		return *reinterpret_cast<int*>(((int)utils::GetServerPlayer() + offM_afPhysicsFlags));
 }
 
 int PlayerIOFeature::GetPlayerMoveType() const
 {
-	auto player = GetServerPlayer();
+	auto player = utils::GetServerPlayer();
 	if (!player || offM_moveType == 0)
 		return -1;
 	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveType)) & 0xF;
+		return *reinterpret_cast<int*>(((int)utils::GetServerPlayer() + offM_moveType)) & 0xF;
 }
 
 int PlayerIOFeature::GetPlayerMoveCollide() const
 {
-	auto player = GetServerPlayer();
+	auto player = utils::GetServerPlayer();
 	if (!player || offM_moveCollide == 0)
 		return -1;
 	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_moveCollide)) & 0x7;
+		return *reinterpret_cast<int*>(((int)utils::GetServerPlayer() + offM_moveCollide)) & 0x7;
 }
 
 int PlayerIOFeature::GetPlayerCollisionGroup() const
 {
-	auto player = GetServerPlayer();
+	auto player = utils::GetServerPlayer();
 	if (!player || offM_collisionGroup == 0)
 		return -1;
 	else
-		return *reinterpret_cast<int*>(((int)GetServerPlayer() + offM_collisionGroup));
+		return *reinterpret_cast<int*>(((int)utils::GetServerPlayer() + offM_collisionGroup));
+}
+
+void PlayerIOFeature::Set_cinput_thisptr(void* thisptr)
+{
+	cinput_thisptr = thisptr;
 }
 
 
@@ -673,7 +687,7 @@ static void DuckspamDown()
 static void DuckspamDown(const CCommand& args)
 #endif
 {
-	_playerio.EnableDuckspam();
+	spt_playerio.EnableDuckspam();
 }
 static ConCommand DuckspamDown_Command("+y_spt_duckspam", DuckspamDown, "Enables the duckspam.");
 
@@ -683,64 +697,52 @@ static void DuckspamUp()
 static void DuckspamUp(const CCommand& args)
 #endif
 {
-	_playerio.DisableDuckspam();
+	spt_playerio.DisableDuckspam();
 }
 static ConCommand DuckspamUp_Command("-y_spt_duckspam", DuckspamUp, "Disables the duckspam.");
 
 CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
-
 	if (args.ArgC() != 2)
 	{
 		Msg("Usage: _y_spt_setpitch <pitch>\n");
 		return;
 	}
 
-	_playerio.SetPitch(atof(args.Arg(1)));
+	spt_playerio.SetPitch(atof(args.Arg(1)));
 }
 
 CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
-
 	if (args.ArgC() != 2)
 	{
 		Msg("Usage: _y_spt_setyaw <yaw>\n");
 		return;
 	}
 
-	_playerio.SetYaw(atof(args.Arg(1)));
+	spt_playerio.SetYaw(atof(args.Arg(1)));
 }
 
 CON_COMMAND(_y_spt_resetpitchyaw, "Resets pitch/yaw commands.")
 {
-	_playerio.ResetPitchYawCommands();
+	spt_playerio.ResetPitchYawCommands();
 }
 
 CON_COMMAND(_y_spt_setangles, "Sets the angles. Usage: _y_spt_setangles <pitch> <yaw>")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
-
 	if (args.ArgC() != 3)
 	{
 		Msg("Usage: _y_spt_setangles <pitch> <yaw>\n");
 		return;
 	}
 
-	_playerio.SetPitch(atof(args.Arg(1)));
-	_playerio.SetYaw(atof(args.Arg(2)));
+	spt_playerio.SetPitch(atof(args.Arg(1)));
+	spt_playerio.SetYaw(atof(args.Arg(2)));
 }
 
 CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 {
-	const Vector vel = _playerio.GetPlayerVelocity();
+	const Vector vel = spt_playerio.GetPlayerVelocity();
 
 	Warning("Velocity (x, y, z): %f %f %f\n", vel.x, vel.y, vel.z);
 	Warning("Velocity (xy): %f\n", vel.Length2D());
@@ -749,9 +751,6 @@ CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 CON_COMMAND(_y_spt_setangle,
             "Sets the yaw/pitch angle required to look at the given position from player's current position.")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
 	Vector target;
 
 	if (args.ArgC() > 3)
@@ -760,12 +759,12 @@ CON_COMMAND(_y_spt_setangle,
 		target.y = atof(args.Arg(2));
 		target.z = atof(args.Arg(3));
 
-		Vector player_origin = _playerio.GetPlayerEyePos();
+		Vector player_origin = spt_playerio.GetPlayerEyePos();
 		Vector diff = (target - player_origin);
 		QAngle angles;
 		VectorAngles(diff, angles);
-		_playerio.SetPitch(angles[PITCH]);
-		_playerio.SetYaw(angles[YAW]);
+		spt_playerio.SetPitch(angles[PITCH]);
+		spt_playerio.SetYaw(angles[YAW]);
 	}
 }
 
@@ -774,19 +773,17 @@ CON_COMMAND(_y_spt_setangle,
 
 CON_COMMAND(y_spt_find_portals, "Yes")
 {
-	if (_playerio.offServerAbsOrigin == 0)
+	if (spt_playerio.offServerAbsOrigin == 0)
 		return;
-
-	auto engine_server = GetEngine();
 
 	for (int i = 0; i < MAX_EDICTS; ++i)
 	{
-		auto ent = engine_server->PEntityOfEntIndex(i);
+		auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
 
 		if (ent && !ent->IsFree() && !strcmp(ent->GetClassName(), "prop_portal"))
 		{
 			auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-			                                          + _playerio.offServerAbsOrigin);
+			                                          + spt_playerio.offServerAbsOrigin);
 
 			Msg("SPT: There's a portal with index %d at %.8f %.8f %.8f.\n",
 			    i,
@@ -802,8 +799,8 @@ void calculate_offset_player_pos(edict_t* saveglitch_portal, Vector& new_player_
 	// Here we make sure that the eye position and the eye angles match up.
 	const Vector view_offset(0, 0, 64);
 	auto& player_origin =
-	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + _playerio.offServerAbsOrigin);
-	auto& player_angles = *reinterpret_cast<QAngle*>(reinterpret_cast<uintptr_t>(GetServerPlayer()) + 2568);
+	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + spt_playerio.offServerAbsOrigin);
+	auto& player_angles = *reinterpret_cast<QAngle*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + 2568);
 
 	auto& matrix = *reinterpret_cast<VMatrix*>(reinterpret_cast<uintptr_t>(saveglitch_portal->GetUnknown()) + 1072);
 
@@ -827,14 +824,12 @@ CON_COMMAND(
 		return;
 	}
 
-	if (_playerio.offServerAbsOrigin == 0)
+	if (spt_playerio.offServerAbsOrigin == 0)
 	{
 		Warning("Could not find the required offset in the client DLL.\n");
 		return;
 	}
 
-	auto engine_server = GetEngine();
-	auto engine = GetEngineClient();
 	int portal_index = atoi(args.Arg(1));
 
 	if (!strcmp(args.Arg(1), "blue") || !strcmp(args.Arg(1), "orange"))
@@ -843,7 +838,7 @@ CON_COMMAND(
 
 		for (int i = 0; i < MAX_EDICTS; ++i)
 		{
-			auto ent = engine_server->PEntityOfEntIndex(i);
+			auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
 
 			if (ent && !ent->IsFree() && !strcmp(ent->GetClassName(), "prop_portal"))
 			{
@@ -861,9 +856,9 @@ CON_COMMAND(
 
 			for (auto i : indices)
 			{
-				auto ent = engine_server->PEntityOfEntIndex(i);
+				auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
 				auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-				                                          + _playerio.offServerAbsOrigin);
+				                                          + spt_playerio.offServerAbsOrigin);
 
 				Msg("%d located at %.8f %.8f %.8f\n", i, origin.x, origin.y, origin.z);
 			}
@@ -881,7 +876,7 @@ CON_COMMAND(
 		}
 	}
 
-	auto portal = engine_server->PEntityOfEntIndex(portal_index);
+	auto portal = interfaces::engine_server->PEntityOfEntIndex(portal_index);
 	if (!portal || portal->IsFree() || strcmp(portal->GetClassName(), "prop_portal") != 0)
 	{
 		Warning("The portal index is invalid.\n");
@@ -915,71 +910,44 @@ CON_COMMAND(
 		         new_player_angles.y,
 		         new_player_angles.z);
 
-		engine->ClientCmd(buf);
+		interfaces::engine->ClientCmd(buf);
 	}
 }
 
 #endif
 
-namespace playerio
+CON_COMMAND(tas_print_movement_vars, "Prints movement vars.")
 {
-	void SetTASInput(float* va, const Strafe::ProcessedFrame& out)
-	{
-		_playerio.SetTASInput(va, out);
-	}
+	auto vars = spt_playerio.GetMovementVars();
 
-	void HandleAiming(float* va, bool& yawChanged)
-	{
-		_playerio.HandleAiming(va, yawChanged);
-	}
+	Msg("Accelerate %f\n", vars.Accelerate);
+	Msg("AirAccelerate %f\n", vars.Airaccelerate);
+	Msg("Bounce %f\n", vars.Bounce);
+	Msg("EntFriction %f\n", vars.EntFriction);
+	Msg("EntGrav %f\n", vars.EntGravity);
+	Msg("Frametime %f\n", vars.Frametime);
+	Msg("Friction %f\n", vars.Friction);
+	Msg("Grav %f\n", vars.Gravity);
+	Msg("Maxspeed %f\n", vars.Maxspeed);
+	Msg("Maxvelocity %f\n", vars.Maxvelocity);
+	Msg("OnGround %d\n", vars.OnGround);
+	Msg("ReduceWishspeed %d\n", vars.ReduceWishspeed);
+	Msg("Stepsize %f\n", vars.Stepsize);
+	Msg("Stopspeed %f\n", vars.Stopspeed);
+	Msg("WS cap %f\n", vars.WishspeedCap);
+}
 
-	bool TryJump()
-	{
-		return _playerio.TryJump();
-	}
 
-	void Set_cinput_thisptr(void* thisptr)
-	{
-		cinput_thisptr = thisptr;
-	}
+CON_COMMAND(_y_spt_getangles, "Gets the view angles of the player.")
+{
+	if (!interfaces::engine)
+		return;
 
-	Strafe::PlayerData GetPlayerData()
-	{
-		return _playerio.GetPlayerData();
-	}
+	QAngle va;
+	interfaces::engine->GetViewAngles(va);
 
-	Strafe::MovementVars GetMovementVars()
-	{
-		return _playerio.GetMovementVars();
-	}
-
-	bool PlayerIOAddressesWereFound()
-	{
-		return _playerio.PlayerIOAddressesFound();
-	}
-
-	Vector GetPlayerVelocity()
-	{
-		return _playerio.GetPlayerVelocity();
-	}
-
-	Vector GetPlayerEyePos()
-	{
-		return _playerio.GetPlayerEyePos();
-	}
-
-	int playerio::GetPlayerFlags()
-	{
-		return _playerio.GetPlayerFlags();
-	}
-
-	bool playerio::GetFlagsDucking()
-	{
-		return _playerio.GetFlagsDucking();
-	}
-
-	bool playerio::IsGroundEntitySet()
-	{
-		return _playerio.IsGroundEntitySet();
-	}
-} // namespace playerio
+	Warning("View Angle (x): %f\n", va.x);
+	Warning("View Angle (y): %f\n", va.y);
+	Warning("View Angle (z): %f\n", va.z);
+	Warning("View Angle (x, y, z): %f %f %f\n", va.x, va.y, va.z);
+}

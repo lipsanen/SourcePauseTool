@@ -1,6 +1,7 @@
 #include "stdafx.h"
+#ifdef OE
 #include "..\feature.hpp"
-#include "..\OrangeBox\cvars.hpp"
+#include "..\cvars.hpp"
 
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
 
@@ -11,8 +12,6 @@ class FOVFeatures : public Feature
 {
 public:
 protected:
-	virtual bool ShouldLoadFeature() override;
-
 	virtual void InitHooks() override;
 
 	virtual void LoadFeature() override;
@@ -24,30 +23,22 @@ private:
 	static void __fastcall HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx);
 };
 
-static FOVFeatures _fov;
-
-bool FOVFeatures::ShouldLoadFeature()
-{
-// Atm only works in OE
-#ifdef OE
-	return true;
-#else
-	return false;
-#endif
-}
+static FOVFeatures spt_fov;
 
 void FOVFeatures::InitHooks()
 {
 	HOOK_FUNCTION(client, CViewRender__OnRenderStart);
 }
 
-void FOVFeatures::LoadFeature() {}
+void FOVFeatures::LoadFeature() 
+{
+}
 
 void FOVFeatures::UnloadFeature() {}
 
 void __fastcall FOVFeatures::HOOKED_CViewRender__OnRenderStart(void* thisptr, int edx)
 {
-	_fov.ORIG_CViewRender__OnRenderStart(thisptr, edx);
+	spt_fov.ORIG_CViewRender__OnRenderStart(thisptr, edx);
 
 	if (!_viewmodel_fov || !_y_spt_force_fov.GetBool())
 		return;
@@ -57,3 +48,4 @@ void __fastcall FOVFeatures::HOOKED_CViewRender__OnRenderStart(void* thisptr, in
 	*fov = _y_spt_force_fov.GetFloat();
 	*fovViewmodel = _viewmodel_fov->GetFloat();
 }
+#endif

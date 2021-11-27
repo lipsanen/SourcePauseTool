@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include <future>
 #include "feature.hpp"
+#include "interfaces.hpp"
+#include "cvars.hpp"
 #include "SPTLib\sptlib.hpp"
 #include "dbg.h"
 #include "SPTLib\Windows\detoursutils.hpp"
@@ -262,4 +264,12 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 	// VTable hooks have to be stored for the unhooking code
 	existingVTableHooks.insert(existingVTableHooks.end(), vftableHooks.begin(), vftableHooks.end());
 	vftableHooks.clear();
+}
+
+VFTableHook::VFTableHook(void** vftable, int index, void* functionToHook, void** origPtr)
+{
+	this->vftable = vftable;
+	this->index = index;
+	this->functionToHook = functionToHook;
+	this->origPtr = origPtr;
 }

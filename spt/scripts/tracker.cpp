@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "tracker.hpp"
-#include "..\..\..\sptlib-wrapper.hpp"
-#include "..\..\..\utils\string_parsing.hpp"
-#include "..\..\..\features\playerio.hpp"
+#include "..\sptlib-wrapper.hpp"
+#include "string_parsing.hpp"
+#include "..\features\playerio.hpp"
+#include <iomanip>
+#include <sstream>
 
 namespace scripts
 {
@@ -47,12 +49,12 @@ namespace scripts
 
 	std::string VelocityTracker::GenerateTestData() const
 	{
-		return GenerateVectorData(playerio::GetPlayerVelocity(), decimals);
+		return GenerateVectorData(spt_playerio.GetPlayerVelocity(), decimals);
 	}
 
 	ValidationResult VelocityTracker::Validate(const std::string& expectedValue) const
 	{
-		return VectorValidation(playerio::GetPlayerVelocity(), expectedValue, decimals);
+		return VectorValidation(spt_playerio.GetPlayerVelocity(), expectedValue, decimals);
 	}
 
 	std::string VelocityTracker::TrackerName() const
@@ -67,12 +69,12 @@ namespace scripts
 
 	std::string PosTracker::GenerateTestData() const
 	{
-		return GenerateVectorData(playerio::GetPlayerEyePos(), decimals);
+		return GenerateVectorData(spt_playerio.GetPlayerEyePos(), decimals);
 	}
 
 	ValidationResult PosTracker::Validate(const std::string& expectedValue) const
 	{
-		return VectorValidation(playerio::GetPlayerEyePos(), expectedValue, decimals);
+		return VectorValidation(spt_playerio.GetPlayerEyePos(), expectedValue, decimals);
 	}
 
 	std::string PosTracker::TrackerName() const

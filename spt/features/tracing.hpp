@@ -58,6 +58,7 @@ typedef float(__fastcall* _TraceFirePortal)(void* thisptr,
 typedef void*(__fastcall* _GetActiveWeapon)(void* thisptr);
 typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMaxs)(void* thisptr, int edx);
 typedef const Vector&(__fastcall* _CGameMovement__GetPlayerMins)(void* thisptr, int edx);
+typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int edx, const Vector& pt);
 
 // Tracing related functionality
 class Tracing : public Feature
@@ -70,6 +71,7 @@ public:
 	_SnapEyeAngles ORIG_SnapEyeAngles;
 	trace_t lastPortalTrace;
 	_GetActiveWeapon ORIG_GetActiveWeapon;
+	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
 
 	bool TraceClientRay(const Ray_t& ray,
 	                    unsigned int mask,
@@ -120,4 +122,4 @@ private:
 	_TraceFirePortal ORIG_TraceFirePortal;
 };
 
-extern Tracing g_Tracing;
+extern Tracing spt_tracing;

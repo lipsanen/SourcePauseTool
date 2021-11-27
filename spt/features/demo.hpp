@@ -46,4 +46,4 @@ private:
 	void OnTick();
 };
 
-extern DemoStuff g_Demostuff;
+extern DemoStuff spt_demostuff;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "convar.h"
+#include "convar.hpp"
 
 #define FCVAR_TAS_RESET (1 << 31)
 
@@ -34,6 +34,7 @@ extern ConVar tas_reset_surface_friction;
 
 extern ConVar tas_force_onground;
 
+extern ConVar tas_anglespeed;
 extern ConVar tas_pause;
 extern ConVar tas_log;
 extern ConVar tas_strafe_lgagst;

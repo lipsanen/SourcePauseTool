@@ -4,15 +4,17 @@
 
 #include "..\spt-serverplugin.hpp"
 
-#include "..\..\sptlib-wrapper.hpp"
-#include "..\..\utils\game_detection.hpp"
-#include "..\..\utils\math.hpp"
-#include "..\..\utils\string_parsing.hpp"
+#include "..\sptlib-wrapper.hpp"
+#include "game_detection.hpp"
+#include "file.hpp"
+#include "interfaces.hpp"
+#include "math.hpp"
+#include "string_parsing.hpp"
 #include "..\cvars.hpp"
-#include "..\..\features\tickrate.hpp"
+#include "..\features\tickrate.hpp"
 #include "framebulk_handler.hpp"
-#include "..\..\features\afterframes.hpp"
-#include "..\..\features\demo.hpp"
+#include "..\features\afterframes.hpp"
+#include "..\features\demo.hpp"
 
 namespace scripts
 {
@@ -43,11 +45,11 @@ namespace scripts
 		fileName = script;
 		CommonExecuteScript(false);
 
-		_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
-		tickTime = _tickrate.GetTickrate();
+		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
+		tickTime = spt_tickrate.GetTickrate();
 		snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
 		int resumeTick = GetCurrentScriptLength() - resumeTicks;
-		_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
+		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
 	}
 
 	void SourceTASReader::StartSearch(const std::string& script)
@@ -186,9 +188,9 @@ namespace scripts
 	{
 		iterationFinished = false;
 		SetFpsAndPlayspeed();
-		g_Demostuff.Demo_StopRecording();
+		spt_demostuff.Demo_StopRecording();
 		currentTick = 0;
-		_afterframes.ResetAfterframesQueue();
+		spt_afterframes.ResetAfterframesQueue();
 		currentScript.Init(fileName);
 
 		auto demoName = currentScript.GetDemoName();
@@ -211,7 +213,7 @@ namespace scripts
 		{
 			if (entry.framesLeft != NO_AFTERFRAMES_BULK)
 			{
-				_afterframes.AddAfterFramesEntry(entry);
+				spt_afterframes.AddAfterFramesEntry(entry);
 			}
 		}
 	}
@@ -219,7 +221,7 @@ namespace scripts
 	void SourceTASReader::SetFpsAndPlayspeed()
 	{
 		std::ostringstream os;
-		tickTime = _tickrate.GetTickrate();
+		tickTime = spt_tickrate.GetTickrate();
 		float fps = 1.0f / tickTime * playbackSpeed;
 		os << "host_framerate " << tickTime << "; fps_max " << fps;
 		currentScript.AddDuringLoadCmd(os.str());
@@ -261,11 +263,8 @@ namespace scripts
 
 	void SourceTASReader::ResetConvars()
 	{
-#ifndef OE
-		auto icvar = GetCvarInterface();
-
 #ifndef P2
-		ConCommandBase* cmd = icvar->GetCommands();
+		ConCommandBase* cmd = interfaces::g_pCVar->GetCommands();
 
 		// Loops through the console variables and commands
 		while (cmd != NULL)
@@ -282,7 +281,7 @@ namespace scripts
 			// Reset any variables that have been marked to be reset for TASes
 			if (!cmd->IsCommand() && name != NULL && cmd->IsFlagSet(FCVAR_TAS_RESET))
 			{
-				auto convar = icvar->FindVar(name);
+				auto convar = interfaces::g_pCVar->FindVar(name);
 				DevMsg("Trying to reset variable %s\n", name);
 
 				// convar found
@@ -310,7 +309,7 @@ namespace scripts
 		// Reset any variables selected above
 		for (int i = 0; i < RESET_VARS_COUNT; ++i)
 		{
-			auto resetCmd = icvar->FindVar(RESET_VARS[i]);
+			auto resetCmd = interfaces::g_pCVar->FindVar(RESET_VARS[i]);
 			if (resetCmd != NULL)
 			{
 				DevMsg("Resetting var %s to value %s\n", resetCmd->GetName(), resetCmd->GetDefault());
@@ -319,7 +318,6 @@ namespace scripts
 			else
 				DevWarning("Unable to find console variable %s\n", RESET_VARS[i]);
 		}
-#endif
 	}
 
 	void SourceTASReader::Reset()

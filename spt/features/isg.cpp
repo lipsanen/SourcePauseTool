@@ -5,7 +5,7 @@
 #include <functional>
 #include <memory>
 
-#include "convar.h"
+#include "convar.hpp"
 
 #if defined(SSDK2007) || defined(SSDK2013)
 
@@ -42,9 +42,7 @@ protected:
 };
 
 static ISGFeature _isg;
-ConCommand* y_spt_set_isg = nullptr;
-
-void CC_Set_ISG(const CCommand& args)
+CON_COMMAND_F(y_spt_set_isg, "Sets the state of ISG in the game (1 or 0), no arguments means 1", FCVAR_DONTRECORD | FCVAR_CHEAT)
 {
 	if (_isg.isgFlagPtr)
 		*_isg.isgFlagPtr = args.ArgC() == 1 || atoi(args[1]);
@@ -54,17 +52,11 @@ void CC_Set_ISG(const CCommand& args)
 
 void ISGFeature::LoadFeature()
 {
-	y_spt_set_isg = new ConCommand("y_spt_set_isg",
-	                               CC_Set_ISG,
-	                               "Sets the state of ISG in the game (1 or 0), no arguments means 1",
-	                               FCVAR_DONTRECORD | FCVAR_CHEAT);
+
 }
 
 void ISGFeature::UnloadFeature()
 {
-	if (y_spt_set_isg)
-		delete y_spt_set_isg;
-	y_spt_set_isg = nullptr;
 }
 
 bool IsISGActive()

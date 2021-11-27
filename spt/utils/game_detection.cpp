@@ -1,6 +1,7 @@
 #include "stdafx.h"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "..\spt-serverplugin.hpp"
 #include "SPTLib\sptlib.hpp"
+#include "interfaces.hpp"
 
 namespace utils
 {
@@ -15,11 +16,9 @@ namespace utils
 			return false;
 		}
 
-		auto engine = GetEngineClient();
-
-		if (engine)
+		if (interfaces::engine)
 		{
-			auto game_dir = engine->GetGameDirectory();
+			auto game_dir = interfaces::engine->GetGameDirectory();
 			return (GetFileName(Convert(game_dir)) == L"portal");
 		}
 #endif
@@ -30,7 +29,6 @@ namespace utils
 	bool DoesGameLookLikeDMoMM()
 	{
 #ifdef OE
-		auto* g_pCVar = GetCvarInterface();
 		if (g_pCVar)
 		{
 			if (g_pCVar->FindVar("mm_xana_fov"))
@@ -43,7 +41,6 @@ namespace utils
 
 	bool DoesGameLookLikeHLS()
 	{
-		auto* g_pCVar = GetCvarInterface();
 		if (g_pCVar)
 		{
 			if (g_pCVar->FindVar("hl1_ref_db_distance"))

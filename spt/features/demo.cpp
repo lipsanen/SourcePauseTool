@@ -1,13 +1,14 @@
 #include "stdafx.h"
 #include "demo.hpp"
 #include "generic.hpp"
-#include "..\OrangeBox\cvars.hpp"
+#include "signals.hpp"
+#include "..\cvars.hpp"
 #include "..\feature.hpp"
-#include "..\OrangeBox\scripts\srctas_reader.hpp"
+#include "..\scripts\srctas_reader.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "dbg.h"
 
-DemoStuff g_Demostuff;
+DemoStuff spt_demostuff;
 
 ConVar y_spt_pause_demo_on_tick(
 	"y_spt_pause_demo_on_tick",
@@ -22,7 +23,7 @@ ConVar y_spt_pause_demo_on_tick(
 
 void DemoStuff::Demo_StopRecording()
 {
-	g_Demostuff.HOOKED_Stop();
+	spt_demostuff.HOOKED_Stop();
 }
 
 int DemoStuff::Demo_GetPlaybackTick() const
@@ -139,9 +140,10 @@ void DemoStuff::LoadFeature()
 {
 	currentAutoRecordDemoNumber = 1;
 	isAutoRecordingDemo = false;
-	if (!ORIG_Record)
+
+	if (ORIG_Record)
 	{
-		Warning("y_spt_pause_demo_on_tick is not available.\n");
+		TickSignal.Connect(this, &DemoStuff::OnTick);
 	}
 
 	if (!ORIG_StopRecording || !ORIG_SetSignonState)
@@ -153,9 +155,6 @@ void DemoStuff::LoadFeature()
 	{
 		Warning("Manually stopping a TAS demo recording won't stop autorecording.\n");
 	}
-#ifdef OE
-	generic_.TickSignal.Connect(this, &DemoStuff::OnTick);
-#endif
 }
 
 void DemoStuff::UnloadFeature() {}
@@ -164,42 +163,42 @@ void __fastcall DemoStuff::HOOKED_StopRecording(void* thisptr, int edx)
 { // This hook will get called twice per loaded save (in most games/versions, at least, according to SAR people), once with m_bLoadgame being false and the next one being true
 	if (!scripts::g_TASReader.IsExecutingScript())
 	{
-		g_Demostuff.ORIG_StopRecording(thisptr, edx);
-		g_Demostuff.isAutoRecordingDemo = false;
-		g_Demostuff.currentAutoRecordDemoNumber = 1;
+		spt_demostuff.ORIG_StopRecording(thisptr, edx);
+		spt_demostuff.isAutoRecordingDemo = false;
+		spt_demostuff.currentAutoRecordDemoNumber = 1;
 		return;
 	}
 
-	bool* pM_bRecording = (bool*)((uint32_t)thisptr + g_Demostuff.m_bRecording_Offset);
-	int* pM_nDemoNumber = (int*)((uint32_t)thisptr + g_Demostuff.m_nDemoNumber_Offset);
+	bool* pM_bRecording = (bool*)((uint32_t)thisptr + spt_demostuff.m_bRecording_Offset);
+	int* pM_nDemoNumber = (int*)((uint32_t)thisptr + spt_demostuff.m_nDemoNumber_Offset);
 
 	// This will set m_nDemoNumber to 0 and m_bRecording to false
-	g_Demostuff.ORIG_StopRecording(thisptr, edx);
+	spt_demostuff.ORIG_StopRecording(thisptr, edx);
 
-	if (g_Demostuff.isAutoRecordingDemo)
+	if (spt_demostuff.isAutoRecordingDemo)
 	{
-		*pM_nDemoNumber = g_Demostuff.currentAutoRecordDemoNumber;
+		*pM_nDemoNumber = spt_demostuff.currentAutoRecordDemoNumber;
 		*pM_bRecording = true;
 	}
 	else
 	{
-		g_Demostuff.currentAutoRecordDemoNumber = 1;
+		spt_demostuff.currentAutoRecordDemoNumber = 1;
 	}
 }
 
 void __fastcall DemoStuff::HOOKED_SetSignonState(void* thisptr, int edx, int state)
 {
 	// This hook only makes sense if StopRecording is also properly hooked
-	if (g_Demostuff.ORIG_StopRecording && scripts::g_TASReader.IsExecutingScript())
+	if (spt_demostuff.ORIG_StopRecording && scripts::g_TASReader.IsExecutingScript())
 	{
-		bool* pM_bRecording = (bool*)((uint32_t)thisptr + g_Demostuff.m_bRecording_Offset);
-		int* pM_nDemoNumber = (int*)((uint32_t)thisptr + g_Demostuff.m_nDemoNumber_Offset);
+		bool* pM_bRecording = (bool*)((uint32_t)thisptr + spt_demostuff.m_bRecording_Offset);
+		int* pM_nDemoNumber = (int*)((uint32_t)thisptr + spt_demostuff.m_nDemoNumber_Offset);
 
 		// SIGNONSTATE_SPAWN (5): ready to receive entity packets
 		// SIGNONSTATE_FULL may be called twice on a load depending on the game and on specific situations. Using SIGNONSTATE_SPAWN for demo number increase instead
-		if (state == 5 && g_Demostuff.isAutoRecordingDemo)
+		if (state == 5 && spt_demostuff.isAutoRecordingDemo)
 		{
-			g_Demostuff.currentAutoRecordDemoNumber++;
+			spt_demostuff.currentAutoRecordDemoNumber++;
 		}
 		// SIGNONSTATE_FULL (6): we are fully connected, first non-delta packet received
 		// Starting a demo recording will call this function with SIGNONSTATE_FULL
@@ -208,7 +207,7 @@ void __fastcall DemoStuff::HOOKED_SetSignonState(void* thisptr, int edx, int sta
 		{
 			// Changing sessions may put the recording flag down
 			// Start recording again
-			if (g_Demostuff.isAutoRecordingDemo)
+			if (spt_demostuff.isAutoRecordingDemo)
 			{
 				*pM_bRecording = true;
 			}
@@ -216,24 +215,23 @@ void __fastcall DemoStuff::HOOKED_SetSignonState(void* thisptr, int edx, int sta
 			// We may have just started the first recording, so set our autorecording flag and take control over the demo number
 			if (*pM_bRecording)
 			{
-				g_Demostuff.isAutoRecordingDemo = true;
-				*pM_nDemoNumber = g_Demostuff.currentAutoRecordDemoNumber;
+				spt_demostuff.isAutoRecordingDemo = true;
+				*pM_nDemoNumber = spt_demostuff.currentAutoRecordDemoNumber;
 			}
 		}
 	}
-	g_Demostuff.ORIG_SetSignonState(thisptr, edx, state);
+	spt_demostuff.ORIG_SetSignonState(thisptr, edx, state);
 }
 
 void __cdecl DemoStuff::HOOKED_Stop()
 {
-	g_Demostuff.isAutoRecordingDemo = false;
-	if (g_Demostuff.ORIG_Stop)
-		g_Demostuff.ORIG_Stop();
+	spt_demostuff.isAutoRecordingDemo = false;
+	if (spt_demostuff.ORIG_Stop)
+		spt_demostuff.ORIG_Stop();
 }
 
 void DemoStuff::OnTick()
 {
-#ifdef OE
 	if (Demo_IsPlayingBack() && !Demo_IsPlaybackPaused())
 	{
 		auto tick = y_spt_pause_demo_on_tick.GetInt();
@@ -246,5 +244,4 @@ void DemoStuff::OnTick()
 				EngineConCmd("demo_pause");
 		}
 	}
-#endif
 }

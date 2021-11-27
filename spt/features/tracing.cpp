@@ -1,11 +1,14 @@
 #include "stdafx.h"
 #include "tracing.hpp"
-#include "..\utils\game_detection.hpp"
-#include "..\utils\math.hpp"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "ent_utils.hpp"
+#include "game_detection.hpp"
+#include "generic.hpp"
+#include "math.hpp"
+#include "interfaces.hpp"
 #include "convar.h"
 
-Tracing g_Tracing;
+ConVar y_spt_hud_oob("y_spt_hud_oob", "0", FCVAR_CHEAT, "Is the player OoB?");
+Tracing spt_tracing;
 
 bool Tracing::TraceClientRay(const Ray_t& ray,
                              unsigned int mask,
@@ -21,15 +24,14 @@ bool Tracing::TraceClientRay(const Ray_t& ray,
 
 bool Tracing::CanTracePlayerBBox()
 {
-	extern void* gm;
 	if (utils::DoesGameLookLikePortal())
 	{
-		return gm != nullptr && ORIG_TracePlayerBBoxForGround2 && ORIG_CGameMovement__TracePlayerBBox
+		return interfaces::gm != nullptr && ORIG_TracePlayerBBoxForGround2 && ORIG_CGameMovement__TracePlayerBBox
 		       && ORIG_CGameMovement__GetPlayerMaxs && ORIG_CGameMovement__GetPlayerMins;
 	}
 	else
 	{
-		return gm != nullptr && ORIG_TracePlayerBBoxForGround && ORIG_CGameMovement__TracePlayerBBox
+		return interfaces::gm != nullptr && ORIG_TracePlayerBBoxForGround && ORIG_CGameMovement__TracePlayerBBox
 		       && ORIG_CGameMovement__GetPlayerMaxs && ORIG_CGameMovement__GetPlayerMins;
 	}
 }
@@ -42,21 +44,20 @@ void Tracing::TracePlayerBBox(const Vector& start,
                               int collisionGroup,
                               trace_t& pm)
 {
-	extern void* gm;
 	overrideMinMax = true;
 	_mins = mins;
 	_maxs = maxs;
 
 	if (utils::DoesGameLookLikePortal())
-		ORIG_CPortalGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
+		ORIG_CPortalGameMovement__TracePlayerBBox(interfaces::gm, 0, start, end, fMask, collisionGroup, pm);
 	else
-		ORIG_CGameMovement__TracePlayerBBox(gm, 0, start, end, fMask, collisionGroup, pm);
+		ORIG_CGameMovement__TracePlayerBBox(interfaces::gm, 0, start, end, fMask, collisionGroup, pm);
 	overrideMinMax = false;
 }
 
 float Tracing::TraceFirePortal(trace_t& tr, const Vector& startPos, const Vector& vDirection)
 {
-	auto weapon = ORIG_GetActiveWeapon(GetServerPlayer());
+	auto weapon = ORIG_GetActiveWeapon(utils::GetServerPlayer());
 
 	if (!weapon)
 	{
@@ -104,6 +105,7 @@ void Tracing::InitHooks()
 		              "TraceFirePortal",
 		              reinterpret_cast<void**>(&ORIG_TraceFirePortal),
 		              HOOKED_TraceFirePortal);
+		FIND_PATTERN(engine, CEngineTrace__PointOutsideWorld);
 	}
 #endif
 }
@@ -130,43 +132,43 @@ float __fastcall Tracing::HOOKED_TraceFirePortal(void* thisptr,
                                                  int iPlacedBy,
                                                  bool bTest)
 {
-	const auto rv = g_Tracing.ORIG_TraceFirePortal(
+	const auto rv = spt_tracing.ORIG_TraceFirePortal(
 	    thisptr, edx, bPortal2, vTraceStart, vDirection, tr, vFinalPosition, qFinalAngles, iPlacedBy, bTest);
 
-	g_Tracing.lastPortalTrace = tr;
+	spt_tracing.lastPortalTrace = tr;
 
 	return rv;
 }
 
 const Vector& __fastcall Tracing::HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx)
 {
-	if (g_Tracing.overrideMinMax)
+	if (spt_tracing.overrideMinMax)
 	{
-		return g_Tracing._maxs;
+		return spt_tracing._maxs;
 	}
 	else
-		return g_Tracing.ORIG_CGameMovement__GetPlayerMaxs(thisptr, edx);
+		return spt_tracing.ORIG_CGameMovement__GetPlayerMaxs(thisptr, edx);
 }
 
 const Vector& __fastcall Tracing::HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx)
 {
-	if (g_Tracing.overrideMinMax)
+	if (spt_tracing.overrideMinMax)
 	{
-		return g_Tracing._mins;
+		return spt_tracing._mins;
 	}
 	else
-		return g_Tracing.ORIG_CGameMovement__GetPlayerMins(thisptr, edx);
+		return spt_tracing.ORIG_CGameMovement__GetPlayerMins(thisptr, edx);
 }
 
 #ifdef SSDK2007
 void setang_exact(const QAngle& angles)
 {
-	auto player = GetServerPlayer();
+	auto player = utils::GetServerPlayer();
 	auto teleport = reinterpret_cast<void(__fastcall*)(void*, int, const Vector*, const QAngle*, const Vector*)>(
 	    (*reinterpret_cast<uintptr_t**>(player))[105]);
 
 	teleport(player, 0, nullptr, &angles, nullptr);
-	g_Tracing.ORIG_SnapEyeAngles(player, 0, angles);
+	spt_tracing.ORIG_SnapEyeAngles(player, 0, angles);
 }
 
 // Trace as if we were firing a Portal with the given viewangles, return the squared distance to the resulting point and the normal.
@@ -174,20 +176,19 @@ double trace_fire_portal(QAngle angles, Vector& normal)
 {
 	setang_exact(angles);
 
-	g_Tracing.ORIG_FirePortal(g_Tracing.ORIG_GetActiveWeapon(GetServerPlayer()), 0, false, nullptr, true);
+	spt_tracing.ORIG_FirePortal(spt_tracing.ORIG_GetActiveWeapon(utils::GetServerPlayer()), 0, false, nullptr, true);
 
-	normal = g_Tracing.lastPortalTrace.plane.normal;
-	return (g_Tracing.lastPortalTrace.endpos - g_Tracing.lastPortalTrace.startpos).LengthSqr();
+	normal = spt_tracing.lastPortalTrace.plane.normal;
+	return (spt_tracing.lastPortalTrace.endpos - spt_tracing.lastPortalTrace.startpos).LengthSqr();
 }
 
-QAngle firstAngle;
-bool firstInvocation = true;
+static QAngle firstAngle;
+static bool firstInvocation = true;
 
 CON_COMMAND(
     y_spt_find_seam_shot,
     "y_spt_find_seam_shot [<pitch1> <yaw1> <pitch2> <yaw2> <epsilon>] - tries to find a seam shot on a \"line\" between viewangles (pitch1; yaw1) and (pitch2; yaw2) with binary search. Decreasing epsilon will result in more viewangles checked. A default value is 0.00001. If no arguments are given, first invocation selects the first point, second invocation selects the second point and searches between them.")
 {
-	auto engine = GetEngineClient();
 	QAngle a, b;
 	double eps = 0.00001 * 0.00001;
 
@@ -195,7 +196,7 @@ CON_COMMAND(
 	{
 		if (firstInvocation)
 		{
-			engine->GetViewAngles(firstAngle);
+			interfaces::engine->GetViewAngles(firstAngle);
 			firstInvocation = !firstInvocation;
 
 			Msg("First point set.\n");
@@ -206,7 +207,7 @@ CON_COMMAND(
 			firstInvocation = !firstInvocation;
 
 			a = firstAngle;
-			engine->GetViewAngles(b);
+			interfaces::engine->GetViewAngles(b);
 		}
 	}
 	else
@@ -222,7 +223,7 @@ CON_COMMAND(
 		eps = (args.ArgC() == 5) ? eps : std::pow(atof(args.Arg(5)), 2);
 	}
 
-	if (!g_Tracing.ORIG_GetActiveWeapon(GetServerPlayer()))
+	if (!spt_tracing.ORIG_GetActiveWeapon(utils::GetServerPlayer()))
 	{
 		Msg("You need to be holding a portal gun.\n");
 		return;

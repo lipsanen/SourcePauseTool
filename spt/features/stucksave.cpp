@@ -5,9 +5,10 @@
 #include "generic.hpp"
 #include "..\feature.hpp"
 #include "..\sptlib-wrapper.hpp"
-#include "..\OrangeBox\cvars.hpp"
-#include "..\OrangeBox\spt-serverplugin.hpp"
+#include "..\cvars.hpp"
+#include "..\spt-serverplugin.hpp"
 #include "..\utils\ent_utils.hpp"
+#include "signals.hpp"
 
 #include <sstream>
 
@@ -35,7 +36,7 @@ private:
 	static int __fastcall HOOKED_CheckStuck(void* thisptr, int edx);
 };
 
-static Stucksave _stucksave;
+static Stucksave spt_stucksave;
 
 bool Stucksave::ShouldLoadFeature()
 {
@@ -49,7 +50,7 @@ void Stucksave::InitHooks()
 
 void Stucksave::LoadFeature()
 {
-	generic_.TickSignal.Connect(&utils::CheckPiwSave);
+	TickSignal.Connect(&utils::CheckPiwSave);
 
 	// CheckStuck
 	if (!ORIG_CheckStuck)
@@ -62,7 +63,7 @@ void Stucksave::UnloadFeature() {}
 
 int __fastcall Stucksave::HOOKED_CheckStuck(void* thisptr, int edx)
 {
-	auto ret = _stucksave.ORIG_CheckStuck(thisptr, edx);
+	auto ret = spt_stucksave.ORIG_CheckStuck(thisptr, edx);
 
 	if (ret && y_spt_stucksave.GetString()[0] != '\0')
 	{

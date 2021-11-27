@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
-#include "convar.h"
+#include "convar.hpp"
 #include "dbg.h"
 
 typedef void(__cdecl* _DoImageSpaceMotionBlur)(void* view, int x, int y, int w, int h);
@@ -43,7 +43,7 @@ private:
 	static void __cdecl HOOKED_ResetToneMapping(float value);
 };
 
-static VisualFixes _visual_fixes;
+static VisualFixes spt_visual_fixes;
 
 bool VisualFixes::ShouldLoadFeature()
 {
@@ -62,7 +62,7 @@ void VisualFixes::LoadFeature()
 {
 	if (ORIG_DoImageSpaceMotionBlur)
 	{
-		int ptnNumber = GetPatternIndex((PVOID*)&ORIG_DoImageSpaceMotionBlur);
+		int ptnNumber = GetPatternIndex((void**)&ORIG_DoImageSpaceMotionBlur);
 
 		switch (ptnNumber)
 		{
@@ -121,22 +121,22 @@ void __cdecl VisualFixes::HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y
 	so we can do such a replace to make it use gpGlobals->curtime instead without
 	breaking anything else.
 	*/
-	if (_visual_fixes.pgpGlobals)
+	if (spt_visual_fixes.pgpGlobals)
 	{
 		if (y_spt_motion_blur_fix.GetBool())
 		{
-			origgpGlobals = *_visual_fixes.pgpGlobals;
-			*_visual_fixes.pgpGlobals = *_visual_fixes.pgpGlobals + 12;
+			origgpGlobals = *spt_visual_fixes.pgpGlobals;
+			*spt_visual_fixes.pgpGlobals = *spt_visual_fixes.pgpGlobals + 12;
 		}
 	}
 
-	_visual_fixes.ORIG_DoImageSpaceMotionBlur(view, x, y, w, h);
+	spt_visual_fixes.ORIG_DoImageSpaceMotionBlur(view, x, y, w, h);
 
-	if (_visual_fixes.pgpGlobals)
+	if (spt_visual_fixes.pgpGlobals)
 	{
 		if (y_spt_motion_blur_fix.GetBool())
 		{
-			*_visual_fixes.pgpGlobals = origgpGlobals;
+			*spt_visual_fixes.pgpGlobals = origgpGlobals;
 		}
 	}
 }
@@ -144,17 +144,17 @@ void __cdecl VisualFixes::HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y
 void __fastcall VisualFixes::HOOKED_CViewEffects__Fade(void* thisptr, int edx, void* data)
 {
 	if (!y_spt_disable_fade.GetBool())
-		_visual_fixes.ORIG_CViewEffects__Fade(thisptr, edx, data);
+		spt_visual_fixes.ORIG_CViewEffects__Fade(thisptr, edx, data);
 }
 
 void __fastcall VisualFixes::HOOKED_CViewEffects__Shake(void* thisptr, int edx, void* data)
 {
 	if (!y_spt_disable_shake.GetBool())
-		_visual_fixes.ORIG_CViewEffects__Shake(thisptr, edx, data);
+		spt_visual_fixes.ORIG_CViewEffects__Shake(thisptr, edx, data);
 }
 
 void __cdecl VisualFixes::HOOKED_ResetToneMapping(float value)
 {
 	if (!y_spt_disable_tone_map_reset.GetBool())
-		_visual_fixes.ORIG_ResetToneMapping(value);
+		spt_visual_fixes.ORIG_ResetToneMapping(value);
 }

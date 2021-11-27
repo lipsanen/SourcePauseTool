@@ -1,13 +1,14 @@
 #include "stdafx.h"
-#include "graphics.hpp"
-#include "convar.h"
+#include "lines.hpp"
+#include "convar.hpp"
+#include "interfaces.hpp"
 #include "..\spt-serverplugin.hpp"
-#include "..\..\sptlib-wrapper.hpp"
-#include "..\..\features\generic.hpp"
-#include "..\..\features\tracing.hpp"
-#include "..\..\features\tickrate.hpp"
-#include "..\..\utils\ent_utils.hpp"
-#include "..\..\utils\property_getter.hpp"
+#include "..\sptlib-wrapper.hpp"
+#include "..\features\generic.hpp"
+#include "..\features\tracing.hpp"
+#include "..\features\tickrate.hpp"
+#include "ent_utils.hpp"
+#include "property_getter.hpp"
 
 ConVar y_spt_drawseams("y_spt_drawseams", "0", FCVAR_CHEAT, "Draws seamshot stuff.\n");
 
@@ -15,19 +16,19 @@ namespace vgui
 {
 	void DrawSeams(IVDebugOverlay* debugOverlay)
 	{
-		auto player = GetServerPlayer();
+		auto player = utils::GetServerPlayer();
 		if (!player)
 			return;
 
 		float va[3];
 		EngineGetViewAngles(va);
-		Vector cameraPosition = generic_.GetCameraOrigin();
+		Vector cameraPosition = spt_generic.GetCameraOrigin();
 		QAngle angles(va[0], va[1], va[2]);
 		Vector vDirection;
 		AngleVectors(angles, &vDirection);
 
 		trace_t tr;
-		g_Tracing.TraceFirePortal(tr, cameraPosition, vDirection);
+		spt_tracing.TraceFirePortal(tr, cameraPosition, vDirection);
 
 		if (tr.fraction < 1.0f)
 		{
@@ -56,7 +57,7 @@ namespace vgui
 				bool seamshot = test1 || test2;
 
 				const int uiScale = 10;
-				float lifeTime = _tickrate.GetTickrate() * 2;
+				float lifeTime = spt_tickrate.GetTickrate() * 2;
 
 				//calculating an edge vector for drawing
 				Vector edge = edgeTr.plane.normal.Cross(tr.plane.normal);
@@ -111,12 +112,10 @@ namespace vgui
 
 	void DrawLines()
 	{
-		auto debugOverlay = GetDebugOverlay();
-
-		if (!debugOverlay || !utils::playerEntityAvailable())
+		if (!interfaces::debugOverlay || !utils::playerEntityAvailable())
 			return;
 
 		if (y_spt_drawseams.GetBool())
-			DrawSeams(debugOverlay);
+			DrawSeams(interfaces::debugOverlay);
 	}
 } // namespace vgui

@@ -3,8 +3,8 @@
 #ifndef OE
 #include "..\spt-serverplugin.hpp"
 
-#include "..\..\utils\ent_utils.hpp"
-#include "..\..\utils\property_getter.hpp"
+#include "ent_utils.hpp"
+#include "property_getter.hpp"
 #include "..\cvars.hpp"
 #include "cdll_int.h"
 #include "client_class.h"

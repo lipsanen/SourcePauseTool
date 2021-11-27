@@ -1,4 +1,5 @@
-#include "stdafx.hpp"
+#include "stdafx.h"
+#include "..\stdafx.hpp"
 
 #ifdef OE
 #include "mathlib.h"
@@ -9,22 +10,21 @@
 #include <iomanip>
 #include <sstream>
 
-#include "OrangeBox/cvars.hpp"
-#include "OrangeBox/module_hooks.hpp"
+#include "..\cvars.hpp"
 #include "const.h"
 #include "strafe_utils.hpp"
 #include "strafestuff.hpp"
-#include "utils/ent_utils.hpp"
-#include "utils\game_detection.hpp"
-#include "utils/math.hpp"
-#include "utils/property_getter.hpp"
-#include "features\playerio.hpp"
-#include "features\tracing.hpp"
-#include "OrangeBox\spt-serverplugin.hpp"
+#include "ent_utils.hpp"
+#include "game_detection.hpp"
+#include "math.hpp"
+#include "property_getter.hpp"
+#include "..\features\playerio.hpp"
+#include "..\features\tracing.hpp"
 #include "SDK\hl_movedata.h"
+#include "interfaces.hpp"
 
 #ifndef OE
-#include "OrangeBox/overlay/portal_camera.hpp"
+#include "..\overlay\portal_camera.hpp"
 #endif
 
 #ifdef max
@@ -47,8 +47,6 @@ ConVar tas_strafe_version("tas_strafe_version",
 ConVar tas_strafe_afh_length("tas_strafe_afh_length", "0.0000000000000000001", FCVAR_TAS_RESET, "Magnitude of AFHs");
 ConVar tas_strafe_afh("tas_strafe_afh", "0", FCVAR_TAS_RESET, "Should AFH?");
 
-extern void* gm;
-
 namespace Strafe
 {
 	bool CanTrace()
@@ -58,11 +56,11 @@ namespace Strafe
 
 		if (tas_strafe_version.GetInt() == 1)
 		{
-			return g_Tracing.ORIG_UTIL_TraceRay != nullptr;
+			return spt_tracing.ORIG_UTIL_TraceRay != nullptr;
 		}
 		else
 		{
-			return g_Tracing.CanTracePlayerBBox();
+			return spt_tracing.CanTracePlayerBBox();
 		}
 	}
 
@@ -72,19 +70,19 @@ namespace Strafe
 
 	void SetMoveData()
 	{
-		data.m_nPlayerHandle = GetServerPlayer()->GetRefEHandle();
-		void** player = reinterpret_cast<void**>((char*)gm + 0x4);
-		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)gm + 0x8);
+		data.m_nPlayerHandle = utils::GetServerPlayer()->GetRefEHandle();
+		void** player = reinterpret_cast<void**>((char*)interfaces::gm + 0x4);
+		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)interfaces::gm + 0x8);
 		oldmv = *mv;
 		oldPlayer = *player;
 		*mv = &data;
-		*player = GetServerPlayer();
+		*player = utils::GetServerPlayer();
 	}
 
 	void UnsetMoveData()
 	{
-		void** player = reinterpret_cast<void**>((char*)gm + 0x4);
-		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)gm + 0x8);
+		void** player = reinterpret_cast<void**>((char*)interfaces::gm + 0x4);
+		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)interfaces::gm + 0x8);
 		*player = oldPlayer;
 		*mv = oldmv;
 	}
@@ -124,7 +122,7 @@ namespace Strafe
 			else
 				ray.Init(start, end, mins, maxs);
 
-			g_Tracing.ORIG_UTIL_TraceRay(ray,
+			spt_tracing.ORIG_UTIL_TraceRay(ray,
 			                             MASK_PLAYERSOLID_BRUSHONLY,
 			                             utils::GetClientEntity(0),
 			                             COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -141,7 +139,7 @@ namespace Strafe
 				mins.z = 36;
 
 			SetMoveData();
-			g_Tracing.TracePlayerBBox(start,
+			spt_tracing.TracePlayerBBox(start,
 			                          end,
 			                          mins,
 			                          maxs,
@@ -157,12 +155,12 @@ namespace Strafe
 	void Trace(trace_t& trace, const Vector& start, const Vector& end)
 	{
 #ifndef OE
-		if (!g_Tracing.ORIG_UTIL_TraceRay)
+		if (!spt_tracing.ORIG_UTIL_TraceRay)
 			return;
 
 		Ray_t ray;
 		ray.Init(start, end);
-		g_Tracing.ORIG_UTIL_TraceRay(ray,
+		spt_tracing.ORIG_UTIL_TraceRay(ray,
 		                             MASK_PLAYERSOLID_BRUSHONLY,
 		                             utils::GetClientEntity(0),
 		                             COLLISION_GROUP_PLAYER_MOVEMENT,
@@ -197,14 +195,14 @@ namespace Strafe
 
 		if (!tas_strafe_use_tracing.GetBool() || strafe_version == 0 || !CanTrace())
 		{
-			if (playerio::IsGroundEntitySet())
+			if (spt_playerio.IsGroundEntitySet())
 				return PositionType::GROUND;
 			else
 				return PositionType::AIR;
 		}
 		else if (strafe_version == 1)
 		{
-			if (playerio::IsGroundEntitySet())
+			if (spt_playerio.IsGroundEntitySet())
 				return PositionType::GROUND;
 
 			if (player.Velocity[2] > 140.f)
@@ -246,7 +244,7 @@ namespace Strafe
 
 			trace_t pm;
 
-			g_Tracing.TracePlayerBBox(bumpOrigin,
+			spt_tracing.TracePlayerBBox(bumpOrigin,
 			                          point,
 			                          mins,
 			                          maxs,
@@ -261,20 +259,20 @@ namespace Strafe
 			}
 
 			if (utils::DoesGameLookLikePortal())
-				g_Tracing.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
+				spt_tracing.ORIG_TracePlayerBBoxForGround2(bumpOrigin,
 				                                         point,
 				                                         mins,
 				                                         maxs,
-				                                         GetServerPlayer(),
+														 utils::GetServerPlayer(),
 				                                         MASK_PLAYERSOLID,
 				                                         COLLISION_GROUP_PLAYER_MOVEMENT,
 				                                         pm);
 			else
-				g_Tracing.ORIG_TracePlayerBBoxForGround(bumpOrigin,
+				spt_tracing.ORIG_TracePlayerBBoxForGround(bumpOrigin,
 				                                        point,
 				                                        mins,
 				                                        maxs,
-				                                        GetServerPlayer(),
+				                                        utils::GetServerPlayer(),
 				                                        MASK_PLAYERSOLID,
 				                                        COLLISION_GROUP_PLAYER_MOVEMENT,
 				                                        pm);

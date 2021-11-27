@@ -24,12 +24,9 @@ public:
 	void ResetAfterframesQueue();
 	void PauseAfterframesQueue();
 	void ResumeAfterframesQueue();
-
-	Gallant::Signal0<void> AfterFramesSignal;
 protected:
 
 	virtual bool ShouldLoadFeature() override;
-	virtual void InitHooks() override;
 	virtual void LoadFeature() override;
 	virtual void UnloadFeature() override;
 
@@ -43,4 +40,4 @@ private:
 	int afterframesDelay;
 };
 
-extern AfterframesFeature _afterframes;
+extern AfterframesFeature spt_afterframes;
