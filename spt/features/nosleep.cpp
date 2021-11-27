@@ -23,7 +23,7 @@ private:
 	static void __fastcall HOOKED_CInputSystem__SleepUntilInput(void* thisptr, int edx, int nMaxSleepTimeMS);
 };
 
-static NoSleepFeature _nosleep;
+static NoSleepFeature spt_nosleep;
 
 bool NoSleepFeature::ShouldLoadFeature()
 {
@@ -49,5 +49,5 @@ void __fastcall NoSleepFeature::HOOKED_CInputSystem__SleepUntilInput(void* thisp
 {
 	if (y_spt_focus_nosleep.GetBool())
 		nMaxSleepTimeMS = 0;
-	_nosleep.ORIG_CInputSystem__SleepUntilInput(thisptr, edx, nMaxSleepTimeMS);
+	spt_nosleep.ORIG_CInputSystem__SleepUntilInput(thisptr, edx, nMaxSleepTimeMS);
 }

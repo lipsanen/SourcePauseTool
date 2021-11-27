@@ -35,18 +35,18 @@ protected:
 	virtual void UnloadFeature() override {}
 };
 
-static ShadowPosition g_Position;
+static ShadowPosition spt_position;
 
 int __fastcall ShadowPosition::HOOKED_GetShadowPosition(void* thisptr, int edx, Vector* worldPosition, QAngle* angles)
 {
-	int GetShadowPos = g_Position.ORIG_GetShadowPosition(thisptr, edx, worldPosition, angles);
-	g_Position.PlayerHavokPos.x = worldPosition->x;
-	g_Position.PlayerHavokPos.y = worldPosition->y;
-	g_Position.PlayerHavokPos.z = worldPosition->z;
+	int GetShadowPos = spt_position.ORIG_GetShadowPosition(thisptr, edx, worldPosition, angles);
+	spt_position.PlayerHavokPos.x = worldPosition->x;
+	spt_position.PlayerHavokPos.y = worldPosition->y;
+	spt_position.PlayerHavokPos.z = worldPosition->z;
 	return GetShadowPos;
 }
 
 Vector GetPlayerHavokPos()
 {
-	return g_Position.PlayerHavokPos;
+	return spt_position.PlayerHavokPos;
 }

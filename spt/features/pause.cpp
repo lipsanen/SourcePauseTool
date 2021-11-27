@@ -25,7 +25,7 @@ private:
 	void SetPaused(void* thisptr, int edx, bool paused);
 };
 
-static PauseFeature _pause;
+static PauseFeature spt_pause;
 
 void PauseFeature::InitHooks()
 {

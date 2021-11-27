@@ -284,9 +284,6 @@ CON_COMMAND(
 CON_COMMAND(y_spt_ipc_echo,
             "y_spt_ipc_echo <text> - Sends a text message to IPC client. Don't insert fancy characters into this.\n")
 {
-#if defined(OE)
-	ArgsWrapper args;
-#endif
 	if (args.ArgC() < 2)
 	{
 		Msg("Usage: y_spt_ipc_echo <text>\n");

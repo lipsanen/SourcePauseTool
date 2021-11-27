@@ -1,4 +1,4 @@
-#ifdef SSDK2007
+#ifndef OE
 #include "..\feature.hpp"
 
 typedef void(
@@ -33,5 +33,5 @@ private:
 	static void __fastcall HOOKED_CViewRender__Render(void* thisptr, int edx, void* rect);
 };
 
-extern Overlay g_Overlay;
+extern Overlay spt_overlay;
 #endif

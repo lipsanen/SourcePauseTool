@@ -41,11 +41,11 @@ protected:
 	virtual void UnloadFeature() override;
 };
 
-static ISGFeature _isg;
+static ISGFeature spt_isg;
 CON_COMMAND_F(y_spt_set_isg, "Sets the state of ISG in the game (1 or 0), no arguments means 1", FCVAR_DONTRECORD | FCVAR_CHEAT)
 {
-	if (_isg.isgFlagPtr)
-		*_isg.isgFlagPtr = args.ArgC() == 1 || atoi(args[1]);
+	if (spt_isg.isgFlagPtr)
+		*spt_isg.isgFlagPtr = args.ArgC() == 1 || atoi(args[1]);
 	else
 		Warning("y_spt_set_isg has no effect\n");
 }
@@ -61,8 +61,8 @@ void ISGFeature::UnloadFeature()
 
 bool IsISGActive()
 {
-	if (_isg.isgFlagPtr)
-		return *_isg.isgFlagPtr;
+	if (spt_isg.isgFlagPtr)
+		return *spt_isg.isgFlagPtr;
 	else
 		return false;
 }

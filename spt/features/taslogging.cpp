@@ -17,10 +17,6 @@ protected:
 	virtual bool ShouldLoadFeature() override;
 
 	virtual void InitHooks() override;
-
-	virtual void LoadFeature() override;
-
-	virtual void UnloadFeature() override;
 private:
 	_ProcessMovement ORIG_ProcessMovement;
 
@@ -46,10 +42,6 @@ void TASLogging::InitHooks()
 		Warning("tas_log 1 has no effect.\n");
 	}
 }
-
-void TASLogging::LoadFeature() {}
-
-void TASLogging::UnloadFeature() {}
 
 void __fastcall TASLogging::HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove)
 {

@@ -270,7 +270,7 @@ namespace scripts
 		while (cmd != NULL)
 		{
 #else
-		ICvar::Iterator iter(icvar);
+		ICvar::Iterator iter(g_pCVar);
 
 		for (iter.SetFirst(); iter.IsValid(); iter.Next())
 		{

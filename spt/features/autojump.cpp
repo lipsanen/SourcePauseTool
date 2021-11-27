@@ -353,6 +353,7 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 			}
 
 			// Add it on
+			spt_autojump.oldVel.z = mv->m_vecVelocity.z; // Keep the z velocity
 			VectorAdd((vecForward * flSpeedAddition), spt_autojump.oldVel, mv->m_vecVelocity);
 		}
 		// </stolen from gamemovement.cpp>

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#ifdef SSDK2007
+#ifndef OE
 #include "overlay.hpp"
 #include "..\overlay\overlay-renderer.hpp"
 
@@ -36,7 +36,7 @@ ConVar _y_spt_overlay_fov("_y_spt_overlay_fov",
 ConVar _y_spt_overlay_swap("_y_spt_overlay_swap", "0", FCVAR_CHEAT, "Swap alternate view and main screen?\n");
 
 
-Overlay g_Overlay;
+Overlay spt_overlay;
 
 bool Overlay::ShouldLoadFeature()
 {
@@ -63,16 +63,16 @@ void __fastcall Overlay::HOOKED_CViewRender__RenderView(void* thisptr,
                                                         int nClearFlags,
                                                         int whatToDraw)
 {
-	if (g_Overlay.ORIG_CViewRender__RenderView == nullptr || g_Overlay.ORIG_CViewRender__Render == nullptr)
+	if (spt_overlay.ORIG_CViewRender__RenderView == nullptr || spt_overlay.ORIG_CViewRender__Render == nullptr)
 	{
-		g_Overlay.ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
+		spt_overlay.ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
 	}
 	else
 	{
 		if (g_OverlayRenderer.shouldRenderOverlay())
 		{
-			g_OverlayRenderer.modifyView(static_cast<CViewSetup*>(cameraView), g_Overlay.renderingOverlay);
-			if (g_Overlay.renderingOverlay)
+			g_OverlayRenderer.modifyView(static_cast<CViewSetup*>(cameraView), spt_overlay.renderingOverlay);
+			if (spt_overlay.renderingOverlay)
 			{
 				g_OverlayRenderer.modifySmallScreenFlags(nClearFlags, whatToDraw);
 			}
@@ -82,33 +82,33 @@ void __fastcall Overlay::HOOKED_CViewRender__RenderView(void* thisptr,
 			}
 		}
 
-		g_Overlay.ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
+		spt_overlay.ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);
 	}
 }
 
 void __fastcall Overlay::HOOKED_CViewRender__Render(void* thisptr, int edx, void* rect)
 {
-	if (g_Overlay.ORIG_CViewRender__RenderView == nullptr || g_Overlay.ORIG_CViewRender__Render == nullptr)
+	if (spt_overlay.ORIG_CViewRender__RenderView == nullptr || spt_overlay.ORIG_CViewRender__Render == nullptr)
 	{
-		g_Overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
+		spt_overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
 	}
 	else
 	{
-		g_Overlay.renderingOverlay = false;
-		g_Overlay.screenRect = rect;
+		spt_overlay.renderingOverlay = false;
+		spt_overlay.screenRect = rect;
 		if (!g_OverlayRenderer.shouldRenderOverlay())
 		{
-			g_Overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
+			spt_overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
 		}
 		else
 		{
-			g_Overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
+			spt_overlay.ORIG_CViewRender__Render(thisptr, edx, rect);
 
-			g_Overlay.renderingOverlay = true;
+			spt_overlay.renderingOverlay = true;
 			Rect_t rec = g_OverlayRenderer.getRect();
-			g_Overlay.screenRect = &rec;
-			g_Overlay.ORIG_CViewRender__Render(thisptr, edx, &rec);
-			g_Overlay.renderingOverlay = false;
+			spt_overlay.screenRect = &rec;
+			spt_overlay.ORIG_CViewRender__Render(thisptr, edx, &rec);
+			spt_overlay.renderingOverlay = false;
 		}
 	}
 }

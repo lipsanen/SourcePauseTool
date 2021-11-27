@@ -333,13 +333,13 @@ void HUDFeature::CalculateAbhVel()
 void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 {
 #ifndef OE
-	if (mode == 2 && !g_Overlay.renderingOverlay)
+	if (mode == 2 && !spt_overlay.renderingOverlay)
 	{
-		spt_hud.DrawHUD((vrect_t*)g_Overlay.screenRect);
+		spt_hud.DrawHUD((vrect_t*)spt_overlay.screenRect);
 	}
 
-	if (g_Overlay.renderingOverlay)
-		spt_hud.DrawCrosshair((vrect_t*)g_Overlay.screenRect);
+	if (spt_overlay.renderingOverlay)
+		spt_hud.DrawCrosshair((vrect_t*)spt_overlay.screenRect);
 
 #endif
 
