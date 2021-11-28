@@ -11,12 +11,6 @@ typedef void(
 typedef int(__fastcall* _GetButtonBits)(void* thisptr, int edx, int bResetState);
 typedef void* (__cdecl* _GetLocalPlayer)();
 
-typedef struct
-{
-	float angle;
-	bool set;
-} angset_command_t;
-
 // This feature reads player stuff from memory and writes player stuff into memory
 class PlayerIOFeature : public Feature
 {
@@ -36,8 +30,6 @@ private:
 
 public:
 	void SetTASInput(float* va, const Strafe::ProcessedFrame& out);
-	void HandleAiming(float* va, bool& yawChanged);
-	bool DoAngleChange(float& angle, float target);
 	Strafe::MovementVars GetMovementVars();
 	bool GetFlagsDucking();
 	Strafe::PlayerData GetPlayerData();
@@ -57,7 +49,6 @@ public:
 	bool duckspam;
 	bool forceJump;
 	bool forceUnduck;
-	angset_command_t setPitch, setYaw;
 	bool playerioAddressesWereFound;
 	ptrdiff_t offServerAbsOrigin;
 	uintptr_t pCmd;
@@ -77,22 +68,6 @@ public:
 	void DisableDuckspam()
 	{
 		duckspam = false;
-	}
-
-	void SetPitch(float pitch)
-	{
-		setPitch.angle = pitch;
-		setPitch.set = true;
-	}
-	void SetYaw(float yaw)
-	{
-		setYaw.angle = yaw;
-		setYaw.set = true;
-	}
-	void ResetPitchYawCommands()
-	{
-		setYaw.set = false;
-		setPitch.set = false;
 	}
 
 private:

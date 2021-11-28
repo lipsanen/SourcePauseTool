@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "..\cvars.hpp"
 #include "..\sptlib-wrapper.hpp"
-#include "..\aim\aim.hpp"
 #include "..\strafe\strafestuff.hpp"
+#include "aim.hpp"
 #include "game_detection.hpp"
 #include "math.hpp"
 #include "playerio.hpp"
@@ -15,15 +15,6 @@
 
 #undef max
 #undef min
-
-ConVar _y_spt_anglesetspeed(
-	"_y_spt_anglesetspeed",
-	"360",
-	FCVAR_TAS_RESET,
-	"Determines how fast the view angle can move per tick while doing _y_spt_setyaw/_y_spt_setpitch.\n");
-ConVar _y_spt_pitchspeed("_y_spt_pitchspeed", "0", FCVAR_TAS_RESET);
-ConVar _y_spt_yawspeed("_y_spt_yawspeed", "0", FCVAR_TAS_RESET);
-
 
 PlayerIOFeature spt_playerio;
 static void* cinput_thisptr = nullptr;
@@ -295,49 +286,6 @@ void PlayerIOFeature::PreHook()
 
 		if (ORIG_GetLocalPlayer)
 			DevMsg("[client.dll] Found GetLocalPlayer at %p.\n", ORIG_GetLocalPlayer);
-	}
-}
-
-void PlayerIOFeature::HandleAiming(float* va, bool& yawChanged)
-{
-	// Use tas_aim stuff for tas_strafe_version >= 4
-	if (tas_strafe_version.GetInt() >= 4)
-	{
-		aim::UpdateView(va[PITCH], va[YAW]);
-	}
-
-	double pitchSpeed = atof(_y_spt_pitchspeed.GetString()), yawSpeed = atof(_y_spt_yawspeed.GetString());
-
-	if (pitchSpeed != 0.0f)
-		va[PITCH] += pitchSpeed;
-	if (setPitch.set)
-	{
-		setPitch.set = DoAngleChange(va[PITCH], setPitch.angle);
-	}
-
-	if (yawSpeed != 0.0f)
-	{
-		va[YAW] += yawSpeed;
-	}
-	if (setYaw.set)
-	{
-		yawChanged = true;
-		setYaw.set = DoAngleChange(va[YAW], setYaw.angle);
-	}
-}
-
-bool PlayerIOFeature::DoAngleChange(float& angle, float target)
-{
-	float normalizedDiff = utils::NormalizeDeg(target - angle);
-	if (std::abs(normalizedDiff) > _y_spt_anglesetspeed.GetFloat())
-	{
-		angle += std::copysign(_y_spt_anglesetspeed.GetFloat(), normalizedDiff);
-		return true;
-	}
-	else
-	{
-		angle = target;
-		return false;
 	}
 }
 
@@ -616,7 +564,7 @@ void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
 	{
 		if (out.Jump && tas_strafe_jumptype.GetInt() > 0)
 		{
-			aim::SetJump();
+			spt_aim.SetJump();
 		}
 
 		// Apply jump and unduck regardless of whether we are strafing
@@ -701,71 +649,12 @@ static void DuckspamUp(const CCommand& args)
 }
 static ConCommand DuckspamUp_Command("-y_spt_duckspam", DuckspamUp, "Disables the duckspam.");
 
-CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
-{
-	if (args.ArgC() != 2)
-	{
-		Msg("Usage: _y_spt_setpitch <pitch>\n");
-		return;
-	}
-
-	spt_playerio.SetPitch(atof(args.Arg(1)));
-}
-
-CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
-{
-	if (args.ArgC() != 2)
-	{
-		Msg("Usage: _y_spt_setyaw <yaw>\n");
-		return;
-	}
-
-	spt_playerio.SetYaw(atof(args.Arg(1)));
-}
-
-CON_COMMAND(_y_spt_resetpitchyaw, "Resets pitch/yaw commands.")
-{
-	spt_playerio.ResetPitchYawCommands();
-}
-
-CON_COMMAND(_y_spt_setangles, "Sets the angles. Usage: _y_spt_setangles <pitch> <yaw>")
-{
-	if (args.ArgC() != 3)
-	{
-		Msg("Usage: _y_spt_setangles <pitch> <yaw>\n");
-		return;
-	}
-
-	spt_playerio.SetPitch(atof(args.Arg(1)));
-	spt_playerio.SetYaw(atof(args.Arg(2)));
-}
-
 CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 {
 	const Vector vel = spt_playerio.GetPlayerVelocity();
 
 	Warning("Velocity (x, y, z): %f %f %f\n", vel.x, vel.y, vel.z);
 	Warning("Velocity (xy): %f\n", vel.Length2D());
-}
-
-CON_COMMAND(_y_spt_setangle,
-            "Sets the yaw/pitch angle required to look at the given position from player's current position.")
-{
-	Vector target;
-
-	if (args.ArgC() > 3)
-	{
-		target.x = atof(args.Arg(1));
-		target.y = atof(args.Arg(2));
-		target.z = atof(args.Arg(3));
-
-		Vector player_origin = spt_playerio.GetPlayerEyePos();
-		Vector diff = (target - player_origin);
-		QAngle angles;
-		VectorAngles(diff, angles);
-		spt_playerio.SetPitch(angles[PITCH]);
-		spt_playerio.SetYaw(angles[YAW]);
-	}
 }
 
 #if SSDK2007

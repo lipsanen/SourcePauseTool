@@ -187,7 +187,7 @@
     <ClCompile Include="spt\strafe\strafestuff.cpp">
       <Filter>spt\strafe</Filter>
     </ClCompile>
-    <ClCompile Include="spt\aim\aim.cpp">
+    <ClCompile Include="spt\aim\aimstuff.cpp">
       <Filter>spt\aim</Filter>
     </ClCompile>
     <ClCompile Include="spt\utils\signals.cpp">
@@ -200,6 +200,9 @@
       <Filter>spt\features</Filter>
     </ClCompile>
     <ClCompile Include="spt\features\ipc-spt.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\aim.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
   </ItemGroup>
@@ -450,11 +453,14 @@
     <ClInclude Include="spt\strafe\strafestuff.hpp">
       <Filter>spt\strafe</Filter>
     </ClInclude>
-    <ClInclude Include="spt\aim\aim.hpp">
+    <ClInclude Include="spt\aim\aimstuff.hpp">
       <Filter>spt\aim</Filter>
     </ClInclude>
     <ClInclude Include="spt\utils\signals.hpp">
       <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\aim.hpp">
+      <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

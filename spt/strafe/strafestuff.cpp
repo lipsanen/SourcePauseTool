@@ -39,14 +39,6 @@
 // go take a look at that instead:
 // https://github.com/HLTAS/hlstrafe
 
-ConVar tas_strafe_version("tas_strafe_version",
-                          "4",
-                          FCVAR_TAS_RESET,
-                          "Strafe version. For backwards compatibility with old scripts.");
-
-ConVar tas_strafe_afh_length("tas_strafe_afh_length", "0.0000000000000000001", FCVAR_TAS_RESET, "Magnitude of AFHs");
-ConVar tas_strafe_afh("tas_strafe_afh", "0", FCVAR_TAS_RESET, "Should AFH?");
-
 namespace Strafe
 {
 	bool CanTrace()
@@ -1241,9 +1233,6 @@ namespace Strafe
 		auto newspeed = std::max(speed - drop, 0.f);
 		player.Velocity *= (newspeed / speed);
 	}
-
-	ConVar tas_strafe_lgagst_min("tas_strafe_lgagst_min", "150", FCVAR_TAS_RESET, "");
-	ConVar tas_strafe_lgagst_max("tas_strafe_lgagst_max", "270", FCVAR_TAS_RESET, "");
 
 	bool LgagstJump(PlayerData& player, const MovementVars& vars)
 	{

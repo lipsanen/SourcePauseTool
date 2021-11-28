@@ -2,9 +2,9 @@
 #include "..\feature.hpp"
 #include "..\cvars.hpp"
 #include "..\sptlib-wrapper.hpp"
-#include "..\aim\aim.hpp"
 #include "..\strafe\strafestuff.hpp"
 #include "..\scripts\srctas_reader.hpp"
+#include "aim.hpp"
 #include "generic.hpp"
 #include "playerio.hpp"
 #include "interfaces.hpp"
@@ -87,7 +87,13 @@ ConVar tas_force_onground(
     "0",
     FCVAR_TAS_RESET,
     "If enabled, strafing assumes the player is on ground regardless of what the prediction indicates. Useful for save glitch in Portal where the prediction always reports the player being in the air.\n");
+ConVar tas_strafe_version("tas_strafe_version",
+	"4",
+	FCVAR_TAS_RESET,
+	"Strafe version. For backwards compatibility with old scripts.");
 
+ConVar tas_strafe_afh_length("tas_strafe_afh_length", "0.0000000000000000001", FCVAR_TAS_RESET, "Magnitude of AFHs");
+ConVar tas_strafe_afh("tas_strafe_afh", "0", FCVAR_TAS_RESET, "Should AFH?");
 ConVar tas_strafe_lgagst(
     "tas_strafe_lgagst",
     "0",
@@ -103,6 +109,8 @@ ConVar tas_strafe_lgagst_fullmaxspeed(
     "0",
     FCVAR_TAS_RESET,
     "If enabled, LGAGST assumes the player is standing regardless of the actual ducking state. Useful for when you land while crouching but intend to stand up immediately.\n");
+ConVar tas_strafe_lgagst_min("tas_strafe_lgagst_min", "150", FCVAR_TAS_RESET, "");
+ConVar tas_strafe_lgagst_max("tas_strafe_lgagst_max", "270", FCVAR_TAS_RESET, "");
 ConVar tas_strafe_jumptype(
     "tas_strafe_jumptype",
     "1",
@@ -187,7 +195,7 @@ void __fastcall TASFeature::HOOKED_AdjustAngles_Func(void* thisptr, int edx, flo
 	float va[3];
 	bool yawChanged = false;
 	EngineGetViewAngles(va);
-	spt_playerio.HandleAiming(va, yawChanged);
+	spt_aim.HandleAiming(va, yawChanged);
 
 	if (tasAddressesWereFound && tas_strafe.GetBool())
 	{

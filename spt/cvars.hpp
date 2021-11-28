@@ -15,12 +15,15 @@ extern ConVar y_spt_pause_demo_on_tick;
 extern ConVar y_spt_on_slide_pause_for;
 extern ConVar y_spt_prevent_vag_crash;
 extern ConVar y_spt_disable_tone_map_reset;
+extern ConVar y_spt_drawseams;
 
 extern ConVar tas_strafe;
 extern ConVar tas_strafe_type;
 extern ConVar tas_strafe_dir;
 extern ConVar tas_strafe_yaw;
 extern ConVar tas_strafe_buttons;
+extern ConVar tas_strafe_afh;
+extern ConVar tas_strafe_afh_length;
 
 extern ConVar tas_strafe_vectorial;
 extern ConVar tas_strafe_vectorial_increment;
@@ -38,6 +41,8 @@ extern ConVar tas_anglespeed;
 extern ConVar tas_pause;
 extern ConVar tas_log;
 extern ConVar tas_strafe_lgagst;
+extern ConVar tas_strafe_lgagst_max;
+extern ConVar tas_strafe_lgagst_min;
 extern ConVar tas_strafe_lgagst_minspeed;
 extern ConVar tas_strafe_lgagst_fullmaxspeed;
 extern ConVar tas_strafe_jumptype;

@@ -2,6 +2,7 @@
 #include "lines.hpp"
 #include "convar.hpp"
 #include "interfaces.hpp"
+#include "..\cvars.hpp"
 #include "..\spt-serverplugin.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "..\features\generic.hpp"
@@ -9,8 +10,6 @@
 #include "..\features\tickrate.hpp"
 #include "ent_utils.hpp"
 #include "property_getter.hpp"
-
-ConVar y_spt_drawseams("y_spt_drawseams", "0", FCVAR_CHEAT, "Draws seamshot stuff.\n");
 
 namespace vgui
 {

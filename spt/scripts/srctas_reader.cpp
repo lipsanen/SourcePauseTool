@@ -263,6 +263,7 @@ namespace scripts
 
 	void SourceTASReader::ResetConvars()
 	{
+#ifndef OE
 #ifndef P2
 		ConCommandBase* cmd = interfaces::g_pCVar->GetCommands();
 
@@ -318,6 +319,7 @@ namespace scripts
 			else
 				DevWarning("Unable to find console variable %s\n", RESET_VARS[i]);
 		}
+#endif
 	}
 
 	void SourceTASReader::Reset()
