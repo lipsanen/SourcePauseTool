@@ -39,7 +39,6 @@ private:
 	_CheckJumpButton ORIG_CheckJumpButton;
 	_CheckJumpButton_client ORIG_CheckJumpButton_client;
 	_FinishGravity ORIG_FinishGravity;
-	Vector oldVel;
 	ptrdiff_t off1M_bDucked;
 	ptrdiff_t off2M_bDucked;
 
