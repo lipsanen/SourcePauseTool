@@ -167,7 +167,8 @@ void Feature::AddPatternHook(PatternHook hook, std::string moduleName)
 
 void ModuleHookData::UnhookModule(const std::wstring& moduleName)
 {
-	DetoursUtils::DetachDetours(moduleName, hookedFunctions.size(), &hookedFunctions[0]);
+	if (!hookedFunctions.empty())
+		DetoursUtils::DetachDetours(moduleName, hookedFunctions.size(), &hookedFunctions[0]);
 
 	for (auto& vft_hook : existingVTableHooks)
 		MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, *vft_hook.origPtr);

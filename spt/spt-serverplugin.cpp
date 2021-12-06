@@ -262,14 +262,14 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 
 void CSourcePauseTool::Unload(void)
 {
-	Hooks::Free();
-
 #if !defined(OE)
 	ConVar_Unregister();
 #endif
 
 	DisconnectTier1Libraries();
 	DisconnectTier3Libraries();
+	Feature::UnloadFeatures();
+	Hooks::Free();
 }
 
 const char* CSourcePauseTool::GetPluginDescription(void)
