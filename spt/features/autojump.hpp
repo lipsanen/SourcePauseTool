@@ -17,10 +17,10 @@ typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 class AutojumpFeature : public Feature
 {
 public:
-	ptrdiff_t off1M_nOldButtons;
-	ptrdiff_t off2M_nOldButtons;
-	bool cantJumpNextTime;
-	bool insideCheckJumpButton;
+	ptrdiff_t off1M_nOldButtons = 0;
+	ptrdiff_t off2M_nOldButtons = 0;
+	bool cantJumpNextTime = false;
+	bool insideCheckJumpButton = false;
 
 protected:
 	virtual bool ShouldLoadFeature() override;
@@ -36,14 +36,14 @@ private:
 	static bool __fastcall HOOKED_CheckJumpButton_client(void* thisptr, int edx);
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
 
-	_CheckJumpButton ORIG_CheckJumpButton;
-	_CheckJumpButton_client ORIG_CheckJumpButton_client;
-	_FinishGravity ORIG_FinishGravity;
-	ptrdiff_t off1M_bDucked;
-	ptrdiff_t off2M_bDucked;
+	_CheckJumpButton ORIG_CheckJumpButton = nullptr;
+	_CheckJumpButton_client ORIG_CheckJumpButton_client = nullptr;
+	_FinishGravity ORIG_FinishGravity = nullptr;
+	ptrdiff_t off1M_bDucked = 0;
+	ptrdiff_t off2M_bDucked = 0;
 
-	bool client_cantJumpNextTime;
-	bool client_insideCheckJumpButton;
+	bool client_cantJumpNextTime = false;
+	bool client_insideCheckJumpButton = false;
 };
 
 extern AutojumpFeature spt_autojump;

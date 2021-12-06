@@ -25,20 +25,20 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	int GetPlaybackTick_Offset;
-	int GetTotalTicks_Offset;
-	int IsPlayingBack_Offset;
-	int IsPlaybackPaused_Offset;
-	void** pDemoplayer;
-	int currentAutoRecordDemoNumber;
-	int m_nDemoNumber_Offset;
-	int m_bRecording_Offset;
-	bool isAutoRecordingDemo;
+	int GetPlaybackTick_Offset = 0;
+	int GetTotalTicks_Offset = 0;
+	int IsPlayingBack_Offset = 0;
+	int IsPlaybackPaused_Offset = 0;
+	void** pDemoplayer = nullptr;
+	int currentAutoRecordDemoNumber = 0;
+	int m_nDemoNumber_Offset = 0;
+	int m_bRecording_Offset = 0;
+	bool isAutoRecordingDemo = false;
 
-	_StopRecording ORIG_StopRecording;
-	_SetSignonState ORIG_SetSignonState;
-	_Stop ORIG_Stop;
-	uintptr_t ORIG_Record;
+	_StopRecording ORIG_StopRecording = nullptr;
+	_SetSignonState ORIG_SetSignonState = nullptr;
+	_Stop ORIG_Stop = nullptr;
+	uintptr_t ORIG_Record = 0;
 
 	static void __fastcall HOOKED_StopRecording(void* thisptr, int edx);
 	static void __fastcall HOOKED_SetSignonState(void* thisptr, int edx, int state);

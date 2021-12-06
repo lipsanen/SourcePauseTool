@@ -13,10 +13,10 @@
 class ISGFeature : public Feature
 {
 public:
-	bool* isgFlagPtr;
+	bool* isgFlagPtr = nullptr;
 
 protected:
-	uint32_t ORIG_MiddleOfRecheck_ov_element;
+	uint32_t ORIG_MiddleOfRecheck_ov_element = 0;
 
 	virtual bool ShouldLoadFeature() override
 	{
@@ -52,7 +52,11 @@ CON_COMMAND_F(y_spt_set_isg,
 		Warning("y_spt_set_isg has no effect\n");
 }
 
-void ISGFeature::LoadFeature() {}
+void ISGFeature::LoadFeature()
+{
+	if (ORIG_MiddleOfRecheck_ov_element)
+		InitCommand(y_spt_set_isg);
+}
 
 void ISGFeature::UnloadFeature() {}
 

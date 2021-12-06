@@ -64,14 +64,14 @@ typedef bool(__fastcall* _CEngineTrace__PointOutsideWorld)(void* thisptr, int ed
 class Tracing : public Feature
 {
 public:
-	_FirePortal ORIG_FirePortal;
-	_UTIL_TraceRay ORIG_UTIL_TraceRay;
-	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround;
-	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2;
-	_SnapEyeAngles ORIG_SnapEyeAngles;
+	_FirePortal ORIG_FirePortal = nullptr;
+	_UTIL_TraceRay ORIG_UTIL_TraceRay = nullptr;
+	_TracePlayerBBoxForGround ORIG_TracePlayerBBoxForGround = nullptr;
+	_TracePlayerBBoxForGround2 ORIG_TracePlayerBBoxForGround2 = nullptr;
+	_SnapEyeAngles ORIG_SnapEyeAngles = nullptr;
 	trace_t lastPortalTrace;
-	_GetActiveWeapon ORIG_GetActiveWeapon;
-	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld;
+	_GetActiveWeapon ORIG_GetActiveWeapon = nullptr;
+	_CEngineTrace__PointOutsideWorld ORIG_CEngineTrace__PointOutsideWorld = nullptr;
 
 	bool TraceClientRay(const Ray_t& ray,
 	                    unsigned int mask,
@@ -111,15 +111,15 @@ private:
 	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMaxs(void* thisptr, int edx);
 	static const Vector& __fastcall HOOKED_CGameMovement__GetPlayerMins(void* thisptr, int edx);
 
-	bool overrideMinMax;
+	bool overrideMinMax = false;
 	Vector _mins;
 	Vector _maxs;
 
-	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox;
-	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox;
-	_CGameMovement__GetPlayerMins ORIG_CGameMovement__GetPlayerMins;
-	_CGameMovement__GetPlayerMaxs ORIG_CGameMovement__GetPlayerMaxs;
-	_TraceFirePortal ORIG_TraceFirePortal;
+	_CGameMovement__TracePlayerBBox ORIG_CGameMovement__TracePlayerBBox = nullptr;
+	_CPortalGameMovement__TracePlayerBBox ORIG_CPortalGameMovement__TracePlayerBBox = nullptr;
+	_CGameMovement__GetPlayerMins ORIG_CGameMovement__GetPlayerMins = nullptr;
+	_CGameMovement__GetPlayerMaxs ORIG_CGameMovement__GetPlayerMaxs = nullptr;
+	_TraceFirePortal ORIG_TraceFirePortal = nullptr;
 };
 
 extern Tracing spt_tracing;

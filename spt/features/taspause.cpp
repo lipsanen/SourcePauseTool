@@ -5,7 +5,6 @@
 typedef void(__cdecl* _Host_AccumulateTime)(float dt);
 ConVar tas_pause("tas_pause", "0", 0, "Does a pause where you can look around when the game is paused.\n");
 
-// Feature description
 class TASPause : public Feature
 {
 public:
@@ -19,10 +18,10 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	float* pHost_Frametime;
-	float* pHost_Realtime;
-	uintptr_t ORIG__Host_RunFrame;
-	_Host_AccumulateTime ORIG_Host_AccumulateTime;
+	float* pHost_Frametime = nullptr;
+	float* pHost_Realtime = nullptr;
+	uintptr_t ORIG__Host_RunFrame = 0;
+	_Host_AccumulateTime ORIG_Host_AccumulateTime = nullptr;
 
 	static void __cdecl HOOKED_Host_AccumulateTime(float dt);
 };
@@ -57,7 +56,12 @@ void TASPause::LoadFeature()
 	}
 	else
 	{
-		pHost_Frametime = nullptr;
+		pHost_Realtime = nullptr;
+	}
+
+	if (ORIG_Host_AccumulateTime && ORIG__Host_RunFrame)
+	{
+		InitConcommandBase(tas_pause);
 	}
 }
 
@@ -65,7 +69,7 @@ void TASPause::UnloadFeature() {}
 
 void __cdecl TASPause::HOOKED_Host_AccumulateTime(float dt)
 {
-	if (tas_pause.GetBool() && spt_taspause.pHost_Realtime && spt_taspause.pHost_Frametime)
+	if (tas_pause.GetBool())
 	{
 		*spt_taspause.pHost_Realtime += dt;
 		*spt_taspause.pHost_Frametime = 0;

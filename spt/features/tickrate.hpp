@@ -18,8 +18,8 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	uintptr_t ORIG_MiddleOfSV_InitGameDLL;
-	float* pIntervalPerTick;
+	uintptr_t ORIG_MiddleOfSV_InitGameDLL = 0;
+	float* pIntervalPerTick = nullptr;
 };
 
 extern TickrateMod spt_tickrate;

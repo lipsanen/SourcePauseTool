@@ -9,8 +9,8 @@ typedef void(__fastcall* _CViewRender__Render)(void* thisptr, int edx, void* rec
 class Overlay : public Feature
 {
 public:
-	bool renderingOverlay;
-	void* screenRect;
+	bool renderingOverlay = false;
+	void* screenRect = nullptr;
 
 protected:
 	virtual bool ShouldLoadFeature() override;
@@ -22,8 +22,8 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	_CViewRender__RenderView ORIG_CViewRender__RenderView;
-	_CViewRender__Render ORIG_CViewRender__Render;
+	_CViewRender__RenderView ORIG_CViewRender__RenderView = nullptr;
+	_CViewRender__Render ORIG_CViewRender__Render = nullptr;
 
 	static void __fastcall HOOKED_CViewRender__RenderView(void* thisptr,
 	                                                      int edx,

@@ -45,20 +45,21 @@ public:
 	int GetPlayerCollisionGroup() const;
 	void Set_cinput_thisptr(void* thisptr);
 
-	bool duckspam;
-	bool forceJump;
-	bool forceUnduck;
-	bool playerioAddressesWereFound;
-	ptrdiff_t offServerAbsOrigin;
-	uintptr_t pCmd;
+	bool duckspam = false;
+	bool forceJump = false;
+	bool forceUnduck = false;
+	bool playerioAddressesWereFound = false;
+	ptrdiff_t offServerAbsOrigin = 0;
+	uintptr_t pCmd = 0;
 
-	ptrdiff_t offM_vecAbsVelocity;
-	ptrdiff_t offM_afPhysicsFlags;
-	ptrdiff_t offM_moveType;
-	ptrdiff_t offM_moveCollide;
-	ptrdiff_t offM_collisionGroup;
-	ptrdiff_t offM_vecPunchAngle;
-	ptrdiff_t offM_vecPunchAngleVel;
+	ptrdiff_t offM_vecAbsVelocity = 0;
+	ptrdiff_t offM_afPhysicsFlags = 0;
+	ptrdiff_t offM_moveType = 0;
+	ptrdiff_t offM_moveCollide = 0;
+	ptrdiff_t offM_collisionGroup = 0;
+	ptrdiff_t offM_vecPunchAngle = 0;
+	ptrdiff_t offM_vecPunchAngleVel = 0;
+	_CreateMove ORIG_CreateMove = nullptr;
 
 	void EnableDuckspam()
 	{
@@ -70,25 +71,24 @@ public:
 	}
 
 private:
-	_GetGroundEntity ORIG_GetGroundEntity;
-	_CreateMove ORIG_CreateMove;
-	_GetButtonBits ORIG_GetButtonBits;
-	_GetLocalPlayer ORIG_GetLocalPlayer;
-	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity;
-	uintptr_t ORIG_MiddleOfCAM_Think;
-	uintptr_t ORIG_PlayerRunCommand;
+	_GetGroundEntity ORIG_GetGroundEntity = nullptr;
+	_GetButtonBits ORIG_GetButtonBits = nullptr;
+	_GetLocalPlayer ORIG_GetLocalPlayer = nullptr;
+	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity = nullptr;
+	uintptr_t ORIG_MiddleOfCAM_Think = 0;
+	uintptr_t ORIG_PlayerRunCommand = 0;
 
-	ptrdiff_t offM_pCommands;
-	ptrdiff_t offForwardmove;
-	ptrdiff_t offSidemove;
-	ptrdiff_t offMaxspeed;
-	ptrdiff_t offFlags;
-	ptrdiff_t offAbsVelocity;
-	ptrdiff_t offDucking;
-	ptrdiff_t offDuckJumpTime;
-	ptrdiff_t offServerSurfaceFriction;
-	ptrdiff_t offServerPreviouslyPredictedOrigin;
-	std::size_t sizeofCUserCmd;
+	ptrdiff_t offM_pCommands = 0;
+	ptrdiff_t offForwardmove = 0;
+	ptrdiff_t offSidemove = 0;
+	ptrdiff_t offMaxspeed = 0;
+	ptrdiff_t offFlags = 0;
+	ptrdiff_t offAbsVelocity = 0;
+	ptrdiff_t offDucking = 0;
+	ptrdiff_t offDuckJumpTime = 0;
+	ptrdiff_t offServerSurfaceFriction = 0;
+	ptrdiff_t offServerPreviouslyPredictedOrigin = 0;
+	std::size_t sizeofCUserCmd = 0;
 
 protected:
 	virtual bool ShouldLoadFeature() override;

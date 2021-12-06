@@ -5,8 +5,8 @@
 
 typedef struct
 {
-	float angle;
-	bool set;
+	float angle = 0.0f;
+	bool set = false;
 } angset_command_t;
 
 class AimFeature : public Feature
@@ -19,6 +19,7 @@ public:
 	void SetYaw(float yaw);
 	void ResetPitchYawCommands();
 	void SetJump();
+	virtual void LoadFeature() override;
 
 protected:
 private:

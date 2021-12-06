@@ -19,7 +19,7 @@ protected:
 	virtual void InitHooks() override;
 
 private:
-	_ProcessMovement ORIG_ProcessMovement;
+	_ProcessMovement ORIG_ProcessMovement = nullptr;
 
 	static void __fastcall HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove);
 };
@@ -38,10 +38,7 @@ void TASLogging::InitHooks()
 		auto vftable = *reinterpret_cast<void***>(interfaces::gm);
 		AddVFTableHook(VFTableHook(vftable, 1, (void*)HOOKED_ProcessMovement, (void**)&ORIG_ProcessMovement),
 		               "server");
-	}
-	else
-	{
-		Warning("tas_log 1 has no effect.\n");
+		InitConcommandBase(tas_log);
 	}
 }
 

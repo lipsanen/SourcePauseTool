@@ -19,7 +19,7 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	_CInputSystem__SleepUntilInput ORIG_CInputSystem__SleepUntilInput;
+	_CInputSystem__SleepUntilInput ORIG_CInputSystem__SleepUntilInput = nullptr;
 	static void __fastcall HOOKED_CInputSystem__SleepUntilInput(void* thisptr, int edx, int nMaxSleepTimeMS);
 };
 
@@ -37,9 +37,9 @@ void NoSleepFeature::InitHooks()
 
 void NoSleepFeature::LoadFeature()
 {
-	if (!ORIG_CInputSystem__SleepUntilInput)
+	if (ORIG_CInputSystem__SleepUntilInput)
 	{
-		Warning("y_spt_focus_nosleep has no effect.\n");
+		InitConcommandBase(y_spt_focus_nosleep);
 	}
 }
 

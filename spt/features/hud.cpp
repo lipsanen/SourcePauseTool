@@ -8,6 +8,7 @@
 #include "vgui\ischeme.h"
 #include "vguimatsurface\imatsystemsurface.h"
 #include "..\utils\ent_utils.hpp"
+#include "game_detection.hpp"
 #include "..\utils\property_getter.hpp"
 #include "..\utils\string_parsing.hpp"
 #include "..\vgui\vgui_utils.hpp"
@@ -90,23 +91,23 @@ private:
 
 	static void __fastcall HOOKED_VGui_Paint(void* thisptr, int edx, int mode);
 
-	_VGui_Paint ORIG_VGui_Paint;
-	_StartDrawing ORIG_StartDrawing;
-	_FinishDrawing ORIG_FinishDrawing;
+	_VGui_Paint ORIG_VGui_Paint = nullptr;
+	_StartDrawing ORIG_StartDrawing = nullptr;
+	_FinishDrawing ORIG_FinishDrawing = nullptr;
 
-	int displayHop;
-	float loss;
-	float percentage;
+	int displayHop = 0;
+	float loss = 0;
+	float percentage = 0;
 
 	bool velNotCalced;
-	int lastHop;
-	float maxVel;
+	int lastHop = 0;
+	float maxVel = 0;
 
-	int sinceLanded;
-	ConVar* cl_showpos;
-	ConVar* cl_showfps;
-	vgui::HFont font;
-	vgui::HFont hopsFont;
+	int sinceLanded = 0;
+	ConVar* cl_showpos = nullptr;
+	ConVar* cl_showfps = nullptr;
+	vgui::HFont font = 0;
+	vgui::HFont hopsFont = 0;
 
 	Vector currentVel;
 	Vector previousVel;
@@ -177,18 +178,44 @@ void HUDFeature::InitHooks()
 
 void HUDFeature::LoadFeature()
 {
+	currentVel.Init(0, 0, 0);
+	previousVel.Init(0, 0, 0);
 	cl_showpos = interfaces::g_pCVar->FindVar("cl_showpos");
 	cl_showfps = interfaces::g_pCVar->FindVar("cl_showfps");
 	auto scheme = vgui::GetScheme();
 	font = scheme->GetFont("DefaultFixedOutline", false);
 	hopsFont = scheme->GetFont("Trebuchet24", false);
 
-	if (!ORIG_VGui_Paint || !ORIG_FinishDrawing || !ORIG_StartDrawing)
+	if (ORIG_VGui_Paint && ORIG_FinishDrawing && ORIG_StartDrawing)
 	{
-		Warning("Speedrun hud is not available.\n");
-	}
-	else
-	{
+		// cba to make this detection more granular, this feature is a garbage fire that should be refactored anyway
+		InitConcommandBase(y_spt_hud_velocity);
+		InitConcommandBase(y_spt_hud_flags);
+		InitConcommandBase(y_spt_hud_moveflags);
+		InitConcommandBase(y_spt_hud_movecollideflags);
+		InitConcommandBase(y_spt_hud_collisionflags);
+		InitConcommandBase(y_spt_hud_accel);
+		InitConcommandBase(y_spt_hud_script_length);
+		InitConcommandBase(y_spt_hud_portal_bubble);
+		InitConcommandBase(y_spt_hud_decimals);
+		InitConcommandBase(y_spt_hud_vars);
+
+		if (utils::DoesGameLookLikePortal())
+		{
+			InitConcommandBase(y_spt_hud_ag_sg_tester);
+			InitConcommandBase(y_spt_hud_isg);
+		}
+
+		InitConcommandBase(y_spt_hud_ent_info);
+		InitConcommandBase(y_spt_hud_left);
+		InitConcommandBase(y_spt_hud_hops);
+		InitConcommandBase(y_spt_hud_hops_x);
+		InitConcommandBase(y_spt_hud_hops_y);
+		InitConcommandBase(y_spt_hud_velocity_angles);
+		InitConcommandBase(_y_spt_overlay_crosshair_size);
+		InitConcommandBase(_y_spt_overlay_crosshair_thickness);
+		InitConcommandBase(_y_spt_overlay_crosshair_color);
+
 		AdjustAngles.Connect(this, &HUDFeature::NewTick);
 		OngroundSignal.Connect(this, &HUDFeature::OnGround);
 		JumpSignal.Connect(this, &HUDFeature::Jump);

@@ -8,7 +8,7 @@ class RNGStuff : public Feature
 {
 public:
 	int GetPredictionRandomSeed(int commandOffset);
-	int commandNumber;
+	int commandNumber = 0;
 
 protected:
 	virtual bool ShouldLoadFeature() override;
@@ -20,7 +20,7 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed;
+	_SetPredictionRandomSeed ORIG_SetPredictionRandomSeed = nullptr;
 
 	static void __cdecl HOOKED_SetPredictionRandomSeed(void* usercmd);
 };

@@ -17,9 +17,9 @@ protected:
 	virtual void LoadFeature() override;
 
 private:
-	uintptr_t ORIG_SpawnPlayer;
-	bool* pM_bLoadgame;
-	void* pGameServer;
+	uintptr_t ORIG_SpawnPlayer = 0;
+	bool* pM_bLoadgame = nullptr;
+	void* pGameServer = nullptr;
 
 	void SV_ActivateServer(bool result);
 	void FinishRestore(void* thisptr, int edx);
@@ -124,6 +124,8 @@ void PauseFeature::LoadFeature()
 		{
 			Warning("y_spt_pause 1 has no effect.\n");
 		}
+
+		InitConcommandBase(y_spt_pause);
 	}
 }
 

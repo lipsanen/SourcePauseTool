@@ -13,7 +13,7 @@ public:
 	Vector PlayerHavokPos;
 
 protected:
-	_GetShadowPosition ORIG_GetShadowPosition;
+	_GetShadowPosition ORIG_GetShadowPosition = nullptr;
 
 	virtual bool ShouldLoadFeature() override
 	{
@@ -28,6 +28,7 @@ protected:
 	virtual void InitHooks() override
 	{
 		HOOK_FUNCTION(vphysics, GetShadowPosition);
+		PlayerHavokPos.Init(0, 0, 0);
 	}
 
 	virtual void LoadFeature() override {}

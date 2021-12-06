@@ -28,9 +28,9 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	void* ORIG_MiddleOfTeleportTouchingEntity;
-	void* ORIG_EndOfTeleportTouchingEntity;
-	int recursiveTeleportCount;
+	void* ORIG_MiddleOfTeleportTouchingEntity = nullptr;
+	void* ORIG_EndOfTeleportTouchingEntity = nullptr;
+	int recursiveTeleportCount = 0;
 
 	static void HOOKED_MiddleOfTeleportTouchingEntity();
 	static void __fastcall HOOKED_MiddleOfTeleportTouchingEntity_Func(void* portalPtr, void* tpStackPointer);
@@ -53,9 +53,9 @@ void VAG::InitHooks()
 
 void VAG::LoadFeature()
 {
-	if (!ORIG_MiddleOfTeleportTouchingEntity || !ORIG_EndOfTeleportTouchingEntity)
+	if (ORIG_MiddleOfTeleportTouchingEntity && ORIG_EndOfTeleportTouchingEntity)
 	{
-		DevWarning("[server.dll] Could not find the teleport function!\n");
+		InitConcommandBase(y_spt_prevent_vag_crash);
 	}
 	recursiveTeleportCount = 0;
 }

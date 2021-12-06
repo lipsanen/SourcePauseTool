@@ -31,11 +31,11 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	uintptr_t* pgpGlobals;
-	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur;
-	_CViewEffects__Fade ORIG_CViewEffects__Fade;
-	_CViewEffects__Shake ORIG_CViewEffects__Shake;
-	_ResetToneMapping ORIG_ResetToneMapping;
+	uintptr_t* pgpGlobals = nullptr;
+	_DoImageSpaceMotionBlur ORIG_DoImageSpaceMotionBlur = nullptr;
+	_CViewEffects__Fade ORIG_CViewEffects__Fade = nullptr;
+	_CViewEffects__Shake ORIG_CViewEffects__Shake = nullptr;
+	_ResetToneMapping ORIG_ResetToneMapping = nullptr;
 
 	static void __cdecl HOOKED_DoImageSpaceMotionBlur(void* view, int x, int y, int w, int h);
 	static void __fastcall HOOKED_CViewEffects__Fade(void* thisptr, int edx, void* data);
@@ -92,20 +92,17 @@ void VisualFixes::LoadFeature()
 		}
 
 		DevMsg("[client dll] pgpGlobals is %p.\n", pgpGlobals);
-	}
-	else
-	{
-		Warning("y_spt_motion_blur_fix has no effect.\n");
+		InitConcommandBase(y_spt_motion_blur_fix);
 	}
 
-	if (!ORIG_CViewEffects__Fade)
-		Warning("y_spt_disable_fade 1 not available\n");
+	if (ORIG_CViewEffects__Fade)
+		InitConcommandBase(y_spt_disable_fade);
 
-	if (!ORIG_CViewEffects__Shake)
-		Warning("y_spt_disable_shake 1 not available\n");
+	if (ORIG_CViewEffects__Shake)
+		InitConcommandBase(y_spt_disable_shake);
 
-	if (!ORIG_ResetToneMapping)
-		Warning("y_spt_disable_tone_map_reset has no effect\n");
+	if (ORIG_ResetToneMapping)
+		InitConcommandBase(y_spt_disable_tone_map_reset);
 }
 
 void VisualFixes::UnloadFeature() {}

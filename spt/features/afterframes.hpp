@@ -29,6 +29,7 @@ protected:
 	virtual bool ShouldLoadFeature() override;
 	virtual void LoadFeature() override;
 	virtual void UnloadFeature() override;
+	virtual void PreHook() override;
 
 private:
 	void OnFrame();
@@ -36,8 +37,8 @@ private:
 	void FinishRestore(void* thisptr, int edx);
 	void SetPaused(void* thisptr, int edx, bool paused);
 	std::vector<afterframes_entry_t> afterframesQueue;
-	bool afterframesPaused;
-	int afterframesDelay;
+	bool afterframesPaused = false;
+	int afterframesDelay = 0;
 };
 
 extern AfterframesFeature spt_afterframes;
