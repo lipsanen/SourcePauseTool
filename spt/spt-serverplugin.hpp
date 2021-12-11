@@ -86,7 +86,4 @@ public:
 	virtual void OnEdictFreed(const edict_t* edict){};
 #endif
 
-#ifdef P2
-	virtual void ClientFullyConnect(edict_t* pEntity){};
-#endif
 };
