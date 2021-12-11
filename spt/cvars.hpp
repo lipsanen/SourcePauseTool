@@ -89,10 +89,6 @@ extern ConVar _y_spt_overlay_width;
 extern ConVar _y_spt_overlay_fov;
 extern ConVar _y_spt_overlay_swap;
 
-#ifdef OE
-extern ConVar y_spt_gamedir;
-#endif
-
 #if defined(SSDK2007) || defined(SSDK2013)
 extern ConCommand y_spt_set_isg;
 #endif
