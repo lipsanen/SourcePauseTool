@@ -26,18 +26,19 @@
 
 #undef max
 
-#if !defined(OE)
+#ifdef OE
+#define GAME_DLL
+#include "..\dlls\cbase.h"
+#include "..\game_shared\physics_shared.h"
+#else
 #define GAME_DLL
 #include "cbase.h"
 #endif
 
-#ifndef OE
 const int INDEX_MASK = MAX_EDICTS - 1;
-#endif
 
 namespace utils
 {
-#ifndef OE
 	IClientEntity* GetClientEntity(int index)
 	{
 		return interfaces::entList->GetClientEntity(index + 1);
@@ -59,6 +60,9 @@ namespace utils
 
 	void PrintAllPortals()
 	{
+#ifdef OE
+		return;
+#else
 		int maxIndex = interfaces::entList->GetHighestEntityIndex();
 
 		for (int i = 0; i <= maxIndex; ++i)
@@ -79,6 +83,7 @@ namespace utils
 				    angles.z);
 			}
 		}
+#endif
 	}
 
 	IClientEntity* GetPlayer()
@@ -454,7 +459,6 @@ namespace utils
 			return INVALID_OFFSET;
 		}
 	}
-#endif
 
 	IServerUnknown* GetServerPlayer()
 	{
@@ -518,11 +522,7 @@ namespace utils
 
 	bool playerEntityAvailable()
 	{
-#ifdef OE
-		return false;
-#else
 		return GetClientEntity(0) != nullptr;
-#endif
 	}
 
 	static CBaseEntity* GetServerEntity(int index)
@@ -559,7 +559,6 @@ namespace utils
 		}
 	}
 
-#ifndef OE
 	static int GetServerEntityCount()
 	{
 		if (!interfaces::engine_server)
@@ -603,7 +602,6 @@ namespace utils
 			}
 		}
 	}
-#endif
 
 	void FindClosestPlane(const trace_t& tr, trace_t& out, float maxDistSqr)
 	{

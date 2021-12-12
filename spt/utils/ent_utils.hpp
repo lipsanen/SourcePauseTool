@@ -10,7 +10,7 @@
 
 namespace utils
 {
-#ifndef OE
+	void PrintAllPortals();
 	struct propValue
 	{
 		std::string name;
@@ -24,7 +24,6 @@ namespace utils
 	void GetAllProps(RecvTable* table, void* ptr, std::vector<propValue>& props);
 	IClientEntity* GetClientEntity(int index);
 	void PrintAllClientEntities();
-	void PrintAllPortals();
 	IClientEntity* GetPlayer();
 	const char* GetModelName(IClientEntity* ent);
 	void PrintAllProps(int index);
@@ -36,7 +35,6 @@ namespace utils
 	int FillInfoArray(std::string argString, wchar* arr, int maxEntries, int bufferSize, char sep, char entSep);
 	void SimulateFrames(int frames);
 	int GetIndex(void* ent);
-#endif
 	IServerUnknown* GetServerPlayer();
 	struct JBData
 	{
@@ -55,7 +53,5 @@ namespace utils
 	                  const cplane_t& plane1,
 	                  const cplane_t& plane2,
 	                  QAngle& seamAngle);
-#ifndef OE
 	void CheckPiwSave();
-#endif
 } // namespace utils

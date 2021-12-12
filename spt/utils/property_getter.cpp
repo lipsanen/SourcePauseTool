@@ -6,7 +6,7 @@
 namespace utils
 {
 	static std::map<std::string, PropMap> classToOffsetsMap;
-#ifndef OE
+
 	PropMap FindOffsets(IClientEntity* ent)
 	{
 		PropMap out;
@@ -28,25 +28,17 @@ namespace utils
 		out.foundOffsets = true;
 		return out;
 	}
-#endif
 
 	int GetOffset(int entindex, const std::string& key)
 	{
-#ifdef OE
-		return INVALID_OFFSET;
-#else
 		auto prop = GetRecvProp(entindex, key);
 		if (prop)
 			return prop->GetOffset();
 		else
 			return INVALID_OFFSET;
-#endif
 	}
 	RecvProp* GetRecvProp(int entindex, const std::string& key)
 	{
-#ifdef OE
-		return nullptr;
-#else
 		auto ent = GetClientEntity(entindex);
 		std::string className = ent->GetClientClass()->m_pNetworkName;
 
@@ -64,6 +56,5 @@ namespace utils
 			return classMap[key];
 		else
 			return nullptr;
-#endif
 	}
 } // namespace utils

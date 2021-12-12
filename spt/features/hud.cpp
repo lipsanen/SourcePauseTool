@@ -132,14 +132,11 @@ void HUDFeature::DrawHUD()
 
 void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 {
-#ifndef OE
 	if (spt_hud.loadingSuccessful && (mode == 2 || spt_overlay.renderingOverlay))
 	{
 		spt_hud.screen = (vrect_t*)spt_overlay.screenRect;
 		spt_hud.DrawHUD();
 	}
-
-#endif
 
 	spt_hud.ORIG_VGui_Paint(thisptr, edx, mode);
 }

@@ -193,7 +193,6 @@ namespace ipc
 
 } // namespace ipc
 
-#if !defined(OE)
 CON_COMMAND(y_spt_ipc_ent, "y_spt_ipc_ent <entity index> - Outputs entity data to IPC client.\n")
 {
 	if (args.ArgC() < 2)
@@ -224,9 +223,7 @@ CON_COMMAND(y_spt_ipc_ent, "y_spt_ipc_ent <entity index> - Outputs entity data t
 	}
 	ipc::Send(msg);
 }
-#endif
 
-#if !defined(OE)
 CON_COMMAND(
     y_spt_ipc_properties,
     "y_spt_ipc_properties <entity index> <property1> <property2> ... - Outputs entity properties to IPC client.\n")
@@ -273,7 +270,6 @@ CON_COMMAND(
 	}
 	ipc::Send(msg);
 }
-#endif
 
 CON_COMMAND(y_spt_ipc_echo,
             "y_spt_ipc_echo <text> - Sends a text message to IPC client. Don't insert fancy characters into this.\n")
@@ -353,10 +349,8 @@ void ipc::IPCFeature::LoadFeature()
 	{
 		Init();
 		FrameSignal.Connect(Loop);
-#ifndef OE
 		InitCommand(y_spt_ipc_ent);
 		InitCommand(y_spt_ipc_properties);
-#endif
 		InitCommand(y_spt_ipc_echo);
 		InitCommand(y_spt_ipc_playback);
 		InitCommand(y_spt_ipc_gamedir);

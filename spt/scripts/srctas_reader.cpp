@@ -257,7 +257,6 @@ namespace scripts
 
 	void SourceTASReader::ResetConvars()
 	{
-#ifndef OE
 		ConCommandBase* cmd = interfaces::g_pCVar->GetCommands();
 
 		// Loops through the console variables and commands
@@ -265,7 +264,11 @@ namespace scripts
 		{
 			const char* name = cmd->GetName();
 			// Reset any variables that have been marked to be reset for TASes
+#ifndef OE
 			if (!cmd->IsCommand() && name != NULL && cmd->IsFlagSet(FCVAR_TAS_RESET))
+#else
+			if (!cmd->IsCommand() && name != NULL && cmd->IsBitSet(FCVAR_TAS_RESET))
+#endif
 			{
 				auto convar = interfaces::g_pCVar->FindVar(name);
 				DevMsg("Trying to reset variable %s\n", name);
@@ -287,8 +290,11 @@ namespace scripts
 				EngineConCmd(cmd->GetName());
 			}
 
-
+#ifdef OE
+			cmd = const_cast<ConCommandBase*>(cmd->GetNext());
+#else
 			cmd = cmd->GetNext();
+#endif
 		}
 
 		// Reset any variables selected above
@@ -303,7 +309,6 @@ namespace scripts
 			else
 				DevWarning("Unable to find console variable %s\n", RESET_VARS[i]);
 		}
-#endif
 	}
 
 	void SourceTASReader::Reset()

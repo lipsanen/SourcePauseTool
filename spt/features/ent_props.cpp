@@ -29,11 +29,7 @@ class EntUtils : public Feature
 public:
 	virtual bool ShouldLoadFeature()
 	{
-#ifdef OE
-		return false;
-#else
 		return true;
-#endif
 	}
 
 	virtual void LoadFeature() override;
@@ -60,7 +56,6 @@ CON_COMMAND(y_spt_canjb, "Tests if player can jumpbug on a given height, with th
 		Msg("No, missed by %.6f in %d ticks.\n", can.landingHeight - height, can.ticks);
 }
 
-#ifndef OE
 CON_COMMAND(y_spt_print_ents, "Prints all client entity indices and their corresponding classes.")
 {
 	utils::PrintAllClientEntities();
@@ -82,16 +77,15 @@ CON_COMMAND(y_spt_print_ent_props, "Prints all props for a given entity index.")
 		utils::PrintAllProps(std::stoi(args.Arg(1)));
 	}
 }
-#endif
 
 void EntUtils::LoadFeature()
 {
-#ifndef OE
-	InitCommand(y_spt_canjb);
 	InitCommand(y_spt_print_ents);
 	InitCommand(y_spt_print_ent_props);
 	if (utils::DoesGameLookLikePortal())
 		InitCommand(y_spt_print_portals);
+#ifndef OE
+	InitCommand(y_spt_canjb);
 #endif
 #ifdef SSDK2007
 	if (utils::DoesGameLookLikePortal())

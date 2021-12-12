@@ -25,9 +25,6 @@ namespace utils
 	template<typename T>
 	T GetProperty(int entindex, const std::string& key)
 	{
-#ifdef OE
-		return T();
-#else
 		auto ent = GetClientEntity(entindex);
 
 		if (!ent)
@@ -40,6 +37,5 @@ namespace utils
 		{
 			return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ent) + offset);
 		}
-#endif
 	}
 } // namespace utils

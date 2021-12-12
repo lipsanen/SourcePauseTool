@@ -1,7 +1,4 @@
 #include "stdafx.h"
-
-#if !defined(OE)
-
 #include "generic.hpp"
 #include "..\feature.hpp"
 #include "..\sptlib-wrapper.hpp"
@@ -80,5 +77,3 @@ int __fastcall Stucksave::HOOKED_CheckStuck(void* thisptr, int edx)
 
 	return ret;
 }
-
-#endif
