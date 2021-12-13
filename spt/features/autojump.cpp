@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "autojump.hpp"
+#include "playerio.hpp"
 
 #include "basehandle.h"
 #include "SDK\hl_movedata.h"
@@ -7,10 +8,6 @@
 #include "dbg.h"
 #include "..\cvars.hpp"
 #include "signals.hpp"
-
-#ifdef OE
-#include "mathlib.h"
-#endif
 
 AutojumpFeature spt_autojump;
 ConVar y_spt_autojump("y_spt_autojump", "0", FCVAR_ARCHIVE);
@@ -27,184 +24,32 @@ bool AutojumpFeature::ShouldLoadFeature()
 
 void AutojumpFeature::InitHooks()
 {
-	HOOK_FUNCTION(server, CheckJumpButton);
 	HOOK_FUNCTION(client, CheckJumpButton_client);
-	HOOK_FUNCTION(server, FinishGravity);
 }
 
 void AutojumpFeature::LoadFeature()
 {
-	// Server-side CheckJumpButton
-	if (ORIG_CheckJumpButton)
-	{
-		InitConcommandBase(y_spt_autojump);
-		InitConcommandBase(_y_spt_autojump_ensure_legit);
-		JumpSignal.Works = true;
-		int ptnNumber = GetPatternIndex((void**)&ORIG_CheckJumpButton);
-		switch (ptnNumber)
-		{
-		case 0:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
 
-		case 1:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 2:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 3:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 4:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 5:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 6:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 7:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 8:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 9:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 10:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 11:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 12:
-			off1M_nOldButtons = 3;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 13:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 14:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 15:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 16:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 17:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 18:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-		}
-	}
-	else
-	{
-		Warning("y_spt_autojump has no effect.\n");
-	}
-
-	if (ORIG_FinishGravity)
-	{
-		InitConcommandBase(y_spt_additional_jumpboost);
-		int ptnNumber = GetPatternIndex((void**)&ORIG_FinishGravity);
-		switch (ptnNumber)
-		{
-		case 0:
-			off1M_bDucked = 1;
-			off2M_bDucked = 2128;
-			break;
-
-		case 1:
-			off1M_bDucked = 2;
-			off2M_bDucked = 3120;
-			break;
-
-		case 2:
-			off1M_bDucked = 2;
-			off2M_bDucked = 3184;
-			break;
-
-		case 3:
-			off1M_bDucked = 2;
-			off2M_bDucked = 3376;
-			break;
-
-		case 4:
-			off1M_bDucked = 1;
-			off2M_bDucked = 3440;
-			break;
-
-		case 5:
-			off1M_bDucked = 1;
-			off2M_bDucked = 3500;
-			break;
-
-		case 6:
-			off1M_bDucked = 1;
-			off2M_bDucked = 3724;
-			break;
-
-		case 7:
-			off1M_bDucked = 2;
-			off2M_bDucked = 3112;
-			break;
-
-		case 8:
-			off1M_bDucked = 1;
-			off2M_bDucked = 3416;
-			break;
-		}
-	}
-	else
-	{
-		Warning("y_spt_additional_jumpboost has no effect.\n");
-		off1M_bDucked = 0;
-		off2M_bDucked = 0;
-	}
 }
 
 void AutojumpFeature::UnloadFeature() {}
+
+void AutojumpFeature::PreHook()
+{
+	if (spt_playerio.ORIG_CheckJumpButton)
+	{
+		AddRawHook("server", (void**)&spt_playerio.ORIG_CheckJumpButton, AutojumpFeature::HOOKED_CheckJumpButton);
+		InitConcommandBase(y_spt_autojump);
+		InitConcommandBase(_y_spt_autojump_ensure_legit);
+		JumpSignal.Works = true;
+	}
+
+	if (spt_playerio.ORIG_FinishGravity && spt_playerio.ORIG_CheckJumpButton)
+	{
+		AddRawHook("server", (void**)&spt_playerio.ORIG_FinishGravity, AutojumpFeature::HOOKED_FinishGravity);
+		InitConcommandBase(y_spt_additional_jumpboost);
+	}
+}
 
 bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 {
@@ -213,7 +58,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	int* pM_nOldButtons = NULL;
 	int origM_nOldButtons = 0;
 
-	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons));
+	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_playerio.off_mv));
 	if (tas_log.GetBool())
 		DevMsg("[CheckJumpButton PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
 		       mv->GetAbsOrigin().x,
@@ -226,7 +71,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	if (y_spt_autojump.GetBool())
 	{
 		pM_nOldButtons =
-		    (int*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons) + spt_autojump.off2M_nOldButtons);
+		    (int*)(*((uintptr_t*)thisptr + spt_playerio.off_mv) + spt_playerio.off2M_nOldButtons);
 		origM_nOldButtons = *pM_nOldButtons;
 
 		if (!spt_autojump.cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
@@ -238,7 +83,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	spt_autojump.cantJumpNextTime = false;
 
 	spt_autojump.insideCheckJumpButton = true;
-	bool rv = spt_autojump.ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
+	bool rv = spt_playerio.ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
 	spt_autojump.insideCheckJumpButton = false;
 
 	if (y_spt_autojump.GetBool())
@@ -285,7 +130,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 	if (y_spt_autojump.GetBool())
 	{
 		pM_nOldButtons =
-		    (int*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons) + spt_autojump.off2M_nOldButtons);
+		    (int*)(*((uintptr_t*)thisptr + spt_playerio.off_mv) + spt_playerio.off2M_nOldButtons);
 		origM_nOldButtons = *pM_nOldButtons;
 
 		if (!spt_autojump.client_cantJumpNextTime) // Do not do anything if we jumped on the previous tick.
@@ -326,9 +171,9 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 {
 	if (spt_autojump.insideCheckJumpButton && y_spt_additional_jumpboost.GetBool())
 	{
-		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons));
+		CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_playerio.off_mv));
 		bool ducked =
-		    *(bool*)(*((uintptr_t*)thisptr + spt_autojump.off1M_bDucked) + spt_autojump.off2M_bDucked);
+		    *(bool*)(*((uintptr_t*)thisptr + spt_playerio.off_player) + spt_playerio.off2M_bDucked);
 
 		// <stolen from gamemovement.cpp>
 		{
@@ -362,5 +207,5 @@ void __fastcall AutojumpFeature::HOOKED_FinishGravity(void* thisptr, int edx)
 		// </stolen from gamemovement.cpp>
 	}
 
-	return spt_autojump.ORIG_FinishGravity(thisptr, edx);
+	return spt_playerio.ORIG_FinishGravity(thisptr, edx);
 }

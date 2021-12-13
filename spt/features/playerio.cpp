@@ -9,8 +9,10 @@
 #include "playerio.hpp"
 #include "ent_utils.hpp"
 #include "interfaces.hpp"
+#include "property_getter.hpp"
 #include "signals.hpp"
 #include "..\overlay\portal_camera.hpp"
+#include "SDK\cplayerlocaldata.h"
 
 #ifdef SSDK2007
 #include "mathlib\vmatrix.h"
@@ -47,34 +49,24 @@ void PlayerIOFeature::InitHooks()
 	FIND_PATTERN(client, CalcAbsoluteVelocity);
 	FIND_PATTERN(client, GetGroundEntity);
 	FIND_PATTERN(client, MiddleOfCAM_Think);
-	FIND_PATTERN(server, PlayerRunCommand);
+	FIND_PATTERN(server, PlayerRunCommand);	
+	FIND_PATTERN(server, CheckJumpButton);
+	FIND_PATTERN(server, FinishGravity);
 }
 
 void PlayerIOFeature::UnloadFeature() {}
 
 void PlayerIOFeature::PreHook()
 {
-	offM_vecAbsVelocity = 0;
 	offM_afPhysicsFlags = 0;
 	offM_moveCollide = 0;
 	offM_moveType = 0;
 	offM_collisionGroup = 0;
-	offM_vecPunchAngle = 0;
-	offM_vecPunchAngleVel = 0;
 
 	offM_pCommands = 0;
 	offForwardmove = 0;
 	offSidemove = 0;
-
-	offMaxspeed = 0;
-	offFlags = 0;
-	offAbsVelocity = 0;
-	offDucking = 0;
-	offDuckJumpTime = 0;
 	offServerSurfaceFriction = 0;
-	offServerPreviouslyPredictedOrigin = 0;
-	offServerAbsOrigin = 0;
-	ORIG_GetLocalPlayer = nullptr;
 
 	if (ORIG_PlayerRunCommand)
 	{
@@ -87,8 +79,6 @@ void PlayerIOFeature::PreHook()
 			offM_moveCollide = 307;
 			offM_moveType = 306;
 			offM_collisionGroup = 420;
-			offM_vecPunchAngle = 2192;
-			offM_vecPunchAngleVel = 2200;
 			break;
 		case 1:
 			offM_vecAbsVelocity = 476;
@@ -185,6 +175,110 @@ void PlayerIOFeature::PreHook()
 		}
 	}
 
+	// Server-side CheckJumpButton
+	if (ORIG_CheckJumpButton)
+	{
+		JumpSignal.Works = true;
+		int ptnNumber = GetPatternIndex((void**)&ORIG_CheckJumpButton);
+		switch (ptnNumber)
+		{
+		case 0:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 1:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 2:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 3:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 4:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 5:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 6:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 7:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 8:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 9:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 10:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 11:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 12:
+			off_mv = 3;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 13:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 14:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 15:
+			off_mv = 1;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 16:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 17:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+
+		case 18:
+			off_mv = 2;
+			off2M_nOldButtons = 40;
+			break;
+		}
+	}
+
 	if (ORIG_GetGroundEntity)
 	{
 		int index = GetPatternIndex((void**)&ORIG_GetGroundEntity);
@@ -235,71 +329,81 @@ void PlayerIOFeature::PreHook()
 			offServerAbsOrigin = 636;
 			break;
 		default:
-			offMaxspeed = 0;
-			offFlags = 0;
-			offAbsVelocity = 0;
-			offDucking = 0;
-			offDuckJumpTime = 0;
 			offServerSurfaceFriction = 0;
-			offServerPreviouslyPredictedOrigin = 0;
-			offServerAbsOrigin = 0;
 			Warning("GetGroundEntity did not contain matching if statement for pattern!\n");
-			break;
 		}
 	}
 
-	if (ORIG_MiddleOfCAM_Think)
+	if (ORIG_FinishGravity)
 	{
-		int index = GetPatternIndex((void**)&ORIG_MiddleOfCAM_Think);
-
-		switch (index)
+		int ptnNumber = GetPatternIndex((void**)&ORIG_FinishGravity);
+		switch (ptnNumber)
 		{
 		case 0:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 29) + ORIG_MiddleOfCAM_Think + 33);
+			off_player = 1;
+			off2M_bDucked = 2128;
 			break;
 
 		case 1:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 30) + ORIG_MiddleOfCAM_Think + 34);
+			off_player = 2;
+			off2M_bDucked = 3120;
 			break;
 
 		case 2:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 21) + ORIG_MiddleOfCAM_Think + 25);
+			off_player = 2;
+			off2M_bDucked = 3184;
 			break;
 
 		case 3:
-			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
-			    *reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 23) + ORIG_MiddleOfCAM_Think + 27);
+			off_player = 2;
+			off2M_bDucked = 3376;
 			break;
-		default:
-			ORIG_GetLocalPlayer = nullptr;
+
+		case 4:
+			off_player = 1;
+			off2M_bDucked = 3440;
+			break;
+
+		case 5:
+			off_player = 1;
+			off2M_bDucked = 3500;
+			break;
+
+		case 6:
+			off_player = 1;
+			off2M_bDucked = 3724;
+			break;
+
+		case 7:
+			off_player = 2;
+			off2M_bDucked = 3112;
+			break;
+
+		case 8:
+			off_player = 1;
+			off2M_bDucked = 3416;
 			break;
 		}
-
-		if (ORIG_GetLocalPlayer)
-			DevMsg("[client.dll] Found GetLocalPlayer at %p.\n", ORIG_GetLocalPlayer);
 	}
 }
 
 Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 {
 	auto vars = Strafe::MovementVars();
-
-	if (!playerioAddressesWereFound || cinput_thisptr == nullptr)
-	{
-		return vars;
-	}
-
+	auto serverPlayer = utils::GetServerPlayer();
 	auto player = ORIG_GetLocalPlayer();
 
-	if (!player)
+	if (!playerioAddressesWereFound || cinput_thisptr == nullptr || serverPlayer == nullptr)
 	{
 		return vars;
 	}
 
+#ifdef NEW
+	auto maxspeed = utils::GetPlayerDatamapProperty<float>("m_flMaxspeed");
+#else
 	auto maxspeed = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offMaxspeed);
+#endif
+	auto m_Local = utils::GetPlayerDatamapPtr<CPlayerLocalData>("m_Local");
 
 	auto pl = GetPlayerData();
 	vars.OnGround = Strafe::GetPositionType(pl, pl.Ducking ? Strafe::HullType::DUCKED : Strafe::HullType::NORMAL)
@@ -342,10 +446,16 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 
 	auto server_player = utils::GetServerPlayer();
 
+#ifdef NEW
+	auto previouslyPredictedOrigin = utils::GetPlayerDatamapProperty<Vector>("m_vecPreviouslyPredictedOrigin");
+	auto absOrigin = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
+	bool gameCodeMovedPlayer = (previouslyPredictedOrigin != absOrigin);
+#else
 	auto previouslyPredictedOrigin =
-	    reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(server_player) + offServerPreviouslyPredictedOrigin);
+		reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(server_player) + offServerPreviouslyPredictedOrigin);
 	auto absOrigin = reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(server_player) + offServerAbsOrigin);
 	bool gameCodeMovedPlayer = (*previouslyPredictedOrigin != *absOrigin);
+#endif
 
 	vars.EntFriction =
 	    *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(server_player) + offServerSurfaceFriction);
@@ -379,12 +489,20 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 
 	vars.CantJump = false;
 	// This will report air on the first frame of unducking and report ground on the last one.
+#ifdef NEW
+	if (m_Local->m_bDucking && GetFlagsDucking())
+#else
 	if ((*reinterpret_cast<bool*>(reinterpret_cast<uintptr_t>(player) + offDucking)) && GetFlagsDucking())
+#endif
 	{
 		vars.CantJump = true;
 	}
-
+#ifdef NEW
+	auto djt = m_Local->m_flDuckJumpTime.Get();
+#else
 	auto djt = (*reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offDuckJumpTime));
+#endif
+
 	djt -= vars.Frametime * 1000;
 	djt = std::max(0.f, djt);
 	float flDuckMilliseconds = std::max(0.0f, 1000.f - djt);
@@ -468,16 +586,14 @@ int __fastcall PlayerIOFeature::HOOKED_GetButtonBits(void* thisptr, int edx, int
 
 bool PlayerIOFeature::GetFlagsDucking()
 {
+#ifdef NEW
+	int flags = utils::GetPlayerDatamapProperty<int>("m_fFlags");
+	return flags & FL_DUCKING;
+#else
 	if (!ORIG_GetLocalPlayer)
 		return false;
 	return (*reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(ORIG_GetLocalPlayer()) + offFlags)) & FL_DUCKING;
-}
-
-int PlayerIOFeature::GetPlayerFlags()
-{
-	if (!ORIG_GetLocalPlayer)
-		return 0;
-	return (*reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(ORIG_GetLocalPlayer()) + offFlags));
+#endif
 }
 
 Strafe::PlayerData PlayerIOFeature::GetPlayerData()
@@ -491,9 +607,11 @@ Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 	data.Ducking = GetFlagsDucking();
 	data.DuckPressed = (ORIG_GetButtonBits(cinput_thisptr, 0, 0) & IN_DUCK);
 	data.UnduckedOrigin =
-	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
+		*reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
+	data.UnduckedOrigin = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
 	data.Velocity = GetPlayerVelocity();
 	data.Basevelocity = Vector();
+	data.Basevelocity = Vector(0, 0, 0);
 
 	if (data.Ducking)
 	{
@@ -508,6 +626,9 @@ Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 
 Vector PlayerIOFeature::GetPlayerVelocity()
 {
+#ifdef NEW
+	return utils::GetPlayerDatamapProperty<Vector>("m_vecAbsVelocity");
+#else
 	void* player;
 	if (!ORIG_GetLocalPlayer || !ORIG_CalcAbsoluteVelocity || !(player = ORIG_GetLocalPlayer()))
 		return Vector(0, 0, 0);
@@ -515,12 +636,17 @@ Vector PlayerIOFeature::GetPlayerVelocity()
 	float* vel = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offAbsVelocity);
 
 	return Vector(vel[0], vel[1], vel[2]);
+#endif
 }
 
 Vector PlayerIOFeature::GetPlayerEyePos()
 {
+#ifdef NEW
+	Vector rval = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
+#else
 	Vector rval =
-	    *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
+		*reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
+#endif
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;
 
@@ -538,11 +664,23 @@ Vector PlayerIOFeature::GetPlayerEyePos()
 
 bool PlayerIOFeature::IsGroundEntitySet()
 {
-	if (ORIG_GetGroundEntity == nullptr || ORIG_GetLocalPlayer == nullptr)
-		return false;
-
-	auto player = ORIG_GetLocalPlayer();
+	auto player = utils::GetClientEntity(0);
 	return (ORIG_GetGroundEntity(player, 0) != NULL); // TODO: This should really be a proper check.
+}
+
+bool PlayerIOFeature::GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel)
+{
+	auto m_Local = utils::GetPlayerDatamapPtr<CPlayerLocalData>("m_Local");
+	if(m_Local)
+	{
+		punchAngle = m_Local->m_vecPunchAngle;
+		punchAngleVel = m_Local->m_vecPunchAngleVel;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 bool PlayerIOFeature::TryJump()
@@ -553,9 +691,14 @@ bool PlayerIOFeature::TryJump()
 
 bool PlayerIOFeature::PlayerIOAddressesFound()
 {
-	return ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits && ORIG_GetLocalPlayer
-	       && ORIG_CalcAbsoluteVelocity && ORIG_MiddleOfCAM_Think && _sv_airaccelerate && _sv_accelerate
-	       && _sv_friction && _sv_maxspeed && _sv_stopspeed && interfaces::engine_server != nullptr;
+// ORIG_GetGroundEntity = FL_ONGROUND
+// ORIG_CreateMove = Grab this from gamemovement?
+// ORIG_GetButtonBits = required probably
+// ORIG_CalcAbsoluteVelocity = go to using server entitities
+
+	return ORIG_CreateMove && ORIG_GetButtonBits && ORIG_GetGroundEntity
+	      && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed
+		  && _sv_stopspeed && interfaces::engine_server != nullptr;
 }
 
 void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
@@ -576,24 +719,6 @@ void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
 		*reinterpret_cast<float*>(pCmd + offSidemove) = out.SideSpeed;
 		va[YAW] = static_cast<float>(out.Yaw);
 	}
-}
-
-double PlayerIOFeature::GetDuckJumpTime()
-{
-	if (!ORIG_GetLocalPlayer)
-		return 0;
-
-	auto player = ORIG_GetLocalPlayer();
-	return *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offDuckJumpTime);
-}
-
-int PlayerIOFeature::GetPlayerPhysicsFlags() const
-{
-	auto player = utils::GetServerPlayer();
-	if (!player || offM_afPhysicsFlags == 0)
-		return -1;
-	else
-		return *reinterpret_cast<int*>(((int)utils::GetServerPlayer() + offM_afPhysicsFlags));
 }
 
 int PlayerIOFeature::GetPlayerMoveType() const
@@ -665,17 +790,13 @@ CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 #if defined(SSDK2007) || defined(SSDK2013)
 CON_COMMAND(y_spt_find_portals, "Yes")
 {
-	if (spt_playerio.offServerAbsOrigin == 0)
-		return;
-
 	for (int i = 0; i < MAX_EDICTS; ++i)
 	{
 		auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
 
 		if (ent && !ent->IsFree() && !strcmp(ent->GetClassName(), "prop_portal"))
 		{
-			auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-			                                          + spt_playerio.offServerAbsOrigin);
+			auto origin = utils::GetField<Vector>(i, "m_vecAbsOrigin");
 
 			Msg("SPT: There's a portal with index %d at %.8f %.8f %.8f.\n",
 			    i,
@@ -694,8 +815,7 @@ void calculate_offset_player_pos(edict_t* saveglitch_portal, Vector& new_player_
 {
 	// Here we make sure that the eye position and the eye angles match up.
 	const Vector view_offset(0, 0, 64);
-	auto& player_origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer())
-	                                                 + spt_playerio.offServerAbsOrigin);
+	auto& player_origin = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
 	auto& player_angles = *reinterpret_cast<QAngle*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + 2568);
 
 	auto& matrix = *reinterpret_cast<VMatrix*>(reinterpret_cast<uintptr_t>(saveglitch_portal->GetUnknown()) + 1072);
@@ -717,12 +837,6 @@ CON_COMMAND(
 	if (args.ArgC() != 2 && args.ArgC() != 3)
 	{
 		Msg("Usage: y_spt_calc_relative_position <index of the save glitch portal | \"blue\" | \"orange\"> [1 if you want to teleport there instead of just printing]\n");
-		return;
-	}
-
-	if (spt_playerio.offServerAbsOrigin == 0)
-	{
-		Warning("Could not find the required offset in the client DLL.\n");
 		return;
 	}
 
@@ -752,9 +866,7 @@ CON_COMMAND(
 
 			for (auto i : indices)
 			{
-				auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
-				auto& origin = *reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(ent->GetUnknown())
-				                                          + spt_playerio.offServerAbsOrigin);
+				auto origin = utils::GetField<Vector>(i, "m_vecAbsOrigin");
 
 				Msg("%d located at %.8f %.8f %.8f\n", i, origin.x, origin.y, origin.z);
 			}
@@ -995,61 +1107,58 @@ void PlayerIOFeature::LoadFeature()
 #endif
 	}
 
-	if (ORIG_GetLocalPlayer && ORIG_CalcAbsoluteVelocity && offAbsVelocity != 0)
-	{
-		InitCommand(_y_spt_getvel);
+	InitCommand(_y_spt_getvel);
 #if defined(SSDK2007)
-		if (TickSignal.Works)
-		{
-			TickSignal.Connect(this, &PlayerIOFeature::OnTick);
-
-			AddHudCallback(
-			    "accel(xyz)",
-			    [this]() {
-				    Vector accel = currentVelocity - previousVelocity;
-				    spt_hud.DrawTopHudElement(L"accel(xyz): %.3f %.3f %.3f", accel.x, accel.y, accel.z);
-				    spt_hud.DrawTopHudElement(L"accel(xy): %.3f", accel.Length2D());
-			    },
-			    y_spt_hud_accel);
-		}
+	if (TickSignal.Works)
+	{
+		TickSignal.Connect(this, &PlayerIOFeature::OnTick);
 
 		AddHudCallback(
-		    "vel(xyz)",
-		    [this]() {
-			    Vector currentVel = GetPlayerVelocity();
-			    spt_hud.DrawTopHudElement(L"vel(xyz): %.3f %.3f %.3f",
-			                              currentVel.x,
-			                              currentVel.y,
-			                              currentVel.z);
-			    spt_hud.DrawTopHudElement(L"vel(xy): %.3f", currentVel.Length2D());
-		    },
-		    y_spt_hud_velocity);
-
-		AddHudCallback(
-		    "vel(p/y/r)",
-		    [this]() {
-			    Vector currentVel = GetPlayerVelocity();
-			    QAngle angles;
-			    VectorAngles(currentVel, Vector(0, 0, 1), angles);
-			    spt_hud.DrawTopHudElement(L"vel(p/y/r): %.3f %.3f %.3f", angles.x, angles.y, angles.z);
-		    },
-		    y_spt_hud_velocity_angles);
-
-		if (utils::DoesGameLookLikePortal())
-		{
-			AddHudCallback(
-			    "ag sg",
-			    [this]() {
-				    Vector v = spt_playerio.GetPlayerEyePos();
-				    QAngle q;
-
-				    std::wstring result = calculateWillAGSG(v, q);
-				    spt_hud.DrawTopHudElement(L"ag sg: %s", result.c_str());
-			    },
-			    y_spt_hud_ag_sg_tester);
-		}
-#endif
+			"accel(xyz)",
+			[this]() {
+				Vector accel = currentVelocity - previousVelocity;
+				spt_hud.DrawTopHudElement(L"accel(xyz): %.3f %.3f %.3f", accel.x, accel.y, accel.z);
+				spt_hud.DrawTopHudElement(L"accel(xy): %.3f", accel.Length2D());
+			},
+			y_spt_hud_accel);
 	}
+
+	AddHudCallback(
+		"vel(xyz)",
+		[this]() {
+			Vector currentVel = GetPlayerVelocity();
+			spt_hud.DrawTopHudElement(L"vel(xyz): %.3f %.3f %.3f",
+			                            currentVel.x,
+			                            currentVel.y,
+			                            currentVel.z);
+			spt_hud.DrawTopHudElement(L"vel(xy): %.3f", currentVel.Length2D());
+		},
+		y_spt_hud_velocity);
+
+	AddHudCallback(
+		"vel(p/y/r)",
+		[this]() {
+			Vector currentVel = GetPlayerVelocity();
+			QAngle angles;
+			VectorAngles(currentVel, Vector(0, 0, 1), angles);
+			spt_hud.DrawTopHudElement(L"vel(p/y/r): %.3f %.3f %.3f", angles.x, angles.y, angles.z);
+		},
+		y_spt_hud_velocity_angles);
+
+	if (utils::DoesGameLookLikePortal())
+	{
+		AddHudCallback(
+			"ag sg",
+			[this]() {
+				Vector v = spt_playerio.GetPlayerEyePos();
+				QAngle q;
+
+				std::wstring result = calculateWillAGSG(v, q);
+				spt_hud.DrawTopHudElement(L"ag sg: %s", result.c_str());
+			},
+			y_spt_hud_ag_sg_tester);
+	}
+#endif
 
 	if (ORIG_GetButtonBits)
 	{
@@ -1065,21 +1174,18 @@ void PlayerIOFeature::LoadFeature()
 	}
 #endif
 #if defined(SSDK2007)
-	if (utils::DoesGameLookLikePortal() && interfaces::engine_server && offServerAbsOrigin != 0)
+	if (utils::DoesGameLookLikePortal() && interfaces::engine_server)
 	{
 		InitCommand(y_spt_find_portals);
 	}
 
-	if (ORIG_GetLocalPlayer && offFlags != 0)
-	{
-		AddHudCallback(
-		    "fl_",
-		    [this]() {
-			    int flags = spt_playerio.GetPlayerFlags();
-			    DrawFlagsHud(false, NULL, FLAGS, ARRAYSIZE(FLAGS), flags);
-		    },
-		    y_spt_hud_flags);
-	}
+	AddHudCallback(
+		"fl_",
+		[this]() {
+			int flags = utils::GetPlayerDatamapProperty<int>("m_fFlags");
+			DrawFlagsHud(false, NULL, FLAGS, ARRAYSIZE(FLAGS), flags);
+		},
+		y_spt_hud_flags);
 
 	if (offM_moveType != 0)
 	{

@@ -525,7 +525,7 @@ namespace utils
 		return GetClientEntity(0) != nullptr;
 	}
 
-	static CBaseEntity* GetServerEntity(int index)
+	CBaseEntity* GetServerEntity(int index)
 	{
 		if (!interfaces::engine_server)
 			return nullptr;
@@ -539,24 +539,6 @@ namespace utils
 			return nullptr;
 
 		return unknown->GetBaseEntity();
-	}
-
-	bool GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel)
-	{
-		auto ply = GetServerEntity(1);
-
-		if (ply && spt_playerio.offM_vecPunchAngle != 0 && spt_playerio.offM_vecPunchAngleVel != 0)
-		{
-			punchAngle =
-			    *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply) + spt_playerio.offM_vecPunchAngle);
-			punchAngleVel = *reinterpret_cast<QAngle*>(reinterpret_cast<char*>(ply)
-			                                           + spt_playerio.offM_vecPunchAngleVel);
-			return true;
-		}
-		else
-		{
-			return false;
-		}
 	}
 
 	static int GetServerEntityCount()
@@ -714,6 +696,83 @@ namespace utils
 		}
 
 		return false;
+	}
+
+	void WriteField(typedescription_t field, CBaseEntity* entity, char* buffer, size_t size)
+	{
+		int offset = field.fieldOffset[0];
+		void* data = (void*)((char*)entity + offset);
+		int ehandle;
+		Vector vec;
+		Quaternion q;
+
+		switch (field.fieldType)
+		{
+		case FIELD_VOID:
+			sprintf_s(buffer, size, "void");
+			break;
+		case FIELD_FLOAT:
+			sprintf_s(buffer, size, "%.3f", *(float*)data);
+			break;
+		case FIELD_VECTOR:
+			vec = *(Vector*)data;
+			sprintf_s(buffer, size, "(%.3f, %.3f, %.3f)", vec[0], vec[1], vec[2]);
+			break;
+		case FIELD_QUATERNION:
+			q = *(Quaternion*)data;
+			sprintf_s(buffer, size, "(%.3f, %.3f, %.3f, %.3f)", q[0], q[1], q[2], q[3]);
+			break;
+		case FIELD_INTEGER:
+			sprintf_s(buffer, size, "%d", *(int*)data);
+			break;
+		case FIELD_BOOLEAN:
+			sprintf_s(buffer, size, "%d", *(int*)data);
+			break;
+		case FIELD_EHANDLE:
+			ehandle = *reinterpret_cast<int*>(data);
+			sprintf_s(buffer,
+			          size,
+			          "(index %d, serial %d)",
+			          ehandle & INDEX_MASK,
+			          (ehandle & (~INDEX_MASK)) >> MAX_EDICT_BITS);
+			break;
+		default:
+			sprintf_s(buffer, size, "unable to parse");
+			break;
+		}
+	}
+
+	void PrintEntityDatamap(int index)
+	{
+		CBaseEntity* entity = GetServerEntity(index);
+		char tempbuffer[256];
+		if (!entity)
+		{
+			Msg("No entity at index %d\n", index);
+			return;
+		}
+
+		auto datamap = entity->GetDataDescMap();
+
+		if (!datamap)
+		{
+			Msg("Entity returned NULL datamap\n");
+			return;
+		}
+		
+		while (datamap != nullptr)
+		{
+			Msg("%s datamap:\n", datamap->dataClassName);
+			for (int i = 0; i < datamap->dataNumFields; ++i)
+			{
+				auto field = datamap->dataDesc[i];
+				int written = sprintf_s(tempbuffer, "\t%s (offset %d): ", field.fieldName, field.fieldOffset[0]);
+				WriteField(field, entity, tempbuffer + written, ARRAYSIZE(tempbuffer) - written);
+				Msg("%s\n", tempbuffer);
+			}
+
+			datamap = datamap->baseMap;
+		}
 	}
 
 } // namespace utils

@@ -22,6 +22,7 @@ namespace utils
 	};
 
 	void GetAllProps(RecvTable* table, void* ptr, std::vector<propValue>& props);
+	CBaseEntity* GetServerEntity(int index);
 	IClientEntity* GetClientEntity(int index);
 	void PrintAllClientEntities();
 	IClientEntity* GetPlayer();
@@ -45,7 +46,6 @@ namespace utils
 
 	JBData CanJB(float height);
 	bool playerEntityAvailable();
-	bool GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel);
 	void FindClosestPlane(const trace_t& tr, trace_t& out, float maxDistSqr);
 	bool TraceHit(const trace_t& tr, float maxDistSqr);
 	bool TestSeamshot(const Vector& cameraPos,
@@ -54,4 +54,5 @@ namespace utils
 	                  const cplane_t& plane2,
 	                  QAngle& seamAngle);
 	void CheckPiwSave();
+	void PrintEntityDatamap(int index);
 } // namespace utils

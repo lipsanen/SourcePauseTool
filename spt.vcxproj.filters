@@ -468,6 +468,9 @@
     <ClInclude Include="spt\features\hud.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
+    <ClInclude Include="SDK\cplayerlocaldata.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">

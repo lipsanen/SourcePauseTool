@@ -139,7 +139,7 @@ CON_COMMAND(tas_aim, "Aims at a point.")
 
 		QAngle punchAngle, punchAnglevel;
 
-		if (utils::GetPunchAngleInformation(punchAngle, punchAnglevel))
+		if (spt_playerio.GetPunchAngleInformation(punchAngle, punchAnglevel))
 		{
 			QAngle futurePunchAngle = aim::DecayPunchAngle(punchAngle, punchAnglevel, frames);
 			aimAngle -= futurePunchAngle;

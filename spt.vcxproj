@@ -1378,6 +1378,7 @@
     <ClInclude Include="..\..\public\tier1\utlmemory.h" />
     <ClInclude Include="..\..\public\tier1\utlvector.h" />
     <ClInclude Include="..\..\public\vstdlib\vstdlib.h" />
+    <ClInclude Include="SDK\cplayerlocaldata.h" />
     <ClInclude Include="SDK\hl_movedata.h" />
     <ClInclude Include="SDK\igamemovement.h" />
     <ClInclude Include="SDK\imovehelper.h" />

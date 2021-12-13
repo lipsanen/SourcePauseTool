@@ -78,10 +78,23 @@ CON_COMMAND(y_spt_print_ent_props, "Prints all props for a given entity index.")
 	}
 }
 
+CON_COMMAND(y_spt_print_ent_datamap, "Prints the datamap for a given entity index.")
+{
+	if (args.ArgC() < 2)
+	{
+		Msg("Usage: y_spt_print_ent_datamap [index]\n");
+	}
+	else
+	{
+		utils::PrintEntityDatamap(std::stoi(args.Arg(1)));
+	}
+}
+
 void EntUtils::LoadFeature()
 {
 	InitCommand(y_spt_print_ents);
 	InitCommand(y_spt_print_ent_props);
+	InitCommand(y_spt_print_ent_datamap);
 	if (utils::DoesGameLookLikePortal())
 		InitCommand(y_spt_print_portals);
 #ifndef OE

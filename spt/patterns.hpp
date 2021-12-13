@@ -476,7 +476,7 @@ namespace patterns
 		PATTERNS(TracePlayerBBoxForGround2,
 		         "5135",
 		         "55 8B EC 83 E4 F0 8B 4D 18 8B 01 8B 50 08 81 EC 84 00 00 00 53 56 57 FF D2");
-		PATTERNS(CGameMovement__TracePlayerBBox, "5135", "55 8B EC 83 E4 F0 83 EC 5C 56 8B F1 8B 06 8B 50 24");
+		PATTERNS(CGameMovement__TracePlayerBBox, "5135", "55 8B EC 83 E4 F0 83 EC ?? 56 8B F1 8B 06 8B 50 ?? FF D2");
 		PATTERNS(CPortalGameMovement__TracePlayerBBox,
 		         "5135",
 		         "55 8B EC 83 E4 F0 81 EC C4 00 00 00 53 56 8B F1 8B 46 08 83 C0 04 8B 00");

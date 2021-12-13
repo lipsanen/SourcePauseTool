@@ -15,6 +15,8 @@ typedef void(
     __fastcall* _CreateMove)(void* thisptr, int edx, int sequence_number, float input_sample_frametime, bool active);
 typedef int(__fastcall* _GetButtonBits)(void* thisptr, int edx, int bResetState);
 typedef void*(__cdecl* _GetLocalPlayer)();
+typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);
+typedef void(__fastcall* _FinishGravity)(void* thisptr, int edx);
 
 // This feature reads player stuff from memory and writes player stuff into memory
 class PlayerIOFeature : public Feature
@@ -40,12 +42,12 @@ public:
 	Strafe::PlayerData GetPlayerData();
 	Vector GetPlayerVelocity();
 	Vector GetPlayerEyePos();
+	bool GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel);
 	int GetPlayerFlags();
 	double GetDuckJumpTime();
 	bool IsGroundEntitySet();
 	bool TryJump();
 	bool PlayerIOAddressesFound();
-	int GetPlayerPhysicsFlags() const;
 	int GetPlayerMoveType() const;
 	int GetPlayerMoveCollide() const;
 	int GetPlayerCollisionGroup() const;
@@ -64,13 +66,13 @@ public:
 	ptrdiff_t offM_moveType = 0;
 	ptrdiff_t offM_moveCollide = 0;
 	ptrdiff_t offM_collisionGroup = 0;
-	ptrdiff_t offM_vecPunchAngle = 0;
-	ptrdiff_t offM_vecPunchAngleVel = 0;
 	_CreateMove ORIG_CreateMove = nullptr;
 
 	_GetLocalPlayer ORIG_GetLocalPlayer = nullptr;
 	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity = nullptr;
 	_GetGroundEntity ORIG_GetGroundEntity = nullptr;
+	_CheckJumpButton ORIG_CheckJumpButton = nullptr;
+	_FinishGravity ORIG_FinishGravity = nullptr;
 	_GetButtonBits ORIG_GetButtonBits = nullptr;
 	uintptr_t ORIG_MiddleOfCAM_Think = 0;
 	uintptr_t ORIG_PlayerRunCommand = 0;
@@ -88,6 +90,10 @@ public:
 	ptrdiff_t offServerSurfaceFriction = 0;
 	ptrdiff_t offServerPreviouslyPredictedOrigin = 0;
 	std::size_t sizeofCUserCmd = 0;
+	ptrdiff_t off_mv = 0;
+	ptrdiff_t off2M_nOldButtons = 0;
+	ptrdiff_t off_player = 0;
+	ptrdiff_t off2M_bDucked = 0;
 
 	void EnableDuckspam()
 	{

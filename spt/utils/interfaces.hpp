@@ -9,6 +9,7 @@
 #include "cdll_int.h"
 #include "icliententitylist.h"
 #include "engine\ivmodelinfo.h"
+#include "vphysics_interface.h"
 
 namespace interfaces
 {
