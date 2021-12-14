@@ -2,6 +2,7 @@
 
 #ifdef OE
 #define GAME_DLL
+#include "datamap.h"
 #include "networkvar.h"
 #else
 #define GAME_DLL

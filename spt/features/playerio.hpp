@@ -1,5 +1,6 @@
 #pragma once
 
+#include "datamap.h"
 #include "..\feature.hpp"
 #include "..\strafe\strafestuff.hpp"
 

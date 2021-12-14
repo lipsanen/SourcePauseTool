@@ -53,6 +53,7 @@ void Cvar_RegisterSPTCvars()
 	if (!g_pCVar)
 		return;
 	ConVar_Register(0);
+	return;
 	int identifier = y_spt_pause.GetDLLIdentifier();
 
 	ConCommandBase* cmd = interfaces::g_pCVar->GetCommands();

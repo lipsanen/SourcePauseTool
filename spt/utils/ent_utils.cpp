@@ -2,6 +2,7 @@
 
 #include "ent_utils.hpp"
 
+#include "datamap.h"
 #include <limits>
 #include <regex>
 #include <sstream>
@@ -742,6 +743,7 @@ namespace utils
 		}
 	}
 
+
 	void PrintEntityDatamap(int index)
 	{
 		CBaseEntity* entity = GetServerEntity(index);
@@ -752,7 +754,7 @@ namespace utils
 			return;
 		}
 
-		auto datamap = entity->GetDataDescMap();
+		auto datamap = GetDataDescMap(entity);
 
 		if (!datamap)
 		{
@@ -774,5 +776,4 @@ namespace utils
 			datamap = datamap->baseMap;
 		}
 	}
-
 } // namespace utils

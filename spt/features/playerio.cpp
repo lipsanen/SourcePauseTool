@@ -151,18 +151,12 @@ void PlayerIOFeature::PreHook()
 			break;
 
 		case 3:
-			offM_pCommands = 196;
+			Msg("BMS XD\n");
+			offM_pCommands = 244;
 			offForwardmove = 24;
 			offSidemove = 28;
 			break;
-
 		case 4:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 5:
 			offM_pCommands = 196;
 			offForwardmove = 24;
 			offSidemove = 28;
@@ -328,6 +322,15 @@ void PlayerIOFeature::PreHook()
 			offServerPreviouslyPredictedOrigin = 3752;
 			offServerAbsOrigin = 636;
 			break;
+		case 4:
+			offMaxspeed = 3620;
+			offFlags = 264;
+			offDucking = 3129;
+			offDuckJumpTime = 3136;
+			offServerSurfaceFriction = 4008;
+			offServerPreviouslyPredictedOrigin = 3888;
+			offServerAbsOrigin = 640;
+			break;
 		default:
 			offServerSurfaceFriction = 0;
 			Warning("GetGroundEntity did not contain matching if statement for pattern!\n");
@@ -385,24 +388,54 @@ void PlayerIOFeature::PreHook()
 			break;
 		}
 	}
+
+	if (ORIG_MiddleOfCAM_Think)
+	{
+		int index = GetPatternIndex((void**)&ORIG_MiddleOfCAM_Think);
+
+		switch (index)
+		{
+		case 0:
+			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
+				*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 29) + ORIG_MiddleOfCAM_Think + 33);
+			break;
+
+		case 1:
+			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
+				*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 30) + ORIG_MiddleOfCAM_Think + 34);
+			break;
+
+		case 2:
+			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
+				*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 21) + ORIG_MiddleOfCAM_Think + 25);
+			break;
+
+		case 3:
+			ORIG_GetLocalPlayer = (_GetLocalPlayer)(
+				*reinterpret_cast<uintptr_t*>(ORIG_MiddleOfCAM_Think + 23) + ORIG_MiddleOfCAM_Think + 27);
+			break;
+		default:
+			ORIG_GetLocalPlayer = nullptr;
+			break;
+		}
+
+		if (ORIG_GetLocalPlayer)
+			DevMsg("[client.dll] Found GetLocalPlayer at %p.\n", ORIG_GetLocalPlayer);
+	}
 }
 
 Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 {
 	auto vars = Strafe::MovementVars();
 	auto serverPlayer = utils::GetServerPlayer();
-	auto player = ORIG_GetLocalPlayer();
+	auto player = utils::GetClientEntity(0);
 
 	if (!playerioAddressesWereFound || cinput_thisptr == nullptr || serverPlayer == nullptr)
 	{
 		return vars;
 	}
 
-#ifdef NEW
 	auto maxspeed = utils::GetPlayerDatamapProperty<float>("m_flMaxspeed");
-#else
-	auto maxspeed = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offMaxspeed);
-#endif
 	auto m_Local = utils::GetPlayerDatamapPtr<CPlayerLocalData>("m_Local");
 
 	auto pl = GetPlayerData();
@@ -457,6 +490,9 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 	bool gameCodeMovedPlayer = (*previouslyPredictedOrigin != *absOrigin);
 #endif
 
+	auto previouslyPredictedOrigin2 = utils::GetPlayerDatamapProperty<Vector>("m_vecPreviouslyPredictedOrigin");
+	auto absOrigin2 = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
+	// EntFriction offset is fucked
 	vars.EntFriction =
 	    *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(server_player) + offServerSurfaceFriction);
 
@@ -489,20 +525,12 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 
 	vars.CantJump = false;
 	// This will report air on the first frame of unducking and report ground on the last one.
-#ifdef NEW
 	if (m_Local->m_bDucking && GetFlagsDucking())
-#else
-	if ((*reinterpret_cast<bool*>(reinterpret_cast<uintptr_t>(player) + offDucking)) && GetFlagsDucking())
-#endif
 	{
 		vars.CantJump = true;
 	}
-#ifdef NEW
-	auto djt = m_Local->m_flDuckJumpTime.Get();
-#else
-	auto djt = (*reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offDuckJumpTime));
-#endif
 
+	auto djt = m_Local->m_flDuckJumpTime.Get();
 	djt -= vars.Frametime * 1000;
 	djt = std::max(0.f, djt);
 	float flDuckMilliseconds = std::max(0.0f, 1000.f - djt);
@@ -586,14 +614,8 @@ int __fastcall PlayerIOFeature::HOOKED_GetButtonBits(void* thisptr, int edx, int
 
 bool PlayerIOFeature::GetFlagsDucking()
 {
-#ifdef NEW
 	int flags = utils::GetPlayerDatamapProperty<int>("m_fFlags");
 	return flags & FL_DUCKING;
-#else
-	if (!ORIG_GetLocalPlayer)
-		return false;
-	return (*reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(ORIG_GetLocalPlayer()) + offFlags)) & FL_DUCKING;
-#endif
 }
 
 Strafe::PlayerData PlayerIOFeature::GetPlayerData()
@@ -626,27 +648,12 @@ Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 
 Vector PlayerIOFeature::GetPlayerVelocity()
 {
-#ifdef NEW
 	return utils::GetPlayerDatamapProperty<Vector>("m_vecAbsVelocity");
-#else
-	void* player;
-	if (!ORIG_GetLocalPlayer || !ORIG_CalcAbsoluteVelocity || !(player = ORIG_GetLocalPlayer()))
-		return Vector(0, 0, 0);
-	ORIG_CalcAbsoluteVelocity(player, 0);
-	float* vel = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(player) + offAbsVelocity);
-
-	return Vector(vel[0], vel[1], vel[2]);
-#endif
 }
 
 Vector PlayerIOFeature::GetPlayerEyePos()
 {
-#ifdef NEW
 	Vector rval = utils::GetPlayerDatamapProperty<Vector>("m_vecAbsOrigin");
-#else
-	Vector rval =
-		*reinterpret_cast<Vector*>(reinterpret_cast<uintptr_t>(utils::GetServerPlayer()) + offServerAbsOrigin);
-#endif
 	constexpr float duckOffset = 28;
 	constexpr float standingOffset = 64;
 

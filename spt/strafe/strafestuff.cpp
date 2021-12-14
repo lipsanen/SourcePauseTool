@@ -62,21 +62,23 @@ namespace Strafe
 
 	void SetMoveData()
 	{
+	/*
 		data.m_nPlayerHandle = utils::GetServerPlayer()->GetRefEHandle();
 		void** player = reinterpret_cast<void**>((char*)interfaces::gm + 0x4);
 		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)interfaces::gm + 0x8);
 		oldmv = *mv;
 		oldPlayer = *player;
 		*mv = &data;
-		*player = utils::GetServerPlayer();
+		*player = utils::GetServerPlayer();*/
 	}
 
 	void UnsetMoveData()
 	{
+		/*
 		void** player = reinterpret_cast<void**>((char*)interfaces::gm + 0x4);
 		CMoveData** mv = reinterpret_cast<CMoveData**>((char*)interfaces::gm + 0x8);
 		*player = oldPlayer;
-		*mv = oldmv;
+		*mv = oldmv;*/
 	}
 
 	void TracePlayer(trace_t& trace, const Vector& start, const Vector& end, HullType hull)

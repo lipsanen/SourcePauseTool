@@ -16,6 +16,24 @@ namespace utils
 {
 	static std::unordered_map<std::string, PropMap> classToOffsetsMap;
 	static std::unordered_map<std::string, DataMap> nameToDatamap;
+	typedef datamap_t* (__fastcall* _GetDataDescMap)(void* thisptr, int edx);
+
+	template<typename T>
+	T GetVirtualFunctionPtrFromVTable(void* obj, int index)
+	{
+		T* ptr = *reinterpret_cast<T**>(obj);
+		return ptr[index];
+	}
+
+	datamap_t* GetDataDescMap(void* entity)
+	{
+#ifdef BMS
+		_GetDataDescMap function = GetVirtualFunctionPtrFromVTable<_GetDataDescMap>((void*)entity, 13);
+#else
+		_GetDataDescMap function = GetVirtualFunctionPtrFromVTable<_GetDataDescMap>((void*)entity, 11);
+#endif
+		return function(entity, 0);
+	}
 
 	PropMap FindOffsets(IClientEntity* ent)
 	{
@@ -48,7 +66,7 @@ namespace utils
 			return out;
 		}
 
-		auto datamap = ent->GetDataDescMap();
+		auto datamap = GetDataDescMap(ent);
 
 		while (datamap != nullptr)
 		{
@@ -89,7 +107,7 @@ namespace utils
 	typedescription_t* GetTypeDescription(int index, const std::string& key)
 	{
 		auto ent = utils::GetServerEntity(index);
-		auto datamap = ent->GetDataDescMap();
+		auto datamap = GetDataDescMap(ent);
 		std::string name = datamap->dataClassName;
 
 		if (nameToDatamap.find(name) == nameToDatamap.end())

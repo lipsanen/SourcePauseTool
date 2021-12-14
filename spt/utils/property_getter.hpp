@@ -6,6 +6,7 @@
 #include "cdll_int.h"
 #include "engine\ivmodelinfo.h"
 #include "client_class.h"
+#include "datamap.h"
 #include "icliententity.h"
 #include "icliententitylist.h"
 #include "ent_utils.hpp"
@@ -26,6 +27,7 @@ namespace utils
 		bool foundOffsets;
 	};
 
+	datamap_t* GetDataDescMap(void* entity);
 	int GetOffset(int entindex, const std::string& key);
 	int GetDatamapOffset(int entindex, const std::string& key);
 	typedescription_t* GetTypeDescription(int index, const std::string& key);
