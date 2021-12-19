@@ -56,6 +56,25 @@ struct PatternHook
 	void* functionHook;
 };
 
+struct MultiPatternHook
+{
+	MultiPatternHook(patterns::PatternWrapper* patternArr,
+	            size_t size,
+	            const char* patternName,
+	            std::vector<uintptr_t>* foundVec)
+	{
+		this->patternArr = patternArr;
+		this->size = size;
+		this->patternName = patternName;
+		this->foundVec = foundVec;
+	}
+
+	patterns::PatternWrapper* patternArr;
+	size_t size;
+	const char* patternName;
+	std::vector<uintptr_t>* foundVec;
+};
+
 struct OffsetHook
 {
 	int32_t offset;
@@ -74,6 +93,7 @@ struct RawHook
 struct ModuleHookData
 {
 	std::vector<PatternHook> patternHooks;
+	std::vector<MultiPatternHook> multipatternHooks;
 	std::vector<VFTableHook> vftableHooks;
 	std::vector<OffsetHook> offsetHooks;
 
@@ -107,8 +127,14 @@ public:
 	                           const char* patternName,
 	                           void** origPtr = nullptr,
 	                           void* functionHook = nullptr);
+	template<size_t PatternLength>
+	static void AddMultiPatternHook(const std::array<patterns::PatternWrapper, PatternLength>& patterns,
+	                           std::string moduleName,
+	                           const char* patternName,
+	                           std::vector<uintptr_t>* foundVec);
 	static void AddRawHook(std::string moduleName, void** origPtr, void* functionHook);
 	static void AddPatternHook(PatternHook hook, std::string moduleEnum);
+	static void AddMultiPatternHook(MultiPatternHook hook, std::string moduleName);
 	static void AddVFTableHook(VFTableHook hook, std::string moduleEnum);
 	static void AddOffsetHook(std::string moduleName,
 	                          int offset,
@@ -145,4 +171,14 @@ inline void Feature::AddPatternHook(const std::array<patterns::PatternWrapper, P
 	                           origPtr,
 	                           functionHook),
 	               moduleEnum);
+}
+
+template<size_t PatternLength>
+inline void Feature::AddMultiPatternHook(const std::array<patterns::PatternWrapper, PatternLength>& patterns, std::string moduleName, const char* patternName, std::vector<uintptr_t>* foundVec)
+{
+	AddMultiPatternHook(MultiPatternHook(const_cast<patterns::PatternWrapper*>(patterns.data()),
+	                                     PatternLength,
+	                                     patternName,
+	                                     foundVec),
+	                    moduleName);
 }
