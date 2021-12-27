@@ -26,7 +26,7 @@
 
 #undef max
 
-#if !defined(OE) && !defined(P2)
+#if !defined(OE) && !defined(P2) && !defined(L4D)
 #define GAME_DLL
 #include "cbase.h"
 #endif
@@ -430,7 +430,7 @@ namespace utils
 	}
 	int GetIndex(void* ent)
 	{
-#ifndef P2
+#if !defined(P2) && !defined(L4D)
 		if (!ent)
 			return -1;
 
@@ -457,7 +457,7 @@ namespace utils
 	}
 #endif
 
-#ifndef P2
+#if !defined(P2) && !defined(L4D)
 	IServerUnknown* GetServerPlayer()
 	{
 		if (!interfaces::engine_server)
@@ -535,7 +535,7 @@ namespace utils
 #endif
 	}
 
-#ifndef P2
+#if !defined(P2) && !defined(L4D)
 	static CBaseEntity* GetServerEntity(int index)
 	{
 		if (!interfaces::engine_server)
@@ -555,7 +555,7 @@ namespace utils
 
 	bool GetPunchAngleInformation(QAngle& punchAngle, QAngle& punchAngleVel)
 	{
-#ifdef P2
+#if defined(P2) || defined(L4D)
 		return false;
 #else
 		auto ply = GetServerEntity(1);
@@ -575,7 +575,7 @@ namespace utils
 #endif
 	}
 
-#if !defined(OE) && !defined(P2)
+#if !defined(OE) && !defined(P2) && !defined(L4D)
 	static int GetServerEntityCount()
 	{
 		if (!interfaces::engine_server)

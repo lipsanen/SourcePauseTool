@@ -27,3 +27,9 @@
 	url = https://github.com/alliedmodders/hl2sdk.git
 	branch = portal2
 	shallow = true
+[submodule "SDK/l4d"]
+	path = SDK/l4d
+	url = https://github.com/alliedmodders/hl2sdk
+[submodule "SDK/l4d2"]
+	path = SDK/l4d2
+	url = https://github.com/alliedmodders/hl2sdk

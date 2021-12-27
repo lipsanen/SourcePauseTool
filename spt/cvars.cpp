@@ -47,7 +47,7 @@ void Cvar_InitConCommandBase(ConCommandBase& concommand, void* owner)
 	}
 }
 
-#if !defined(OE) && !defined(P2)
+#if !defined(OE) && !defined(P2) && !defined(L4D)
 void Cvar_RegisterSPTCvars()
 {
 	if (!g_pCVar)
@@ -87,7 +87,7 @@ void Cvar_RegisterSPTCvars()
 }
 #endif
 
-#ifdef P2
+#if defined(P2) || defined(L4D)
 void Cvar_RegisterSPTCvars()
 {
 	if (!g_pCVar)

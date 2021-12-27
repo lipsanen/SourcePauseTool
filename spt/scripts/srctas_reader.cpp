@@ -264,7 +264,7 @@ namespace scripts
 	void SourceTASReader::ResetConvars()
 	{
 #ifndef OE
-#ifndef P2
+#if !defined(P2) && !defined (L4D)
 		ConCommandBase* cmd = interfaces::g_pCVar->GetCommands();
 
 		// Loops through the console variables and commands
