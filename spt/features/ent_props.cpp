@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
+#include "ent_props.hpp"
 #include "SPTLib\patterns.hpp"
 #include "convar.hpp"
 #include "hud.hpp"
@@ -9,15 +10,15 @@
 #include "ent_utils.hpp"
 #include "string_utils.hpp"
 #include "..\overlay\portal_camera.hpp"
-#include <map>
+#include <unordered_map>
 #include <string>
 
 ConVar y_spt_hud_portal_bubble("y_spt_hud_portal_bubble", "0", FCVAR_CHEAT, "Turns on portal bubble index hud.\n");
-ConVar y_spt_hud_ent_info(
-    "y_spt_hud_ent_info",
-    "",
-FCVAR_CHEAT,
-"Display entity info on HUD. Format is \"[ent index],[prop regex],[prop regex],...,[prop regex];[ent index],...,[prop regex]\".\n");
+ConVar y_spt_hud_ent_info("y_spt_hud_ent_info",
+                          "",
+                          FCVAR_CHEAT,
+                          "Display entity info on HUD. Format is \"[ent index],[prop regex],[prop "
+                          "regex],...,[prop regex];[ent index],...,[prop regex]\".\n");
 
 static const int MAX_ENTRIES = 128;
 static const int INFO_BUFFER_SIZE = 256;
@@ -27,45 +28,93 @@ static const char PROP_SEPARATOR = ',';
 
 namespace patterns
 {
-	PATTERNS(
-		Datamap,
-		"pattern1",
-		"C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? B8",
-		"pattern2",
-		"C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C3");
+	PATTERNS(Datamap,
+	         "pattern1",
+	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? B8",
+	         "pattern2",
+	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C3");
 }
 
-// Initializes ent utils stuff
-class EntUtils : public Feature
-{
-public:
-	virtual bool ShouldLoadFeature()
-	{
-#ifdef OE
-		return false;
-#else
-		return true;
-#endif
-	}
-
-	virtual void LoadFeature() override;
-	virtual void InitHooks() override;
-	virtual void PreHook() override;
-
-protected:
-	std::vector<uintptr_t> serverPatterns;
-	std::vector<uintptr_t> clientPatterns;
-
-	std::map<std::string, datamap_t*> serverMaps;
-	std::map<std::string, datamap_t*> clientMaps;
-};
-
-static EntUtils spt_entutils;
+EntUtils spt_entutils;
 
 void EntUtils::InitHooks()
 {
 	AddMultiPatternHook(patterns::Datamap, "client", "Datamap", &clientPatterns);
 	AddMultiPatternHook(patterns::Datamap, "server", "Datamap", &serverPatterns);
+	tablesProcessed = false;
+}
+
+void EntUtils::PreHook()
+{
+	ProcessTablesLazy();
+}
+
+void EntUtils::UnloadFeature()
+{
+	for (auto* map : wrappers)
+		delete map;
+}
+
+void EntUtils::WalkDatamap(std::string key)
+{
+	ProcessTablesLazy();
+	auto* result = GetDatamapWrapper(key);
+	if (result)
+		result->ExploreOffsets();
+	else
+		Msg("No datamap found with name %s\n", key.c_str());
+}
+
+void EntUtils::PrintDatamaps()
+{
+	Msg("Printing all datamaps:\n");
+	std::vector<std::string> names;
+	names.reserve(wrappers.size());
+
+	for (auto& pair : nameToMapWrapper)
+		names.push_back(pair.first);
+
+	std::sort(names.begin(), names.end());
+
+	for (auto& name : names)
+	{
+		auto* map = nameToMapWrapper[name];
+
+		Msg("\tDatamap: %s, server map %x, client map %x\n", name.c_str(), map->_serverMap, map->_clientMap);
+	}
+}
+
+int EntUtils::GetPlayerOffset(const std::string& key, bool server)
+{
+	ProcessTablesLazy();
+	auto* playermap = GetPlayerDatamapWrapper();
+
+	if (!playermap)
+		return utils::INVALID_DATAMAP_OFFSET;
+
+	if (server)
+		return playermap->GetServerOffset(key);
+	else
+		return playermap->GetClientOffset(key);
+}
+
+void* EntUtils::GetPlayer(bool server)
+{
+	if (server)
+	{
+		if (!interfaces::engine_server)
+			return nullptr;
+
+		auto edict = interfaces::engine_server->PEntityOfEntIndex(1);
+		if (!edict)
+			return nullptr;
+
+		return edict->GetUnknown();
+	}
+	else
+	{
+		return interfaces::entList->GetClientEntity(1);
+	}
 }
 
 static bool IsAddressLegal(uint8_t* address, uint8_t* start, std::size_t length)
@@ -92,8 +141,100 @@ static bool DoesNameLookSane(datamap_t* map, uint8_t* moduleStart, std::size_t l
 	return false;
 }
 
-void EntUtils::PreHook()
+PropMode EntUtils::GetAutoMode()
 {
+	auto svplayer = GetPlayer(true);
+	auto clplayer = GetPlayer(false);
+	if (svplayer)
+		return PropMode::Server;
+	else if (clplayer)
+		return PropMode::Client;
+	else
+		return PropMode::None;
+}
+
+void EntUtils::AddMap(datamap_t* map, bool server)
+{
+	std::string name = map->dataClassName;
+
+	// Pop the _ out of the client maps to make them match the server
+	if (!server && strstr(map->dataClassName, "C_") == map->dataClassName)
+	{
+		name = name.erase(1, 1);
+	}
+
+	Msg("Adding map %s, is server: %d\n", name.c_str(), server);
+	auto result = nameToMapWrapper.find(name);
+	utils::DatamapWrapper* ptr;
+
+	if (result == nameToMapWrapper.end())
+	{
+		ptr = new utils::DatamapWrapper();
+		wrappers.push_back(ptr);
+		nameToMapWrapper[name] = ptr;
+	}
+	else
+	{
+		ptr = result->second;
+	}
+
+	if (server)
+		ptr->_serverMap = map;
+	else
+		ptr->_clientMap = map;
+}
+
+utils::DatamapWrapper* EntUtils::GetDatamapWrapper(const std::string& key)
+{
+	auto result = nameToMapWrapper.find(key);
+	if (result != nameToMapWrapper.end())
+		return result->second;
+	else
+		return nullptr;
+}
+
+utils::DatamapWrapper* EntUtils::GetPlayerDatamapWrapper()
+{
+	// Grab cached result if exists, can also be NULL!
+	if (playerDatamapSearched)
+		return __playerdatamap;
+
+	if (utils::DoesGameLookLikePortal())
+	{
+		__playerdatamap = GetDatamapWrapper("CPortal_Player");
+	}
+
+	// Add any other game specific class names here
+
+	if (!__playerdatamap)
+	{
+		__playerdatamap = GetDatamapWrapper("CHL2_Player");
+	}
+
+	if (!__playerdatamap)
+	{
+		__playerdatamap = GetDatamapWrapper("CBasePlayer");
+	}
+
+	if (!__playerdatamap)
+	{
+		__playerdatamap = GetDatamapWrapper("CBaseCombatCharacter");
+	}
+
+	if (!__playerdatamap)
+	{
+		__playerdatamap = GetDatamapWrapper("CBaseEntity");
+	}
+
+	playerDatamapSearched = true;
+	return __playerdatamap;
+}
+
+void EntUtils::ProcessTablesLazy()
+{
+	if (tablesProcessed)
+		return;
+
 	void* clhandle;
 	void* clmoduleStart;
 	size_t clmoduleSize;
@@ -108,13 +249,13 @@ void EntUtils::PreHook()
 			int numfields = *reinterpret_cast<int*>(serverPattern + 6);
 			datamap_t** pmap = reinterpret_cast<datamap_t**>(serverPattern + 12);
 			if (numfields > 0
-				&& IsAddressLegal(reinterpret_cast<uint8_t*>(pmap),
-					reinterpret_cast<uint8_t*>(svmoduleStart),
-					svmoduleSize))
+			    && IsAddressLegal(reinterpret_cast<uint8_t*>(pmap),
+			                      reinterpret_cast<uint8_t*>(svmoduleStart),
+			                      svmoduleSize))
 			{
 				datamap_t* map = *pmap;
 				if (DoesNameLookSane(map, reinterpret_cast<uint8_t*>(svmoduleStart), svmoduleSize))
-					serverMaps[map->dataClassName] = map;
+					AddMap(map, true);
 			}
 		}
 	}
@@ -132,16 +273,19 @@ void EntUtils::PreHook()
 			{
 				datamap_t* map = *pmap;
 				if (DoesNameLookSane(map, reinterpret_cast<uint8_t*>(clmoduleStart), clmoduleSize))
-					clientMaps[map->dataClassName] = map;
+					AddMap(map, false);
 			}
 		}
 	}
 
 	clientPatterns.clear();
 	serverPatterns.clear();
+	tablesProcessed = true;
 }
 
-CON_COMMAND(y_spt_canjb, "Tests if player can jumpbug on a given height, with the current position and speed.")
+CON_COMMAND(y_spt_canjb,
+            "Tests if player can jumpbug on a given height, with "
+            "the current position and speed.")
 {
 	if (args.ArgC() < 2)
 	{
@@ -182,8 +326,20 @@ CON_COMMAND(y_spt_print_ent_props, "Prints all props for a given entity index.")
 }
 #endif
 
+CON_COMMAND(y_spt_dev_datamap_print, "Prints all datamaps.")
+{
+	spt_entutils.PrintDatamaps();
+}
+
+CON_COMMAND(y_spt_dev_datamap_walk, "Walk through a datamap and print all offsets.")
+{
+	spt_entutils.WalkDatamap(args.Arg(1));
+}
+
 void EntUtils::LoadFeature()
 {
+	InitCommand(y_spt_dev_datamap_print);
+	InitCommand(y_spt_dev_datamap_walk);
 #ifndef OE
 	InitCommand(y_spt_canjb);
 	InitCommand(y_spt_print_ents);
@@ -196,7 +352,8 @@ void EntUtils::LoadFeature()
 	{
 		AddHudCallback(
 		    "portal bubble",
-		    [this]() {
+		    [this]()
+		    {
 			    int in_bubble = GetEnvironmentPortal() != NULL;
 			    spt_hud.DrawTopHudElement(L"portal bubble: %d", in_bubble);
 		    },
@@ -204,7 +361,8 @@ void EntUtils::LoadFeature()
 
 		bool result = spt_hud.AddHudCallback(HudCallback(
 		    "z",
-		    []() {
+		    []()
+		    {
 			    std::string info(y_spt_hud_ent_info.GetString());
 			    if (!whiteSpacesOnly(info))
 			    {

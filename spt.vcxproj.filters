@@ -211,6 +211,9 @@
     <ClCompile Include="spt\features\hops_hud.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\utils\datamap_wrapper.cpp">
+      <Filter>spt\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -468,6 +471,12 @@
     <ClInclude Include="spt\features\hud.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
+    <ClInclude Include="spt\utils\datamap_wrapper.hpp">
+      <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\ent_props.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">
@@ -528,6 +537,9 @@
     </Filter>
     <Filter Include="spt\aim">
       <UniqueIdentifier>{dddef7ec-c95f-4baa-9f56-d47554ea2e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\entity">
+      <UniqueIdentifier>{f5b8c3f0-71c9-4601-9ba7-c93414a545fc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
