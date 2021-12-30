@@ -538,9 +538,6 @@
     <Filter Include="spt\aim">
       <UniqueIdentifier>{dddef7ec-c95f-4baa-9f56-d47554ea2e86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="spt\entity">
-      <UniqueIdentifier>{f5b8c3f0-71c9-4601-9ba7-c93414a545fc}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="thirdparty\example.txt">

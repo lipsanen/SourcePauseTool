@@ -117,6 +117,45 @@ void* EntUtils::GetPlayer(bool server)
 	}
 }
 
+int EntUtils::GetFieldOffset(const std::string& mapKey, const std::string& key, bool server)
+{
+	auto map = GetDatamapWrapper(mapKey);
+	if (!map)
+	{
+		return utils::INVALID_DATAMAP_OFFSET;
+	}
+
+	if(server)
+		return map->GetServerOffset(key);
+	else
+		return map->GetClientOffset(key);
+}
+
+_InternalPlayerField EntUtils::_GetPlayerField(const std::string& key, bool getServer, bool getClient, bool preferServer)
+{
+	_InternalPlayerField out;
+	if(!startedLoading)
+		return out;
+	out.preferServer = preferServer;
+
+	if (getServer)
+	{
+		out.serverOffset = GetPlayerOffset(key, true);
+	}
+
+	if (getClient)
+	{
+		out.clientOffset = GetPlayerOffset(key, false);
+	}
+
+	if (out.serverOffset == utils::INVALID_DATAMAP_OFFSET && out.clientOffset == utils::INVALID_DATAMAP_OFFSET)
+	{
+		DevWarning("Was unable to find field %s offsets for server or client!\n", key.c_str());
+	}
+
+	return out;
+}
+
 static bool IsAddressLegal(uint8_t* address, uint8_t* start, std::size_t length)
 {
 	return address >= start && address <= start + length;
@@ -163,7 +202,7 @@ void EntUtils::AddMap(datamap_t* map, bool server)
 		name = name.erase(1, 1);
 	}
 
-	Msg("Adding map %s, is server: %d\n", name.c_str(), server);
+
 	auto result = nameToMapWrapper.find(name);
 	utils::DatamapWrapper* ptr;
 
@@ -205,7 +244,6 @@ utils::DatamapWrapper* EntUtils::GetPlayerDatamapWrapper()
 	}
 
 	// Add any other game specific class names here
-
 	if (!__playerdatamap)
 	{
 		__playerdatamap = GetDatamapWrapper("CHL2_Player");

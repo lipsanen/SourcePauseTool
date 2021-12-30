@@ -2,6 +2,7 @@
 
 #include "..\feature.hpp"
 #include "..\strafe\strafestuff.hpp"
+#include "ent_props.hpp"
 
 #ifdef OE
 #include "vector.h"
@@ -50,6 +51,7 @@ public:
 	int GetPlayerMoveCollide() const;
 	int GetPlayerCollisionGroup() const;
 	void Set_cinput_thisptr(void* thisptr);
+	void GetPlayerFields();
 	void OnTick();
 
 	bool duckspam = false;
@@ -58,36 +60,33 @@ public:
 	bool playerioAddressesWereFound = false;
 	ptrdiff_t offServerAbsOrigin = 0;
 	uintptr_t pCmd = 0;
-
-	ptrdiff_t offM_vecAbsVelocity = 0;
-	ptrdiff_t offM_afPhysicsFlags = 0;
-	ptrdiff_t offM_moveType = 0;
-	ptrdiff_t offM_moveCollide = 0;
-	ptrdiff_t offM_collisionGroup = 0;
-	ptrdiff_t offM_vecPunchAngle = 0;
-	ptrdiff_t offM_vecPunchAngleVel = 0;
 	_CreateMove ORIG_CreateMove = nullptr;
 
-	_GetLocalPlayer ORIG_GetLocalPlayer = nullptr;
-	_CalcAbsoluteVelocity ORIG_CalcAbsoluteVelocity = nullptr;
 	_GetGroundEntity ORIG_GetGroundEntity = nullptr;
 	_GetButtonBits ORIG_GetButtonBits = nullptr;
-	uintptr_t ORIG_MiddleOfCAM_Think = 0;
-	uintptr_t ORIG_PlayerRunCommand = 0;
 	Vector currentVelocity;
 	Vector previousVelocity;
 
 	ptrdiff_t offM_pCommands = 0;
 	ptrdiff_t offForwardmove = 0;
 	ptrdiff_t offSidemove = 0;
-	ptrdiff_t offMaxspeed = 0;
-	ptrdiff_t offFlags = 0;
-	ptrdiff_t offAbsVelocity = 0;
-	ptrdiff_t offDucking = 0;
-	ptrdiff_t offDuckJumpTime = 0;
 	ptrdiff_t offServerSurfaceFriction = 0;
-	ptrdiff_t offServerPreviouslyPredictedOrigin = 0;
 	std::size_t sizeofCUserCmd = 0;
+
+	PlayerField<int> m_afPhysicsFlags;
+	PlayerField<Vector> m_vecAbsOrigin;
+	PlayerField<Vector> m_vecAbsVelocity;
+	PlayerField<Vector> m_vecViewOffset;
+	PlayerField<int> m_MoveType;
+	PlayerField<int> m_MoveCollide;
+	PlayerField<int> m_CollisionGroup;
+	PlayerField<QAngle> m_vecPunchAngle;
+	PlayerField<QAngle> m_vecPunchAngleVel;
+	PlayerField<float> m_flMaxspeed;
+	PlayerField<int> m_fFlags;
+	PlayerField<Vector> m_vecPreviouslyPredictedOrigin;
+	PlayerField<bool> m_bDucking;
+	PlayerField<float> m_flDuckJumpTime;
 
 	void EnableDuckspam()
 	{
