@@ -32,15 +32,17 @@ namespace patterns
 	         "pattern1",
 	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? B8",
 	         "pattern2",
-	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C3");
+	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C7 05 ?? ?? ?? ?? ?? ?? ?? ?? C3",
+	         "pattern3",
+	         "C7 05 ?? ?? ?? ?? ?? ?? ?? ?? B8 ?? ?? ?? ?? C7 05");
 }
 
 EntUtils spt_entutils;
 
 void EntUtils::InitHooks()
 {
-	AddMultiPatternHook(patterns::Datamap, "client", "Datamap", &clientPatterns);
-	AddMultiPatternHook(patterns::Datamap, "server", "Datamap", &serverPatterns);
+	AddMatchAllPattern(patterns::Datamap, "client", "Datamap", &clientPatterns);
+	AddMatchAllPattern(patterns::Datamap, "server", "Datamap", &serverPatterns);
 	tablesProcessed = false;
 }
 
@@ -125,16 +127,19 @@ int EntUtils::GetFieldOffset(const std::string& mapKey, const std::string& key, 
 		return utils::INVALID_DATAMAP_OFFSET;
 	}
 
-	if(server)
+	if (server)
 		return map->GetServerOffset(key);
 	else
 		return map->GetClientOffset(key);
 }
 
-_InternalPlayerField EntUtils::_GetPlayerField(const std::string& key, bool getServer, bool getClient, bool preferServer)
+_InternalPlayerField EntUtils::_GetPlayerField(const std::string& key,
+                                               bool getServer,
+                                               bool getClient,
+                                               bool preferServer)
 {
 	_InternalPlayerField out;
-	if(!startedLoading)
+	if (!startedLoading)
 		return out;
 	out.preferServer = preferServer;
 
@@ -202,7 +207,6 @@ void EntUtils::AddMap(datamap_t* map, bool server)
 		name = name.erase(1, 1);
 	}
 
-
 	auto result = nameToMapWrapper.find(name);
 	utils::DatamapWrapper* ptr;
 
@@ -268,6 +272,25 @@ utils::DatamapWrapper* EntUtils::GetPlayerDatamapWrapper()
 	return __playerdatamap;
 }
 
+static void GetDatamapInfo(patterns::MatchedPattern pattern, int& numfields, datamap_t**& pmap)
+{
+	switch (pattern.ptnNumber)
+	{
+	case 0:
+		numfields = *reinterpret_cast<int*>(pattern.ptr + 6);
+		pmap = reinterpret_cast<datamap_t**>(pattern.ptr + 12);
+		break;
+	case 1:
+		numfields = *reinterpret_cast<int*>(pattern.ptr + 6);
+		pmap = reinterpret_cast<datamap_t**>(pattern.ptr + 12);
+		break;
+	case 2:
+		numfields = *reinterpret_cast<int*>(pattern.ptr + 6);
+		pmap = reinterpret_cast<datamap_t**>(pattern.ptr + 17);
+		break;
+	}
+}
+
 void EntUtils::ProcessTablesLazy()
 {
 	if (tablesProcessed)
@@ -282,10 +305,11 @@ void EntUtils::ProcessTablesLazy()
 
 	if (MemUtils::GetModuleInfo(L"server.dll", &svhandle, &svmoduleStart, &svmoduleSize))
 	{
-		for (auto& serverPattern : serverPatterns)
+		for (auto serverPattern : serverPatterns)
 		{
-			int numfields = *reinterpret_cast<int*>(serverPattern + 6);
-			datamap_t** pmap = reinterpret_cast<datamap_t**>(serverPattern + 12);
+			int numfields;
+			datamap_t** pmap;
+			GetDatamapInfo(serverPattern, numfields, pmap);
 			if (numfields > 0
 			    && IsAddressLegal(reinterpret_cast<uint8_t*>(pmap),
 			                      reinterpret_cast<uint8_t*>(svmoduleStart),
@@ -302,8 +326,9 @@ void EntUtils::ProcessTablesLazy()
 	{
 		for (auto& clientPattern : clientPatterns)
 		{
-			int numfields = *reinterpret_cast<int*>(clientPattern + 6);
-			datamap_t** pmap = reinterpret_cast<datamap_t**>(clientPattern + 12);
+			int numfields;
+			datamap_t** pmap;
+			GetDatamapInfo(clientPattern, numfields, pmap);
 			if (numfields > 0
 			    && IsAddressLegal(reinterpret_cast<uint8_t*>(pmap),
 			                      reinterpret_cast<uint8_t*>(clmoduleStart),

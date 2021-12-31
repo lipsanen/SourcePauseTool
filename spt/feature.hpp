@@ -7,6 +7,7 @@
 #include "SPTLib\patterns.hpp"
 #include "convar.hpp"
 #include "patterns.hpp"
+#include "matchAllPattern.hpp"
 
 #define ADD_RAW_HOOK(moduleName, name) \
 	AddRawHook(#moduleName, reinterpret_cast<void**>(&ORIG_##name##), reinterpret_cast<void*>(HOOKED_##name##));
@@ -56,12 +57,12 @@ struct PatternHook
 	void* functionHook;
 };
 
-struct MultiPatternHook
+struct MatchAllPattern
 {
-	MultiPatternHook(patterns::PatternWrapper* patternArr,
-	            size_t size,
-	            const char* patternName,
-	            std::vector<uintptr_t>* foundVec)
+	MatchAllPattern(patterns::PatternWrapper* patternArr,
+	                size_t size,
+	                const char* patternName,
+	                std::vector<patterns::MatchedPattern>* foundVec)
 	{
 		this->patternArr = patternArr;
 		this->size = size;
@@ -72,7 +73,7 @@ struct MultiPatternHook
 	patterns::PatternWrapper* patternArr;
 	size_t size;
 	const char* patternName;
-	std::vector<uintptr_t>* foundVec;
+	std::vector<patterns::MatchedPattern>* foundVec;
 };
 
 struct OffsetHook
@@ -93,7 +94,7 @@ struct RawHook
 struct ModuleHookData
 {
 	std::vector<PatternHook> patternHooks;
-	std::vector<MultiPatternHook> multipatternHooks;
+	std::vector<MatchAllPattern> matchAllPatterns;
 	std::vector<VFTableHook> vftableHooks;
 	std::vector<OffsetHook> offsetHooks;
 
@@ -128,13 +129,13 @@ public:
 	                           void** origPtr = nullptr,
 	                           void* functionHook = nullptr);
 	template<size_t PatternLength>
-	static void AddMultiPatternHook(const std::array<patterns::PatternWrapper, PatternLength>& patterns,
-	                           std::string moduleName,
-	                           const char* patternName,
-	                           std::vector<uintptr_t>* foundVec);
+	static void AddMatchAllPattern(const std::array<patterns::PatternWrapper, PatternLength>& patterns,
+	                               std::string moduleName,
+	                               const char* patternName,
+	                               std::vector<patterns::MatchedPattern>* foundVec);
 	static void AddRawHook(std::string moduleName, void** origPtr, void* functionHook);
 	static void AddPatternHook(PatternHook hook, std::string moduleEnum);
-	static void AddMultiPatternHook(MultiPatternHook hook, std::string moduleName);
+	static void AddMatchAllPattern(MatchAllPattern hook, std::string moduleName);
 	static void AddVFTableHook(VFTableHook hook, std::string moduleEnum);
 	static void AddOffsetHook(std::string moduleName,
 	                          int offset,
@@ -174,11 +175,14 @@ inline void Feature::AddPatternHook(const std::array<patterns::PatternWrapper, P
 }
 
 template<size_t PatternLength>
-inline void Feature::AddMultiPatternHook(const std::array<patterns::PatternWrapper, PatternLength>& patterns, std::string moduleName, const char* patternName, std::vector<uintptr_t>* foundVec)
+inline void Feature::AddMatchAllPattern(const std::array<patterns::PatternWrapper, PatternLength>& patterns,
+                                        std::string moduleName,
+                                        const char* patternName,
+                                        std::vector<patterns::MatchedPattern>* foundVec)
 {
-	AddMultiPatternHook(MultiPatternHook(const_cast<patterns::PatternWrapper*>(patterns.data()),
-	                                     PatternLength,
-	                                     patternName,
-	                                     foundVec),
-	                    moduleName);
+	AddMatchAllPattern(MatchAllPattern(const_cast<patterns::PatternWrapper*>(patterns.data()),
+	                                   PatternLength,
+	                                   patternName,
+	                                   foundVec),
+	                   moduleName);
 }

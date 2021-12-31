@@ -107,36 +107,7 @@ void PlayerIOFeature::PreHook()
 		}
 	}
 
-	if (ORIG_GetGroundEntity)
-	{
-		int index = GetPatternIndex((void**)&ORIG_GetGroundEntity);
-
-		switch (index)
-		{
-		case 0:
-			offServerSurfaceFriction = 3812;
-			break;
-
-		case 1:
-			offServerSurfaceFriction = 3752;
-			break;
-
-		case 2:
-			offServerSurfaceFriction = 3872;
-			break;
-
-		case 3:
-			offServerSurfaceFriction = 3872;
-			break;
-		default:
-			offServerSurfaceFriction = 0;
-			Warning("GetGroundEntity did not contain matching if statement for pattern!\n");
-			break;
-		}
-	}
-
 	GetPlayerFields();
-	offServerAbsOrigin = m_vecAbsOrigin.field.serverOffset;
 }
 
 Strafe::MovementVars PlayerIOFeature::GetMovementVars()
@@ -401,6 +372,17 @@ void PlayerIOFeature::GetPlayerFields()
 		m_vecViewOffset = spt_entutils.GetPlayerField<Vector>("m_vecViewOffset");
 	}
 
+	offServerAbsOrigin = m_vecAbsOrigin.field.serverOffset;
+
+	int m_bSinglePlayerGameEndingOffset = spt_entutils.GetPlayerOffset("m_bSinglePlayerGameEnding", true);
+	if (m_bSinglePlayerGameEndingOffset != utils::INVALID_DATAMAP_OFFSET)
+	{
+		// There's 2 chars between m_bSinglePlayerGameEnding and m_surfaceFriction and floats are 4 byte aligned
+		// Therefore it should be -6 relative to m_bSinglePlayerGameEnding.
+		offServerSurfaceFriction = m_bSinglePlayerGameEndingOffset & ~3; // 4 byte align the offset
+		offServerSurfaceFriction -= 4; // Take the previous 4 byte aligned address
+	}
+
 	fetched = true;
 }
 
@@ -425,8 +407,9 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 
 	return m_vecAbsVelocity.Found() && m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found()
 	       && m_vecPreviouslyPredictedOrigin.Found() && m_bDucking.Found() && m_flDuckJumpTime.Found()
-	       && ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits && _sv_airaccelerate && _sv_accelerate
-	       && _sv_friction && _sv_maxspeed && _sv_stopspeed && interfaces::engine_server != nullptr;
+	       && offServerSurfaceFriction != 0 && ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits
+	       && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed && _sv_stopspeed
+	       && interfaces::engine_server != nullptr;
 }
 
 void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)

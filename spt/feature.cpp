@@ -183,7 +183,7 @@ void Feature::AddPatternHook(PatternHook hook, std::string moduleName)
 	mhd.patternHooks.push_back(hook);
 }
 
-void Feature::AddMultiPatternHook(MultiPatternHook hook, std::string moduleName)
+void Feature::AddMatchAllPattern(MatchAllPattern hook, std::string moduleName)
 {
 	if (moduleHookData.find(moduleName) == moduleHookData.end())
 	{
@@ -191,7 +191,7 @@ void Feature::AddMultiPatternHook(MultiPatternHook hook, std::string moduleName)
 	}
 
 	auto& mhd = moduleHookData[moduleName];
-	mhd.multipatternHooks.push_back(hook);
+	mhd.matchAllPatterns.push_back(hook);
 }
 
 void ModuleHookData::UnhookModule(const std::wstring& moduleName)
@@ -201,29 +201,6 @@ void ModuleHookData::UnhookModule(const std::wstring& moduleName)
 
 	for (auto& vft_hook : existingVTableHooks)
 		MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, *vft_hook.origPtr);
-}
-
-void find_all_sequences(
-	const void* start,
-	size_t length,
-	patterns::PatternWrapper* begin,
-	patterns::PatternWrapper* end,
-	std::vector<uintptr_t>* foundVec)
-{
-	for (auto pattern = begin; pattern != end; ++pattern) {
-		const void* currentStart = start;
-		size_t currentLength = length;
-		uintptr_t address = 1;
-		do {
-			address = MemUtils::find_pattern(currentStart, currentLength, *pattern);
-			if (address)
-			{
-				foundVec->push_back(address);
-				currentStart = reinterpret_cast<void*>(address + 1);
-				currentLength = reinterpret_cast<uintptr_t>(start) - reinterpret_cast<uintptr_t>(currentStart) + length;
-			}
-		} while (address);
-	}
 }
 
 void ModuleHookData::InitModule(const std::wstring& moduleName)
@@ -246,23 +223,22 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 	std::vector<std::future<void>> mhooks;
 	hooks.reserve(patternHooks.size());
 
-	for (auto& mpattern : multipatternHooks)
+	for (auto& mpattern : matchAllPatterns)
 	{
-		mhooks.emplace_back(std::async(find_all_sequences,
-			moduleStart,
-			moduleSize,
-			mpattern.patternArr,
-			mpattern.patternArr + mpattern.size,
-			mpattern.foundVec));
+		mhooks.emplace_back(patterns::get_all_matches(mpattern.foundVec,
+		                                              moduleStart,
+		                                              moduleSize,
+		                                              mpattern.patternArr,
+		                                              mpattern.patternArr + mpattern.size));
 	}
 
 	for (auto& pattern : patternHooks)
 	{
 		hooks.emplace_back(MemUtils::find_unique_sequence_async(*pattern.origPtr,
-			moduleStart,
-			moduleSize,
-			pattern.patternArr,
-			pattern.patternArr + pattern.size));
+		                                                        moduleStart,
+		                                                        moduleSize,
+		                                                        pattern.patternArr,
+		                                                        pattern.patternArr + pattern.size));
 	}
 
 	funcPairs.reserve(funcPairs.size() + patternHooks.size());
@@ -270,9 +246,12 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 
 	for (std::size_t i = 0; i < mhooks.size(); ++i)
 	{
-		auto modulePattern = multipatternHooks[i];
+		auto modulePattern = matchAllPatterns[i];
 		mhooks[i].get();
-		DevMsg("[%s] Found %u instances of pattern %s\n", Convert(moduleName).c_str(), modulePattern.foundVec->size(), modulePattern.patternName);
+		DevMsg("[%s] Found %u instances of pattern %s\n",
+		       Convert(moduleName).c_str(),
+		       modulePattern.foundVec->size(),
+		       modulePattern.patternName);
 	}
 
 	for (std::size_t i = 0; i < hooks.size(); ++i)

@@ -13,15 +13,22 @@ enum class PropMode
 struct _InternalPlayerField
 {
 	int serverOffset = utils::INVALID_DATAMAP_OFFSET;
-	int clientOffset = utils::INVALID_DATAMAP_OFFSET;;
+	int clientOffset = utils::INVALID_DATAMAP_OFFSET;
+	;
 	bool preferServer = true;
 
 	template<typename T>
 	T GetValue() const;
 	template<typename T>
 	T* GetPtr();
-	bool ClientOffsetFound() { return clientOffset != utils::INVALID_DATAMAP_OFFSET; }
-	bool ServerOffsetFound() { return serverOffset != utils::INVALID_DATAMAP_OFFSET; }
+	bool ClientOffsetFound()
+	{
+		return clientOffset != utils::INVALID_DATAMAP_OFFSET;
+	}
+	bool ServerOffsetFound()
+	{
+		return serverOffset != utils::INVALID_DATAMAP_OFFSET;
+	}
 };
 
 template<typename T>
@@ -29,11 +36,26 @@ struct PlayerField
 {
 	_InternalPlayerField field;
 
-	T GetValue() const { return field.GetValue<T>(); }
-	T* GetPtr() { return field.GetPtr<T>(); }
-	bool ClientOffsetFound() { return field.clientOffset != utils::INVALID_DATAMAP_OFFSET; }
-	bool ServerOffsetFound() { return field.serverOffset != utils::INVALID_DATAMAP_OFFSET; }
-	bool Found() { return ClientOffsetFound() || ServerOffsetFound(); }
+	T GetValue() const
+	{
+		return field.GetValue<T>();
+	}
+	T* GetPtr()
+	{
+		return field.GetPtr<T>();
+	}
+	bool ClientOffsetFound()
+	{
+		return field.clientOffset != utils::INVALID_DATAMAP_OFFSET;
+	}
+	bool ServerOffsetFound()
+	{
+		return field.serverOffset != utils::INVALID_DATAMAP_OFFSET;
+	}
+	bool Found()
+	{
+		return ClientOffsetFound() || ServerOffsetFound();
+	}
 };
 
 // Initializes ent utils stuff
@@ -55,7 +77,10 @@ public:
 	int GetPlayerOffset(const std::string& key, bool server);
 	void* GetPlayer(bool server);
 	template<typename T>
-	PlayerField<T> GetPlayerField(const std::string& key, bool getServer = true, bool getClient = true, bool preferServer = true);
+	PlayerField<T> GetPlayerField(const std::string& key,
+	                              bool getServer = true,
+	                              bool getClient = true,
+	                              bool preferServer = true);
 	int GetFieldOffset(const std::string& mapKey, const std::string& key, bool server);
 
 protected:
@@ -69,8 +94,8 @@ protected:
 	utils::DatamapWrapper* GetDatamapWrapper(const std::string& key);
 	utils::DatamapWrapper* GetPlayerDatamapWrapper();
 	void ProcessTablesLazy();
-	std::vector<uintptr_t> serverPatterns;
-	std::vector<uintptr_t> clientPatterns;
+	std::vector<patterns::MatchedPattern> serverPatterns;
+	std::vector<patterns::MatchedPattern> clientPatterns;
 	std::vector<utils::DatamapWrapper*> wrappers;
 	std::unordered_map<std::string, utils::DatamapWrapper*> nameToMapWrapper;
 };
@@ -141,7 +166,10 @@ inline T* _InternalPlayerField::GetPtr()
 }
 
 template<typename T>
-inline PlayerField<T> EntUtils::GetPlayerField(const std::string& key, bool getServer, bool getClient, bool preferServer)
+inline PlayerField<T> EntUtils::GetPlayerField(const std::string& key,
+                                               bool getServer,
+                                               bool getClient,
+                                               bool preferServer)
 {
 	PlayerField<T> field;
 	field.field = _GetPlayerField(key, getServer, getClient, preferServer);
