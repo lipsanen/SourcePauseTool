@@ -214,9 +214,6 @@
     <ClCompile Include="spt\utils\datamap_wrapper.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
-    <ClCompile Include="spt\utils\matchAllPattern.cpp">
-      <Filter>spt\utils</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">

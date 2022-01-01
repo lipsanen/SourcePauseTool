@@ -1540,7 +1540,6 @@
     <ClCompile Include="spt\utils\ent_utils.cpp" />
     <ClCompile Include="spt\utils\file.cpp" />
     <ClCompile Include="spt\utils\game_detection.cpp" />
-    <ClCompile Include="spt\utils\matchAllPattern.cpp" />
     <ClCompile Include="spt\utils\math.cpp" />
     <ClCompile Include="spt\utils\property_getter.cpp" />
     <ClCompile Include="spt\utils\signals.cpp" />

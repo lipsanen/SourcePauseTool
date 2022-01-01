@@ -51,13 +51,6 @@ void PlayerIOFeature::UnloadFeature() {}
 
 void PlayerIOFeature::PreHook()
 {
-	offM_pCommands = 0;
-	offForwardmove = 0;
-	offSidemove = 0;
-
-	offServerSurfaceFriction = 0;
-	offServerAbsOrigin = 0;
-
 	if (ORIG_CreateMove)
 	{
 		int index = GetPatternIndex((void**)&ORIG_CreateMove);
@@ -69,40 +62,13 @@ void PlayerIOFeature::PreHook()
 			offForwardmove = 24;
 			offSidemove = 28;
 			break;
-
-		case 1:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 2:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 3:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 4:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 5:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
 		default:
-			offM_pCommands = 0;
-			offForwardmove = 0;
-			offSidemove = 0;
+			if (utils::DoesGameLookLikeBMS())
+				offM_pCommands = 244;
+			else
+				offM_pCommands = 196;
+			offForwardmove = 24;
+			offSidemove = 28;
 			break;
 		}
 	}
@@ -357,6 +323,7 @@ void PlayerIOFeature::GetPlayerFields()
 	if (spt_entutils.ShouldLoadFeature())
 	{
 		m_afPhysicsFlags = spt_entutils.GetPlayerField<int>("m_afPhysicsFlags");
+		m_hGroundEntity = spt_entutils.GetPlayerField<int>("m_hGroundEntity", false);
 		m_vecAbsVelocity = spt_entutils.GetPlayerField<Vector>("m_vecAbsVelocity");
 		m_vecAbsOrigin = spt_entutils.GetPlayerField<Vector>("m_vecAbsOrigin");
 		m_MoveType = spt_entutils.GetPlayerField<int>("m_MoveType");
@@ -377,7 +344,7 @@ void PlayerIOFeature::GetPlayerFields()
 	int m_bSinglePlayerGameEndingOffset = spt_entutils.GetPlayerOffset("m_bSinglePlayerGameEnding", true);
 	if (m_bSinglePlayerGameEndingOffset != utils::INVALID_DATAMAP_OFFSET)
 	{
-		// There's 2 chars between m_bSinglePlayerGameEnding and m_surfaceFriction and floats are 4 byte aligned
+		// There's 2 chars between m_bSinglePlayerGameEnding and m_surfaceFriction and floats are 4 byte aligned in structs
 		// Therefore it should be -6 relative to m_bSinglePlayerGameEnding.
 		offServerSurfaceFriction = m_bSinglePlayerGameEndingOffset & ~3; // 4 byte align the offset
 		offServerSurfaceFriction -= 4; // Take the previous 4 byte aligned address
@@ -388,11 +355,16 @@ void PlayerIOFeature::GetPlayerFields()
 
 bool PlayerIOFeature::IsGroundEntitySet()
 {
-	auto player = spt_entutils.GetPlayer(false);
+	/*	auto player = spt_entutils.GetPlayer(false);
 	if (ORIG_GetGroundEntity == nullptr || !player)
 		return false;
 
-	return (ORIG_GetGroundEntity(player, 0) != NULL); // TODO: This should really be a proper check.
+	return (ORIG_GetGroundEntity(player, 0) != NULL); // TODO: This should really be a proper check.*/
+
+	const int INDEX_MASK = MAX_EDICTS - 1;
+	int index = m_hGroundEntity.GetValue() & INDEX_MASK;
+	auto ptr = interfaces::entList->GetClientEntity(index);
+	return ptr != NULL;
 }
 
 bool PlayerIOFeature::TryJump()
@@ -407,7 +379,7 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 
 	return m_vecAbsVelocity.Found() && m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found()
 	       && m_vecPreviouslyPredictedOrigin.Found() && m_bDucking.Found() && m_flDuckJumpTime.Found()
-	       && offServerSurfaceFriction != 0 && ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits
+	       && offServerSurfaceFriction != 0 && m_hGroundEntity.Found() && ORIG_CreateMove && ORIG_GetButtonBits
 	       && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed && _sv_stopspeed
 	       && interfaces::engine_server != nullptr;
 }

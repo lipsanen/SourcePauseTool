@@ -2,6 +2,7 @@
 #include "..\spt-serverplugin.hpp"
 #include "SPTLib\sptlib.hpp"
 #include "interfaces.hpp"
+#include "game_detection.hpp"
 
 namespace utils
 {
@@ -44,6 +45,17 @@ namespace utils
 		if (g_pCVar)
 		{
 			if (g_pCVar->FindVar("hl1_ref_db_distance"))
+				return true;
+		}
+
+		return false;
+	}
+
+	bool DoesGameLookLikeBMS()
+	{
+		if (g_pCVar)
+		{
+			if (g_pCVar->FindVar("bm_announcer"))
 				return true;
 		}
 

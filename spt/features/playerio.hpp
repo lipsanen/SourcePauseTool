@@ -74,6 +74,7 @@ public:
 	std::size_t sizeofCUserCmd = 0;
 
 	PlayerField<int> m_afPhysicsFlags;
+	PlayerField<int> m_hGroundEntity;
 	PlayerField<Vector> m_vecAbsOrigin;
 	PlayerField<Vector> m_vecAbsVelocity;
 	PlayerField<Vector> m_vecViewOffset;

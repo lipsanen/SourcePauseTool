@@ -246,6 +246,10 @@ utils::DatamapWrapper* EntUtils::GetPlayerDatamapWrapper()
 	{
 		__playerdatamap = GetDatamapWrapper("CPortal_Player");
 	}
+	else if (utils::DoesGameLookLikeBMS())
+	{
+		__playerdatamap = GetDatamapWrapper("CBlackMesaPlayer");
+	}
 
 	// Add any other game specific class names here
 	if (!__playerdatamap)

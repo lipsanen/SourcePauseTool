@@ -225,11 +225,11 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 
 	for (auto& mpattern : matchAllPatterns)
 	{
-		mhooks.emplace_back(patterns::get_all_matches(mpattern.foundVec,
-		                                              moduleStart,
-		                                              moduleSize,
-		                                              mpattern.patternArr,
-		                                              mpattern.patternArr + mpattern.size));
+		mhooks.emplace_back(patterns::get_all_matches_async(mpattern.foundVec,
+		                                                    moduleStart,
+		                                                    moduleSize,
+		                                                    mpattern.patternArr,
+		                                                    mpattern.patternArr + mpattern.size));
 	}
 
 	for (auto& pattern : patternHooks)

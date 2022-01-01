@@ -310,5 +310,9 @@ void TASFeature::LoadFeature()
 			InitConcommandBase(tas_strafe_use_tracing);
 			InitConcommandBase(tas_strafe_autojb);
 		}
+		else
+		{
+			tas_strafe_use_tracing.SetValue(0);
+		}
 	}
 }
