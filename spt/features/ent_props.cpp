@@ -494,3 +494,13 @@ void** _InternalPlayerField::GetClientPtr()
 	else
 		return nullptr;
 }
+
+bool _InternalPlayerField::ClientOffsetFound()
+{
+	return clientOffset != utils::INVALID_DATAMAP_OFFSET;
+}
+
+bool _InternalPlayerField::ServerOffsetFound()
+{
+	return serverOffset != utils::INVALID_DATAMAP_OFFSET;
+}

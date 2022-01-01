@@ -20,14 +20,8 @@ struct _InternalPlayerField
 	void** GetServerPtr();
 	void** GetClientPtr();
 
-	bool ClientOffsetFound()
-	{
-		return clientOffset != utils::INVALID_DATAMAP_OFFSET;
-	}
-	bool ServerOffsetFound()
-	{
-		return serverOffset != utils::INVALID_DATAMAP_OFFSET;
-	}
+	bool ClientOffsetFound();
+	bool ServerOffsetFound();
 };
 
 template<typename T>
@@ -66,14 +60,14 @@ public:
 	virtual void PreHook() override;
 	virtual void UnloadFeature() override;
 
-	void WalkDatamap(std::string key);
-	void PrintDatamaps();
+	int GetFieldOffset(const std::string& mapKey, const std::string& key, bool server);
 	int GetPlayerOffset(const std::string& key, bool server);
-	void* GetPlayer(bool server);
 	template<typename T>
 	PlayerField<T> GetPlayerField(const std::string& key, PropMode mode = PropMode::PreferServer);
-	int GetFieldOffset(const std::string& mapKey, const std::string& key, bool server);
 	PropMode ResolveMode(PropMode mode);
+	void PrintDatamaps();
+	void WalkDatamap(std::string key);
+	void* GetPlayer(bool server);
 
 protected:
 	bool tablesProcessed = false;

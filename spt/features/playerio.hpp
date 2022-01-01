@@ -68,22 +68,22 @@ public:
 	ptrdiff_t offServerSurfaceFriction = 0;
 	std::size_t sizeofCUserCmd = 0;
 
-	PlayerField<int> m_afPhysicsFlags;
-	PlayerField<int> m_hGroundEntity;
-	PlayerField<Vector> m_vecAbsOrigin;
-	PlayerField<Vector> m_vecAbsVelocity;
-	PlayerField<Vector> m_vecViewOffset;
-	PlayerField<int> m_MoveType;
-	PlayerField<int> m_MoveCollide;
-	PlayerField<int> m_CollisionGroup;
-	PlayerField<QAngle> m_vecPunchAngle;
-	PlayerField<QAngle> m_vecPunchAngleVel;
-	PlayerField<float> m_flMaxspeed;
-	PlayerField<int> m_fFlags;
-	PlayerField<Vector> m_vecPreviouslyPredictedOrigin;
 	PlayerField<bool> m_bDucking;
 	PlayerField<float> m_flDuckJumpTime;
+	PlayerField<float> m_flMaxspeed;
 	PlayerField<float> m_surfaceFriction;
+	PlayerField<int> m_afPhysicsFlags;
+	PlayerField<int> m_CollisionGroup;
+	PlayerField<int> m_fFlags;
+	PlayerField<int> m_hGroundEntity;
+	PlayerField<int> m_MoveCollide;
+	PlayerField<int> m_MoveType;
+	PlayerField<QAngle> m_vecPunchAngle;
+	PlayerField<QAngle> m_vecPunchAngleVel;
+	PlayerField<Vector> m_vecAbsOrigin;
+	PlayerField<Vector> m_vecAbsVelocity;
+	PlayerField<Vector> m_vecPreviouslyPredictedOrigin;
+	PlayerField<Vector> m_vecViewOffset;
 
 	void EnableDuckspam()
 	{

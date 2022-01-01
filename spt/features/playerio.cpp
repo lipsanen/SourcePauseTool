@@ -37,7 +37,7 @@ ConVar y_spt_hud_velocity_angles("y_spt_hud_velocity_angles", "0", FCVAR_CHEAT, 
 
 bool PlayerIOFeature::ShouldLoadFeature()
 {
-	return interfaces::engine != nullptr;
+	return interfaces::engine != nullptr && spt_entutils.ShouldLoadFeature();
 }
 
 void PlayerIOFeature::InitHooks()
@@ -80,13 +80,6 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 	auto vars = Strafe::MovementVars();
 
 	if (!playerioAddressesWereFound || cinput_thisptr == nullptr)
-	{
-		return vars;
-	}
-
-	auto server_player = spt_entutils.GetPlayer(true);
-
-	if (!server_player)
 	{
 		return vars;
 	}
@@ -316,19 +309,19 @@ void PlayerIOFeature::GetPlayerFields()
 	if (spt_entutils.ShouldLoadFeature())
 	{
 		m_afPhysicsFlags = spt_entutils.GetPlayerField<int>("m_afPhysicsFlags");
-		m_hGroundEntity = spt_entutils.GetPlayerField<int>("m_hGroundEntity");
-		m_vecAbsVelocity = spt_entutils.GetPlayerField<Vector>("m_vecAbsVelocity");
-		m_vecAbsOrigin = spt_entutils.GetPlayerField<Vector>("m_vecAbsOrigin");
-		m_MoveType = spt_entutils.GetPlayerField<int>("m_MoveType");
-		m_MoveCollide = spt_entutils.GetPlayerField<int>("m_MoveCollide");
+		m_bDucking = spt_entutils.GetPlayerField<bool>("m_Local.m_bDucking");
 		m_CollisionGroup = spt_entutils.GetPlayerField<int>("m_CollisionGroup");
+		m_fFlags = spt_entutils.GetPlayerField<int>("m_fFlags");
+		m_flDuckJumpTime = spt_entutils.GetPlayerField<float>("m_Local.m_flDuckJumpTime");
+		m_flMaxspeed = spt_entutils.GetPlayerField<float>("m_flMaxspeed");
+		m_hGroundEntity = spt_entutils.GetPlayerField<int>("m_hGroundEntity");
+		m_MoveCollide = spt_entutils.GetPlayerField<int>("m_MoveCollide");
+		m_MoveType = spt_entutils.GetPlayerField<int>("m_MoveType");
+		m_vecAbsOrigin = spt_entutils.GetPlayerField<Vector>("m_vecAbsOrigin");
+		m_vecAbsVelocity = spt_entutils.GetPlayerField<Vector>("m_vecAbsVelocity");
+		m_vecPreviouslyPredictedOrigin = spt_entutils.GetPlayerField<Vector>("m_vecPreviouslyPredictedOrigin");
 		m_vecPunchAngle = spt_entutils.GetPlayerField<QAngle>("m_Local.m_vecPunchAngle");
 		m_vecPunchAngleVel = spt_entutils.GetPlayerField<QAngle>("m_Local.m_vecPunchAngleVel");
-		m_flMaxspeed = spt_entutils.GetPlayerField<float>("m_flMaxspeed");
-		m_fFlags = spt_entutils.GetPlayerField<int>("m_fFlags");
-		m_vecPreviouslyPredictedOrigin = spt_entutils.GetPlayerField<Vector>("m_vecPreviouslyPredictedOrigin");
-		m_bDucking = spt_entutils.GetPlayerField<bool>("m_Local.m_bDucking");
-		m_flDuckJumpTime = spt_entutils.GetPlayerField<float>("m_Local.m_flDuckJumpTime");
 		m_vecViewOffset = spt_entutils.GetPlayerField<Vector>("m_vecViewOffset");
 		offServerAbsOrigin = m_vecAbsOrigin.field.serverOffset;
 
