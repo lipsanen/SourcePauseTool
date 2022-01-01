@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31911.196
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SPT", "spt.vcxproj", "{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -30,8 +30,7 @@ Global
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug BMS|Win32.Build.0 = Debug BMS|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug OE|Win32.ActiveCfg = Debug OE|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug OE|Win32.Build.0 = Debug OE|Win32
-		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug P2|Win32.ActiveCfg = Debug P2|Win32
-		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug P2|Win32.Build.0 = Debug P2|Win32
+		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug P2|Win32.ActiveCfg = Debug OE|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug|Win32.ActiveCfg = Debug|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Debug|Win32.Build.0 = Debug|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release 2013|Win32.ActiveCfg = Release 2013|Win32
@@ -40,8 +39,7 @@ Global
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release BMS|Win32.Build.0 = Release BMS|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release OE|Win32.ActiveCfg = Release OE|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release OE|Win32.Build.0 = Release OE|Win32
-		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release P2|Win32.ActiveCfg = Release P2|Win32
-		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release P2|Win32.Build.0 = Release P2|Win32
+		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release P2|Win32.ActiveCfg = Release OE|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release|Win32.ActiveCfg = Release|Win32
 		{B6572CBE-7C7F-4FFF-94DE-AFBBBAB11C64}.Release|Win32.Build.0 = Release|Win32
 		{F142A341-5EE0-442D-A15F-98AE9B48DBAE}.Debug 2013|Win32.ActiveCfg = Debug|Win32
