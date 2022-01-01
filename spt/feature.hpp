@@ -7,7 +7,6 @@
 #include "SPTLib\patterns.hpp"
 #include "convar.hpp"
 #include "patterns.hpp"
-#include "matchAllPattern.hpp"
 
 #define ADD_RAW_HOOK(moduleName, name) \
 	AddRawHook(#moduleName, reinterpret_cast<void**>(&ORIG_##name##), reinterpret_cast<void*>(HOOKED_##name##));

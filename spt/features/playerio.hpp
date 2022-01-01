@@ -41,15 +41,10 @@ public:
 	Strafe::PlayerData GetPlayerData();
 	Vector GetPlayerVelocity();
 	Vector GetPlayerEyePos();
-	int GetPlayerFlags();
 	double GetDuckJumpTime();
 	bool IsGroundEntitySet();
 	bool TryJump();
 	bool PlayerIOAddressesFound();
-	int GetPlayerPhysicsFlags() const;
-	int GetPlayerMoveType() const;
-	int GetPlayerMoveCollide() const;
-	int GetPlayerCollisionGroup() const;
 	void Set_cinput_thisptr(void* thisptr);
 	void GetPlayerFields();
 	void OnTick();
@@ -74,6 +69,7 @@ public:
 	std::size_t sizeofCUserCmd = 0;
 
 	PlayerField<int> m_afPhysicsFlags;
+	PlayerField<int> m_hGroundEntity;
 	PlayerField<Vector> m_vecAbsOrigin;
 	PlayerField<Vector> m_vecAbsVelocity;
 	PlayerField<Vector> m_vecViewOffset;
@@ -87,6 +83,7 @@ public:
 	PlayerField<Vector> m_vecPreviouslyPredictedOrigin;
 	PlayerField<bool> m_bDucking;
 	PlayerField<float> m_flDuckJumpTime;
+	PlayerField<float> m_surfaceFriction;
 
 	void EnableDuckspam()
 	{

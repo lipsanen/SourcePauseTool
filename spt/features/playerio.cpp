@@ -51,60 +51,25 @@ void PlayerIOFeature::UnloadFeature() {}
 
 void PlayerIOFeature::PreHook()
 {
-	offM_pCommands = 0;
-	offForwardmove = 0;
-	offSidemove = 0;
-
-	offServerSurfaceFriction = 0;
-	offServerAbsOrigin = 0;
-
 	if (ORIG_CreateMove)
 	{
 		int index = GetPatternIndex((void**)&ORIG_CreateMove);
 
-		switch (index)
+		if (index == 0)
 		{
-		case 0:
 			offM_pCommands = 180;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 1:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 2:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 3:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 4:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-
-		case 5:
-			offM_pCommands = 196;
-			offForwardmove = 24;
-			offSidemove = 28;
-			break;
-		default:
-			offM_pCommands = 0;
-			offForwardmove = 0;
-			offSidemove = 0;
-			break;
 		}
+		else if (utils::DoesGameLookLikeBMS())
+		{
+			offM_pCommands = 244;
+		}
+		else
+		{
+			offM_pCommands = 196;
+		}
+
+		offForwardmove = 24;
+		offSidemove = 28;
 	}
 
 	GetPlayerFields();
@@ -171,8 +136,7 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 	auto absOrigin = m_vecAbsOrigin.GetValue();
 	bool gameCodeMovedPlayer = (previouslyPredictedOrigin != absOrigin);
 
-	vars.EntFriction =
-	    *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(server_player) + offServerSurfaceFriction);
+	vars.EntFriction = m_surfaceFriction.GetValue();
 
 	if (gameCodeMovedPlayer)
 	{
@@ -295,11 +259,6 @@ bool PlayerIOFeature::GetFlagsDucking()
 	return m_fFlags.GetValue() & FL_DUCKING;
 }
 
-int PlayerIOFeature::GetPlayerFlags()
-{
-	return m_fFlags.GetValue();
-}
-
 Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 {
 	if (!playerioAddressesWereFound)
@@ -357,6 +316,7 @@ void PlayerIOFeature::GetPlayerFields()
 	if (spt_entutils.ShouldLoadFeature())
 	{
 		m_afPhysicsFlags = spt_entutils.GetPlayerField<int>("m_afPhysicsFlags");
+		m_hGroundEntity = spt_entutils.GetPlayerField<int>("m_hGroundEntity");
 		m_vecAbsVelocity = spt_entutils.GetPlayerField<Vector>("m_vecAbsVelocity");
 		m_vecAbsOrigin = spt_entutils.GetPlayerField<Vector>("m_vecAbsOrigin");
 		m_MoveType = spt_entutils.GetPlayerField<int>("m_MoveType");
@@ -370,29 +330,41 @@ void PlayerIOFeature::GetPlayerFields()
 		m_bDucking = spt_entutils.GetPlayerField<bool>("m_Local.m_bDucking");
 		m_flDuckJumpTime = spt_entutils.GetPlayerField<float>("m_Local.m_flDuckJumpTime");
 		m_vecViewOffset = spt_entutils.GetPlayerField<Vector>("m_vecViewOffset");
+		offServerAbsOrigin = m_vecAbsOrigin.field.serverOffset;
+
+		int m_bSinglePlayerGameEndingOffset = spt_entutils.GetPlayerOffset("m_bSinglePlayerGameEnding", true);
+		if (m_bSinglePlayerGameEndingOffset != utils::INVALID_DATAMAP_OFFSET)
+		{
+			// There's 2 chars between m_bSinglePlayerGameEnding and m_surfaceFriction and floats are 4 byte aligned
+			// Therefore it should be -6 relative to m_bSinglePlayerGameEnding.
+			m_surfaceFriction.field.serverOffset =
+			    m_bSinglePlayerGameEndingOffset & ~3;  // 4 byte align the offset
+			m_surfaceFriction.field.serverOffset -= 4; // Take the previous 4 byte aligned address
+		}
 	}
-
-	offServerAbsOrigin = m_vecAbsOrigin.field.serverOffset;
-
-	int m_bSinglePlayerGameEndingOffset = spt_entutils.GetPlayerOffset("m_bSinglePlayerGameEnding", true);
-	if (m_bSinglePlayerGameEndingOffset != utils::INVALID_DATAMAP_OFFSET)
-	{
-		// There's 2 chars between m_bSinglePlayerGameEnding and m_surfaceFriction and floats are 4 byte aligned
-		// Therefore it should be -6 relative to m_bSinglePlayerGameEnding.
-		offServerSurfaceFriction = m_bSinglePlayerGameEndingOffset & ~3; // 4 byte align the offset
-		offServerSurfaceFriction -= 4; // Take the previous 4 byte aligned address
-	}
-
 	fetched = true;
 }
 
 bool PlayerIOFeature::IsGroundEntitySet()
 {
-	auto player = spt_entutils.GetPlayer(false);
-	if (ORIG_GetGroundEntity == nullptr || !player)
-		return false;
-
-	return (ORIG_GetGroundEntity(player, 0) != NULL); // TODO: This should really be a proper check.
+	if (tas_strafe_version.GetInt() <= 4)
+	{
+		// This is bugged around portals, here for backwards compat
+		auto player = spt_entutils.GetPlayer(false);
+		if (ORIG_GetGroundEntity == nullptr || !player)
+			return false;
+		else
+		{
+			return (ORIG_GetGroundEntity(player, 0) != NULL);
+		}
+	}
+	else
+	{
+		// Not bugged around portals
+		const int INDEX_MASK = MAX_EDICTS - 1;
+		int index = m_hGroundEntity.GetValue() & INDEX_MASK;
+		return index != INDEX_MASK;
+	}
 }
 
 bool PlayerIOFeature::TryJump()
@@ -407,7 +379,7 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 
 	return m_vecAbsVelocity.Found() && m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found()
 	       && m_vecPreviouslyPredictedOrigin.Found() && m_bDucking.Found() && m_flDuckJumpTime.Found()
-	       && offServerSurfaceFriction != 0 && ORIG_GetGroundEntity && ORIG_CreateMove && ORIG_GetButtonBits
+	       && m_surfaceFriction.Found() && m_hGroundEntity.Found() && ORIG_CreateMove && ORIG_GetButtonBits
 	       && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed && _sv_stopspeed
 	       && interfaces::engine_server != nullptr;
 }
@@ -435,26 +407,6 @@ void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& out)
 double PlayerIOFeature::GetDuckJumpTime()
 {
 	return m_flDuckJumpTime.GetValue();
-}
-
-int PlayerIOFeature::GetPlayerPhysicsFlags() const
-{
-	return m_afPhysicsFlags.GetValue();
-}
-
-int PlayerIOFeature::GetPlayerMoveType() const
-{
-	return m_MoveType.GetValue();
-}
-
-int PlayerIOFeature::GetPlayerMoveCollide() const
-{
-	return m_MoveCollide.GetValue();
-}
-
-int PlayerIOFeature::GetPlayerCollisionGroup() const
-{
-	return m_CollisionGroup.GetValue();
 }
 
 void PlayerIOFeature::Set_cinput_thisptr(void* thisptr)
@@ -499,7 +451,7 @@ CON_COMMAND(_y_spt_getvel, "Gets the last velocity of the player.")
 #if defined(SSDK2007) || defined(SSDK2013)
 CON_COMMAND(y_spt_find_portals, "Yes")
 {
-	if (spt_playerio.offServerAbsOrigin == 0)
+	if (spt_playerio.offServerAbsOrigin != utils::INVALID_DATAMAP_OFFSET)
 		return;
 
 	for (int i = 0; i < MAX_EDICTS; ++i)
@@ -909,7 +861,7 @@ void PlayerIOFeature::LoadFeature()
 		AddHudCallback(
 		    "fl_",
 		    [this]() {
-			    int flags = spt_playerio.GetPlayerFlags();
+			    int flags = spt_playerio.m_fFlags.GetValue();
 			    DrawFlagsHud(false, NULL, FLAGS, ARRAYSIZE(FLAGS), flags);
 		    },
 		    y_spt_hud_flags);
@@ -920,7 +872,7 @@ void PlayerIOFeature::LoadFeature()
 		AddHudCallback(
 		    "moveflags",
 		    [this]() {
-			    int flags = spt_playerio.GetPlayerMoveType();
+			    int flags = spt_playerio.m_MoveType.GetValue();
 			    DrawFlagsHud(true, L"Move type", MOVETYPE_FLAGS, ARRAYSIZE(MOVETYPE_FLAGS), flags);
 		    },
 		    y_spt_hud_moveflags);
@@ -931,7 +883,7 @@ void PlayerIOFeature::LoadFeature()
 		AddHudCallback(
 		    "collisionflags",
 		    [this]() {
-			    int flags = spt_playerio.GetPlayerCollisionGroup();
+			    int flags = spt_playerio.m_CollisionGroup.GetValue();
 			    DrawFlagsHud(true,
 			                 L"Collision group",
 			                 COLLISION_GROUPS,
@@ -946,7 +898,7 @@ void PlayerIOFeature::LoadFeature()
 		AddHudCallback(
 		    "movecollide",
 		    [this]() {
-			    int flags = spt_playerio.GetPlayerMoveCollide();
+			    int flags = spt_playerio.m_MoveCollide.GetValue();
 			    DrawFlagsHud(true, L"Move collide", MOVECOLLIDE_FLAGS, ARRAYSIZE(MOVECOLLIDE_FLAGS), flags);
 		    },
 		    y_spt_hud_movecollideflags);

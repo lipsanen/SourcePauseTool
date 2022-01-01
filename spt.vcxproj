@@ -1540,7 +1540,6 @@
     <ClCompile Include="spt\utils\ent_utils.cpp" />
     <ClCompile Include="spt\utils\file.cpp" />
     <ClCompile Include="spt\utils\game_detection.cpp" />
-    <ClCompile Include="spt\utils\matchAllPattern.cpp" />
     <ClCompile Include="spt\utils\math.cpp" />
     <ClCompile Include="spt\utils\property_getter.cpp" />
     <ClCompile Include="spt\utils\signals.cpp" />
@@ -1634,7 +1633,6 @@
     <ClInclude Include="spt\utils\file.hpp" />
     <ClInclude Include="spt\utils\game_detection.hpp" />
     <ClInclude Include="spt\utils\interfaces.hpp" />
-    <ClInclude Include="spt\utils\matchAllPattern.hpp" />
     <ClInclude Include="spt\utils\math.hpp" />
     <ClInclude Include="spt\utils\property_getter.hpp" />
     <ClInclude Include="spt\utils\signals.hpp" />

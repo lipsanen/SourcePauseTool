@@ -7,6 +7,8 @@ enum class PropMode
 {
 	Server,
 	Client,
+	PreferServer,
+	PreferClient,
 	None
 };
 
@@ -14,13 +16,10 @@ struct _InternalPlayerField
 {
 	int serverOffset = utils::INVALID_DATAMAP_OFFSET;
 	int clientOffset = utils::INVALID_DATAMAP_OFFSET;
-	;
-	bool preferServer = true;
 
-	template<typename T>
-	T GetValue() const;
-	template<typename T>
-	T* GetPtr();
+	void** GetServerPtr();
+	void** GetClientPtr();
+
 	bool ClientOffsetFound()
 	{
 		return clientOffset != utils::INVALID_DATAMAP_OFFSET;
@@ -35,15 +34,10 @@ template<typename T>
 struct PlayerField
 {
 	_InternalPlayerField field;
+	PropMode mode = PropMode::PreferServer;
 
-	T GetValue() const
-	{
-		return field.GetValue<T>();
-	}
-	T* GetPtr()
-	{
-		return field.GetPtr<T>();
-	}
+	T GetValue();
+	T* GetPtr();
 	bool ClientOffsetFound()
 	{
 		return field.clientOffset != utils::INVALID_DATAMAP_OFFSET;
@@ -77,20 +71,17 @@ public:
 	int GetPlayerOffset(const std::string& key, bool server);
 	void* GetPlayer(bool server);
 	template<typename T>
-	PlayerField<T> GetPlayerField(const std::string& key,
-	                              bool getServer = true,
-	                              bool getClient = true,
-	                              bool preferServer = true);
+	PlayerField<T> GetPlayerField(const std::string& key, PropMode mode = PropMode::PreferServer);
 	int GetFieldOffset(const std::string& mapKey, const std::string& key, bool server);
+	PropMode ResolveMode(PropMode mode);
 
 protected:
 	bool tablesProcessed = false;
 	bool playerDatamapSearched = false;
 	utils::DatamapWrapper* __playerdatamap = nullptr;
 
-	PropMode GetAutoMode();
 	void AddMap(datamap_t* map, bool server);
-	_InternalPlayerField _GetPlayerField(const std::string& key, bool getServer, bool getClient, bool preferServer);
+	_InternalPlayerField _GetPlayerField(const std::string& key, PropMode mode);
 	utils::DatamapWrapper* GetDatamapWrapper(const std::string& key);
 	utils::DatamapWrapper* GetPlayerDatamapWrapper();
 	void ProcessTablesLazy();
@@ -103,75 +94,33 @@ protected:
 extern EntUtils spt_entutils;
 
 template<typename T>
-inline T _InternalPlayerField::GetValue() const
-{
-	void* svplayer = spt_entutils.GetPlayer(true);
-	void* clplayer = spt_entutils.GetPlayer(false);
-	if (preferServer)
-	{
-		if (svplayer)
-		{
-			return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(svplayer) + serverOffset);
-		}
-		else if (clplayer)
-		{
-			return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(clplayer) + clientOffset);
-		}
-	}
-	else
-	{
-		if (clplayer)
-		{
-			return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(clplayer) + clientOffset);
-		}
-		else if (svplayer)
-		{
-			return *reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(svplayer) + serverOffset);
-		}
-	}
-
-	return T();
-}
-
-template<typename T>
-inline T* _InternalPlayerField::GetPtr()
-{
-	void* svplayer = GetPlayer(true);
-	void* clplayer = GetPlayer(false);
-
-	if (preferServer)
-	{
-		if (svplayer && serverOffset != utils::INVALID_DATAMAP_OFFSET)
-		{
-			return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(serverOffset) + serverOffset);
-		}
-		else if (clplayer && serverOffset != utils::INVALID_DATAMAP_OFFSET)
-		{
-			return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(clientOffset) + clientOffset);
-		}
-	}
-	else
-	{
-		if (clplayer && serverOffset != utils::INVALID_DATAMAP_OFFSET)
-		{
-			return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(serverOffset) + serverOffset);
-		}
-		else if (svplayer && serverOffset != utils::INVALID_DATAMAP_OFFSET)
-		{
-			return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(clientOffset) + clientOffset);
-		}
-	}
-
-	return nullptr;
-}
-
-template<typename T>
-inline PlayerField<T> EntUtils::GetPlayerField(const std::string& key,
-                                               bool getServer,
-                                               bool getClient,
-                                               bool preferServer)
+inline PlayerField<T> EntUtils::GetPlayerField(const std::string& key, PropMode mode)
 {
 	PlayerField<T> field;
-	field.field = _GetPlayerField(key, getServer, getClient, preferServer);
+	field.field = _GetPlayerField(key, mode);
+	field.mode = mode;
 	return field;
+}
+
+template<typename T>
+inline T PlayerField<T>::GetValue()
+{
+	T* ptr = GetPtr();
+
+	if (ptr)
+		return *ptr;
+	else
+		return T();
+}
+
+template<typename T>
+inline T* PlayerField<T>::GetPtr()
+{
+	auto resolved = spt_entutils.ResolveMode(mode);
+	if (resolved == PropMode::Server)
+		return reinterpret_cast<T*>(field.GetServerPtr());
+	else if (resolved == PropMode::Client)
+		return reinterpret_cast<T*>(field.GetClientPtr());
+	else
+		return nullptr;
 }

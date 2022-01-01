@@ -133,15 +133,15 @@ int EntUtils::GetFieldOffset(const std::string& mapKey, const std::string& key, 
 		return map->GetClientOffset(key);
 }
 
-_InternalPlayerField EntUtils::_GetPlayerField(const std::string& key,
-                                               bool getServer,
-                                               bool getClient,
-                                               bool preferServer)
+_InternalPlayerField EntUtils::_GetPlayerField(const std::string& key, PropMode mode)
 {
 	_InternalPlayerField out;
+	// Do nothing if we didn't load
 	if (!startedLoading)
 		return out;
-	out.preferServer = preferServer;
+
+	bool getServer = mode == PropMode::Server || mode == PropMode::PreferClient || mode == PropMode::PreferServer;
+	bool getClient = mode == PropMode::Client || mode == PropMode::PreferClient || mode == PropMode::PreferServer;
 
 	if (getServer)
 	{
@@ -166,8 +166,11 @@ static bool IsAddressLegal(uint8_t* address, uint8_t* start, std::size_t length)
 	return address >= start && address <= start + length;
 }
 
-static bool DoesNameLookSane(datamap_t* map, uint8_t* moduleStart, std::size_t length)
+static bool DoesMapLookValid(datamap_t* map, uint8_t* moduleStart, std::size_t length)
 {
+	if (!IsAddressLegal(reinterpret_cast<uint8_t*>(map->dataDesc), moduleStart, length))
+		return false;
+
 	int MAX_LEN = 64;
 	char* name = const_cast<char*>(map->dataClassName);
 
@@ -185,16 +188,40 @@ static bool DoesNameLookSane(datamap_t* map, uint8_t* moduleStart, std::size_t l
 	return false;
 }
 
-PropMode EntUtils::GetAutoMode()
+PropMode EntUtils::ResolveMode(PropMode mode)
 {
 	auto svplayer = GetPlayer(true);
 	auto clplayer = GetPlayer(false);
-	if (svplayer)
-		return PropMode::Server;
-	else if (clplayer)
-		return PropMode::Client;
-	else
+
+	switch (mode)
+	{
+	case PropMode::Client:
+		if (clplayer)
+			return PropMode::Client;
+		else
+			return PropMode::None;
+	case PropMode::Server:
+		if (svplayer)
+			return PropMode::Server;
+		else
+			return PropMode::None;
+	case PropMode::PreferServer:
+		if (svplayer)
+			return PropMode::Server;
+		else if (clplayer)
+			return PropMode::Client;
+		else
+			return PropMode::None;
+	case PropMode::PreferClient:
+		if (clplayer)
+			return PropMode::Client;
+		else if (svplayer)
+			return PropMode::Server;
+		else
+			return PropMode::None;
+	default:
 		return PropMode::None;
+	}
 }
 
 void EntUtils::AddMap(datamap_t* map, bool server)
@@ -274,7 +301,7 @@ utils::DatamapWrapper* EntUtils::GetPlayerDatamapWrapper()
 
 static void GetDatamapInfo(patterns::MatchedPattern pattern, int& numfields, datamap_t**& pmap)
 {
-	switch (pattern.ptnNumber)
+	switch (pattern.ptnIndex)
 	{
 	case 0:
 		numfields = *reinterpret_cast<int*>(pattern.ptr + 6);
@@ -316,7 +343,7 @@ void EntUtils::ProcessTablesLazy()
 			                      svmoduleSize))
 			{
 				datamap_t* map = *pmap;
-				if (DoesNameLookSane(map, reinterpret_cast<uint8_t*>(svmoduleStart), svmoduleSize))
+				if (DoesMapLookValid(map, reinterpret_cast<uint8_t*>(svmoduleStart), svmoduleSize))
 					AddMap(map, true);
 			}
 		}
@@ -335,7 +362,7 @@ void EntUtils::ProcessTablesLazy()
 			                      clmoduleSize))
 			{
 				datamap_t* map = *pmap;
-				if (DoesNameLookSane(map, reinterpret_cast<uint8_t*>(clmoduleStart), clmoduleSize))
+				if (DoesMapLookValid(map, reinterpret_cast<uint8_t*>(clmoduleStart), clmoduleSize))
 					AddMap(map, false);
 			}
 		}
@@ -448,4 +475,22 @@ void EntUtils::LoadFeature()
 		}
 	}
 #endif
+}
+
+void** _InternalPlayerField::GetServerPtr()
+{
+	auto serverplayer = reinterpret_cast<uintptr_t>(spt_entutils.GetPlayer(true));
+	if (serverplayer && serverOffset != utils::INVALID_DATAMAP_OFFSET)
+		return reinterpret_cast<void**>(serverplayer + serverOffset);
+	else
+		return nullptr;
+}
+
+void** _InternalPlayerField::GetClientPtr()
+{
+	auto clientPlayer = reinterpret_cast<uintptr_t>(spt_entutils.GetPlayer(false));
+	if (clientPlayer && clientOffset != utils::INVALID_DATAMAP_OFFSET)
+		return reinterpret_cast<void**>(clientPlayer + clientOffset);
+	else
+		return nullptr;
 }

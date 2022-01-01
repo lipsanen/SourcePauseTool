@@ -220,16 +220,15 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 	}
 
 	std::vector<std::future<patterns::PatternWrapper*>> hooks;
-	std::vector<std::future<void>> mhooks;
+	std::vector<std::future<std::vector<patterns::MatchedPattern>>> mhooks;
 	hooks.reserve(patternHooks.size());
 
 	for (auto& mpattern : matchAllPatterns)
 	{
-		mhooks.emplace_back(patterns::get_all_matches(mpattern.foundVec,
-		                                              moduleStart,
-		                                              moduleSize,
-		                                              mpattern.patternArr,
-		                                              mpattern.patternArr + mpattern.size));
+		mhooks.emplace_back(MemUtils::find_all_sequences_async(moduleStart,
+		                                                       moduleSize,
+		                                                       mpattern.patternArr,
+		                                                       mpattern.patternArr + mpattern.size));
 	}
 
 	for (auto& pattern : patternHooks)
@@ -247,7 +246,7 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 	for (std::size_t i = 0; i < mhooks.size(); ++i)
 	{
 		auto modulePattern = matchAllPatterns[i];
-		mhooks[i].get();
+		*modulePattern.foundVec = std::move(mhooks[i].get());
 		DevMsg("[%s] Found %u instances of pattern %s\n",
 		       Convert(moduleName).c_str(),
 		       modulePattern.foundVec->size(),
