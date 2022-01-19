@@ -1234,17 +1234,17 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug blank|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release OE|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\condition.cpp" />
+    <ClCompile Include="spt\legacy_scripts\framebulk_handler.cpp" />
+    <ClCompile Include="spt\legacy_scripts\parsed_script.cpp" />
+    <ClCompile Include="spt\legacy_scripts\srctas_reader.cpp" />
+    <ClCompile Include="spt\legacy_scripts\tester.cpp" />
+    <ClCompile Include="spt\legacy_scripts\test_item.cpp" />
+    <ClCompile Include="spt\legacy_scripts\tracker.cpp" />
+    <ClCompile Include="spt\legacy_scripts\variable_container.cpp" />
     <ClCompile Include="spt\overlay\overlay-renderer.cpp" />
     <ClCompile Include="spt\overlay\overlays.cpp" />
     <ClCompile Include="spt\overlay\portal_camera.cpp" />
-    <ClCompile Include="spt\scripts\condition.cpp" />
-    <ClCompile Include="spt\scripts\framebulk_handler.cpp" />
-    <ClCompile Include="spt\scripts\parsed_script.cpp" />
-    <ClCompile Include="spt\scripts\srctas_reader.cpp" />
-    <ClCompile Include="spt\scripts\tester.cpp" />
-    <ClCompile Include="spt\scripts\test_item.cpp" />
-    <ClCompile Include="spt\scripts\tracker.cpp" />
-    <ClCompile Include="spt\scripts\variable_container.cpp" />
     <ClCompile Include="spt\spt-serverplugin.cpp" />
     <ClCompile Include="spt\sptlib-wrapper.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -1356,19 +1356,19 @@
     <ClInclude Include="spt\features\tickrate.hpp" />
     <ClInclude Include="spt\features\tracing.hpp" />
     <ClInclude Include="spt\ipc\ipc.hpp" />
+    <ClInclude Include="spt\legacy_scripts\condition.hpp" />
+    <ClInclude Include="spt\legacy_scripts\framebulk_handler.hpp" />
+    <ClInclude Include="spt\legacy_scripts\parsed_script.hpp" />
+    <ClInclude Include="spt\legacy_scripts\range_variable.hpp" />
+    <ClInclude Include="spt\legacy_scripts\srctas_reader.hpp" />
+    <ClInclude Include="spt\legacy_scripts\tester.hpp" />
+    <ClInclude Include="spt\legacy_scripts\test_item.hpp" />
+    <ClInclude Include="spt\legacy_scripts\tracker.hpp" />
+    <ClInclude Include="spt\legacy_scripts\variable_container.hpp" />
     <ClInclude Include="spt\overlay\overlay-renderer.hpp" />
     <ClInclude Include="spt\overlay\overlays.hpp" />
     <ClInclude Include="spt\overlay\portal_camera.hpp" />
     <ClInclude Include="spt\patterns.hpp" />
-    <ClInclude Include="spt\scripts\condition.hpp" />
-    <ClInclude Include="spt\scripts\framebulk_handler.hpp" />
-    <ClInclude Include="spt\scripts\parsed_script.hpp" />
-    <ClInclude Include="spt\scripts\range_variable.hpp" />
-    <ClInclude Include="spt\scripts\srctas_reader.hpp" />
-    <ClInclude Include="spt\scripts\tester.hpp" />
-    <ClInclude Include="spt\scripts\test_item.hpp" />
-    <ClInclude Include="spt\scripts\tracker.hpp" />
-    <ClInclude Include="spt\scripts\variable_container.hpp" />
     <ClInclude Include="spt\spt-serverplugin.hpp" />
     <ClInclude Include="sptlib\sptlib.hpp" />
     <ClInclude Include="sptlib\sptlib-stdafx.hpp" />

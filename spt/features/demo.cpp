@@ -4,7 +4,7 @@
 #include "signals.hpp"
 #include "..\cvars.hpp"
 #include "..\feature.hpp"
-#include "..\scripts\srctas_reader.hpp"
+#include "..\legacy_scripts\srctas_reader.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "dbg.h"
 

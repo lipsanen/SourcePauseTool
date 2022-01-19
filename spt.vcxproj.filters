@@ -157,30 +157,6 @@
     <ClCompile Include="spt\vgui\lines.cpp">
       <Filter>spt\vgui</Filter>
     </ClCompile>
-    <ClCompile Include="spt\scripts\condition.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\framebulk_handler.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\parsed_script.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\srctas_reader.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\tester.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\test_item.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\tracker.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="spt\scripts\variable_container.cpp">
-      <Filter>spt\scripts</Filter>
-    </ClCompile>
     <ClCompile Include="spt\strafe\strafestuff.cpp">
       <Filter>spt\strafe</Filter>
     </ClCompile>
@@ -228,6 +204,30 @@
     </ClCompile>
     <ClCompile Include="spt\features\sg-collide-vis.cpp">
       <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\condition.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\framebulk_handler.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\parsed_script.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\srctas_reader.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\test_item.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\tester.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\tracker.cpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\legacy_scripts\variable_container.cpp">
+      <Filter>spt\legacy scripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -435,33 +435,6 @@
     <ClInclude Include="spt\vgui\lines.hpp">
       <Filter>spt\vgui</Filter>
     </ClInclude>
-    <ClInclude Include="spt\scripts\condition.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\framebulk_handler.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\parsed_script.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\range_variable.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\srctas_reader.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\tester.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\test_item.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\tracker.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\scripts\variable_container.hpp">
-      <Filter>spt\scripts</Filter>
-    </ClInclude>
     <ClInclude Include="spt\strafe\strafe_utils.hpp">
       <Filter>spt\strafe</Filter>
     </ClInclude>
@@ -500,6 +473,33 @@
     </ClInclude>
     <ClInclude Include="spt\features\physvis.hpp">
       <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\condition.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\framebulk_handler.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\parsed_script.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\range_variable.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\srctas_reader.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\test_item.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\tester.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\tracker.hpp">
+      <Filter>spt\legacy scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\legacy_scripts\variable_container.hpp">
+      <Filter>spt\legacy scripts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -553,14 +553,14 @@
     <Filter Include="spt\vgui">
       <UniqueIdentifier>{ef90278d-c4de-4d5f-b06f-50c99a1d056f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="spt\scripts">
-      <UniqueIdentifier>{a46aaf49-b67f-4f3a-8356-9c9c87901911}</UniqueIdentifier>
-    </Filter>
     <Filter Include="spt\strafe">
       <UniqueIdentifier>{8da5a507-6984-4ca8-a309-751bae22e3f9}</UniqueIdentifier>
     </Filter>
     <Filter Include="spt\aim">
       <UniqueIdentifier>{dddef7ec-c95f-4baa-9f56-d47554ea2e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\legacy scripts">
+      <UniqueIdentifier>{a46aaf49-b67f-4f3a-8356-9c9c87901911}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

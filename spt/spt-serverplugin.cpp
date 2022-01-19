@@ -17,7 +17,6 @@
 #include "..\features\playerio.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
-#include "scripts\srctas_reader.hpp"
 #include "..\feature.hpp"
 #include "vstdlib\random.h"
 

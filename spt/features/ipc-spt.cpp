@@ -6,7 +6,7 @@
 #include "ent_utils.hpp"
 #include "property_getter.hpp"
 #include "signals.hpp"
-#include "..\scripts\srctas_reader.hpp"
+#include "..\legacy_scripts\srctas_reader.hpp"
 #include "..\ipc\ipc.hpp"
 #include "..\sptlib-wrapper.hpp"
 

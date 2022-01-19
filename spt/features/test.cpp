@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
 #include "signals.hpp"
-#include "..\scripts\tester.hpp"
+#include "..\legacy_scripts\tester.hpp"
 
 class TestFeature : public FeatureWrapper<TestFeature>
 {
