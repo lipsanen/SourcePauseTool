@@ -562,6 +562,9 @@
     <Filter Include="spt\legacy scripts">
       <UniqueIdentifier>{a46aaf49-b67f-4f3a-8356-9c9c87901911}</UniqueIdentifier>
     </Filter>
+    <Filter Include="spt\tas">
+      <UniqueIdentifier>{b1cbace1-d0f0-4843-8ff1-d00a4600357b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="thirdparty\example.txt">

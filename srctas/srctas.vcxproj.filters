@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{05433b68-f346-41d7-91ac-bd4f3836e713}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{fe38a93b-4378-4e81-a083-af384bf690f2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\framebulk.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\framebulk.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\utils.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
