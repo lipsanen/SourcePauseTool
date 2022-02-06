@@ -12,11 +12,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libMinHook", "SPTLib\Window
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srctas", "srctas\srctas.vcxproj", "{C0F73565-AB11-4E65-A98C-C530339C969B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit tests", "Unit tests", "{80113FF0-D97D-4BB1-B83F-9610BE7E816F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{80113FF0-D97D-4BB1-B83F-9610BE7E816F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code", "Code", "{BFCB7BB6-E99C-47B9-97B4-0FB8E54CD7B6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srctas_test", "Unit tests\srctas_test\srctas_test.vcxproj", "{6EF348B7-6984-40D8-8402-51CCD6A716DD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "srctas_test", "Tests\srctas_test\srctas_test.vcxproj", "{6EF348B7-6984-40D8-8402-51CCD6A716DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

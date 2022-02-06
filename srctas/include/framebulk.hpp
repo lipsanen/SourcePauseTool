@@ -6,8 +6,14 @@
 namespace srctas
 {
 	struct FrameBulk;
+	
+	struct AimYawState
+	{
+		AimYawState() { Yaw = 0; Auto = true; }
 
-	enum class AimSetState { Set, Unset, Reset };
+		double Yaw;
+		bool Auto;
+	};
 
 	struct ErrorReturn
 	{
@@ -28,9 +34,8 @@ namespace srctas
 		int Field;
 	};
 
-	struct FrameBulk
+	struct MovementState
 	{
-		// Field 1 - Autofuncs
 		bool Strafe;
 		int StrafeType;
 		int JumpType;
@@ -38,6 +43,13 @@ namespace srctas
 		bool AutoJump;
 		bool Duckspam;
 		bool Jumpbug;
+		bool StrafeYawSet;
+		double StrafeYaw;
+	};
+
+	struct FrameBulk
+	{
+		MovementState Movement;
 
 		// Field 2 - Regular movement
 		bool Forward;
@@ -58,26 +70,19 @@ namespace srctas
 		bool Sprint;
 
 		// Field 4 - Aiming
-		AimSetState AimSet;
+		bool AimSet;
 		double AimPitch;
-		double AimYaw;
+		AimYawState AimYaw;
 		int AimFrames;
 		int Cone;
 
-		// Field 5 - Strafe pitch
-		bool StrafePitchSet;
-		double StrafePitch;
-
-		// Field 6 - Strafe yaw
-		bool StrafeYawSet;
-		double StrafeYaw;
-
-		// Field 7 - Frames
+		// Field 6 - Frames
 		int Frames;
 
-		// Field 8 - Commands
+		// Field 7 - Commands
 		std::string Commands;
 
+		FrameBulk();
 		std::string GenerateString();
 		static ErrorReturn ParseFrameBulk(const std::string& line, FrameBulk& bulk);
 	};
