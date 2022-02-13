@@ -93,6 +93,7 @@
     <ClInclude Include="include\strafe.hpp" />
     <ClInclude Include="include\strafe_utils.hpp" />
     <ClInclude Include="include\utils.hpp" />
+    <ClInclude Include="include\vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -5,16 +5,6 @@
 
 namespace srctas
 {
-	struct FrameBulk;
-	
-	struct AimYawState
-	{
-		AimYawState() { Yaw = 0; Auto = true; }
-
-		double Yaw;
-		bool Auto;
-	};
-
 	struct ErrorReturn
 	{
 		ErrorReturn() = default;
@@ -25,17 +15,25 @@ namespace srctas
 		bool Success;
 	};
 
-	struct FrameBulk;
-	typedef ErrorReturn(*BulkFunc)(FrameBulk& bulk, std::size_t& lineIndex, const std::string& line);
-
-	struct IndexHandler
+	struct _InternalAimYawState
 	{
-		BulkFunc handler;
-		int Field;
+		_InternalAimYawState() { Yaw = 0; Auto = true; }
+
+		double Yaw;
+		bool Auto;
 	};
 
-	struct MovementState
+	enum class StrafeType
 	{
+		MAXACCEL = 0,
+		MAXANGLE = 1,
+		CAPPED = 2,
+		DIRECTION = 3
+	};
+
+	struct _InternalFramebulk
+	{
+		// Field 1 - Autofuncs
 		bool Strafe;
 		int StrafeType;
 		int JumpType;
@@ -43,23 +41,8 @@ namespace srctas
 		bool AutoJump;
 		bool Duckspam;
 		bool Jumpbug;
-		bool StrafeYawSet;
-		double StrafeYaw;
-	};
 
-	struct FrameBulk
-	{
-		MovementState Movement;
-
-		// Field 2 - Regular movement
-		bool Forward;
-		bool Left;
-		bool Right;
-		bool Back;
-		bool Up;
-		bool Down;
-
-		// Field 3 - Misc
+		// Field 2 - Misc
 		bool Jump;
 		bool Duck;
 		bool Use;
@@ -69,21 +52,83 @@ namespace srctas
 		bool Walk;
 		bool Sprint;
 
-		// Field 4 - Aiming
+		// Field 3 - Aiming
 		bool AimSet;
 		double AimPitch;
-		AimYawState AimYaw;
+		_InternalAimYawState AimYaw;
 		int AimFrames;
 		int Cone;
 
-		// Field 6 - Frames
+		// Field 4 - Strafe yaw
+		bool StrafeYawSet;
+		double StrafeYaw;
+
+		// Field 5 - Frames
 		int Frames;
 
-		// Field 7 - Commands
+		// Field 6 - Commands
 		std::string Commands;
 
-		FrameBulk();
-		std::string GenerateString();
-		static ErrorReturn ParseFrameBulk(const std::string& line, FrameBulk& bulk);
+		_InternalFramebulk();
+		static ErrorReturn ParseFrameBulk(const std::string& line, _InternalFramebulk& bulk);
+	};
+
+
+	struct MovementInput
+	{
+		bool Strafe;
+
+		StrafeType strafeType;
+		int JumpType;
+		double StrafeYaw;
+		bool Lgagst;
+
+		bool AutoJump;
+		bool Duckspam;
+		bool Jumpbug;
+
+		static ErrorReturn MovementInputFromInternal(const std::string& line, MovementInput& state, _InternalFramebulk& bulk);
+	};
+
+	struct ButtonsInput
+	{
+		bool Jump;
+		bool Duck;
+		bool Use;
+		bool Attack1;
+		bool Attack2;
+		bool Reload;
+		bool Walk;
+		bool Sprint;
+
+		static ErrorReturn ButtonsInputFromInternal(const std::string& line, ButtonsInput& state, _InternalFramebulk& bulk);
+	};
+
+	struct AimState
+	{
+		bool AimSet;
+
+		double AimPitch;
+		double AimYaw;
+		int AimFrames;
+		int Cone;
+		bool Auto;
+
+		static ErrorReturn AimStateFromInternal(const std::string& line, AimState& state, _InternalFramebulk& bulk);
+	};
+
+	struct Framebulk
+	{
+		MovementInput movementInput;
+		ButtonsInput buttonsInput;
+		AimState aimState;
+
+		int Frames;
+		std::string Commands;
+
+		// add strafe settings stuff
+
+		Framebulk() {};
+		static ErrorReturn ParseFrameBulk(const std::string& line, Framebulk& bulk);
 	};
 }

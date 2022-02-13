@@ -9,7 +9,17 @@ namespace srctas
 {
 	using namespace std::placeholders;
 
-	typedef void (*SetFunc)(FrameBulk& bulk, bool state);
+	struct _InternalFramebulk;
+
+	typedef ErrorReturn(*BulkFunc)(_InternalFramebulk& bulk, std::size_t& lineIndex, const std::string& line);
+
+	struct IndexHandler
+	{
+		BulkFunc handler;
+		int Field;
+	};
+
+	typedef void (*SetFunc)(_InternalFramebulk& bulk, bool state);
 	static ErrorReturn HandleLetter(std::size_t& strIndex, const std::string& line, bool& value, char setLetter)
 	{
 		char letter = line[strIndex];
@@ -36,29 +46,16 @@ namespace srctas
 	}
 
 #define DEFINE_BULK_FUNC(name, letter) \
-	static ErrorReturn Handle##name##(FrameBulk & bulk, std::size_t & strIndex, const std::string& line) \
+	static ErrorReturn Handle##name##(_InternalFramebulk & bulk, std::size_t & strIndex, const std::string& line) \
 	{ \
 		return HandleLetter(strIndex, line, bulk.##name##, ##letter##); \
 	}
 
-#define DEFINE_BULK_FUNC_MOVEMENT(name, letter) \
-	static ErrorReturn Handle##name##(FrameBulk & bulk, std::size_t & strIndex, const std::string& line) \
-	{ \
-		return HandleLetter(strIndex, line, bulk.Movement.##name##, ##letter##); \
-	}
-
-	DEFINE_BULK_FUNC_MOVEMENT(Strafe, 's');
-	DEFINE_BULK_FUNC_MOVEMENT(Lgagst, 'l');
-	DEFINE_BULK_FUNC_MOVEMENT(AutoJump, 'j');
-	DEFINE_BULK_FUNC_MOVEMENT(Duckspam, 'd');
-	DEFINE_BULK_FUNC_MOVEMENT(Jumpbug, 'b');
-
-	DEFINE_BULK_FUNC(Forward, 'f');
-	DEFINE_BULK_FUNC(Left, 'l');
-	DEFINE_BULK_FUNC(Right, 'r');
-	DEFINE_BULK_FUNC(Back, 'b');
-	DEFINE_BULK_FUNC(Up, 'u');
-	DEFINE_BULK_FUNC(Down, 'd');
+	DEFINE_BULK_FUNC(Strafe, 's');
+	DEFINE_BULK_FUNC(Lgagst, 'l');
+	DEFINE_BULK_FUNC(AutoJump, 'j');
+	DEFINE_BULK_FUNC(Duckspam, 'd');
+	DEFINE_BULK_FUNC(Jumpbug, 'b');
 
 	DEFINE_BULK_FUNC(Jump, 'j');
 	DEFINE_BULK_FUNC(Duck, 'd');
@@ -93,7 +90,7 @@ namespace srctas
 		}
 	}
 
-	static ErrorReturn HandleStrafeType(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleStrafeType(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		int value;
@@ -107,13 +104,13 @@ namespace srctas
 		}
 		else
 		{
-			bulk.Movement.StrafeType = value;
+			bulk.StrafeType = value;
 		}
 
 		return rval;
 	}
 
-	static ErrorReturn HandleJumpType(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleJumpType(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		int value;
@@ -127,13 +124,13 @@ namespace srctas
 		}
 		else
 		{
-			bulk.Movement.JumpType = value;
+			bulk.JumpType = value;
 		}
 
 		return rval;
 	}
 
-	static ErrorReturn HandleAim(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleAim(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		std::istringstream oss;
@@ -184,7 +181,7 @@ namespace srctas
 		return rval;
 	}
 
-	static ErrorReturn HandleStrafeYaw(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleStrafeYaw(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		if (line[strIndex] == '-' && line[strIndex+1] == '|')
@@ -197,12 +194,12 @@ namespace srctas
 			rval.Success = false;
 			const char* start = line.c_str() + strIndex;
 			const char* end = line.c_str() + line.size();
-			auto result = std::from_chars(start, end, bulk.Movement.StrafeYaw);
+			auto result = std::from_chars(start, end, bulk.StrafeYaw);
 
 			if (result.ec == std::errc())
 			{
 				rval.Success = true;
-				bulk.Movement.StrafeYawSet = true;
+				bulk.StrafeYawSet = true;
 				strIndex += result.ptr - start;
 			}
 			else
@@ -217,7 +214,7 @@ namespace srctas
 		return rval;
 	}
 
-	static ErrorReturn HandleFrames(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleFrames(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		const char* start = line.c_str() + strIndex;
@@ -240,7 +237,7 @@ namespace srctas
 		return rval;
 	}
 
-	static ErrorReturn HandleCommand(FrameBulk& bulk, std::size_t& strIndex, const std::string& line)
+	static ErrorReturn HandleCommand(_InternalFramebulk& bulk, std::size_t& strIndex, const std::string& line)
 	{
 		ErrorReturn rval;
 		// This never fails, just grab the rest of the line
@@ -262,48 +259,34 @@ namespace srctas
 		handlers.push_back(IndexHandler{HandleDuckspam, 0});
 		handlers.push_back(IndexHandler{HandleJumpbug, 0});
 
-		handlers.push_back(IndexHandler{HandleForward, 1});
-		handlers.push_back(IndexHandler{HandleLeft, 1});
-		handlers.push_back(IndexHandler{HandleRight, 1});
-		handlers.push_back(IndexHandler{HandleBack, 1});
-		handlers.push_back(IndexHandler{HandleUp, 1});
-		handlers.push_back(IndexHandler{HandleDown, 1});
+		handlers.push_back(IndexHandler{HandleJump, 1});
+		handlers.push_back(IndexHandler{HandleDuck, 1});
+		handlers.push_back(IndexHandler{HandleUse, 1});
+		handlers.push_back(IndexHandler{HandleAttack1, 1});
+		handlers.push_back(IndexHandler{HandleAttack2, 1});
+		handlers.push_back(IndexHandler{HandleReload, 1});
+		handlers.push_back(IndexHandler{HandleWalk, 1});
+		handlers.push_back(IndexHandler{HandleSprint, 1});
 
-		handlers.push_back(IndexHandler{HandleJump, 2});
-		handlers.push_back(IndexHandler{HandleDuck, 2});
-		handlers.push_back(IndexHandler{HandleUse, 2});
-		handlers.push_back(IndexHandler{HandleAttack1, 2});
-		handlers.push_back(IndexHandler{HandleAttack2, 2});
-		handlers.push_back(IndexHandler{HandleReload, 2});
-		handlers.push_back(IndexHandler{HandleWalk, 2});
-		handlers.push_back(IndexHandler{HandleSprint, 2});
-
-		handlers.push_back(IndexHandler{HandleAim, 3});
-		handlers.push_back(IndexHandler{HandleStrafeYaw, 4});
-		handlers.push_back(IndexHandler{HandleFrames, 5});
-		handlers.push_back(IndexHandler{HandleCommand, 6});
+		handlers.push_back(IndexHandler{HandleAim, 2});
+		handlers.push_back(IndexHandler{HandleStrafeYaw, 3});
+		handlers.push_back(IndexHandler{HandleFrames, 4});
+		handlers.push_back(IndexHandler{HandleCommand, 5});
 
 		return handlers;
 	}
 
-	FrameBulk::FrameBulk()
+	_InternalFramebulk::_InternalFramebulk()
 	{
-		Movement.Strafe = false;
-		Movement.StrafeType = -1;
-		Movement.JumpType = -1;
-		Movement.Lgagst = false;
-		Movement.AutoJump = false;
-		Movement.Duckspam = false;
-		Movement.Jumpbug = false;
-		Movement.StrafeYawSet = false;
-		Movement.StrafeYaw = 0;
-
-		Forward = false;
-		Left = false;
-		Right = false;
-		Back = false;
-		Up = false;
-		Down = false;
+		Strafe = false;
+		StrafeType = -1;
+		JumpType = -1;
+		Lgagst = false;
+		AutoJump = false;
+		Duckspam = false;
+		Jumpbug = false;
+		StrafeYawSet = false;
+		StrafeYaw = 0;
 
 		Jump = false;
 		Duck = false;
@@ -322,7 +305,7 @@ namespace srctas
 		Frames = 0;
 	}
 
-	ErrorReturn FrameBulk::ParseFrameBulk(const std::string& line, FrameBulk& bulk)
+	ErrorReturn _InternalFramebulk::ParseFrameBulk(const std::string& line, _InternalFramebulk& bulk)
 	{
 		int field = 0;
 		std::size_t handlerIndex = 0;
@@ -370,5 +353,106 @@ namespace srctas
 	{
 		Error = value;
 		Success = bvalue;
+	}
+
+	ErrorReturn Framebulk::ParseFrameBulk(const std::string& line, Framebulk& bulk)
+	{
+		_InternalFramebulk internalFramebulk;
+		ErrorReturn error = _InternalFramebulk::ParseFrameBulk(line, internalFramebulk);
+		Framebulk framebulk;
+
+		if (!error.Success)
+		{
+			return error;
+		}
+
+		error = AimState::AimStateFromInternal(line, framebulk.aimState, internalFramebulk);
+
+		if (!error.Success)
+		{
+			return error;
+		}
+
+		error = ButtonsInput::ButtonsInputFromInternal(line, framebulk.buttonsInput, internalFramebulk);
+
+		if (!error.Success)
+		{
+			return error;
+		}
+
+		error = MovementInput::MovementInputFromInternal(line, framebulk.movementInput, internalFramebulk);
+
+		if (!error.Success)
+		{
+			return error;
+		}
+
+		framebulk.Commands = internalFramebulk.Commands;
+		framebulk.Frames = internalFramebulk.Frames;
+
+		return error;
+	}
+
+	ErrorReturn MovementInput::MovementInputFromInternal(const std::string& line, MovementInput& state, _InternalFramebulk& bulk)
+	{
+		ErrorReturn error(true);
+
+		if (bulk.Strafe && bulk.StrafeType == -1)
+		{
+			error.Success = false;
+			error.Error = "Strafe type must be set if strafing.";
+			return error;
+		}
+
+		if (bulk.Strafe && bulk.JumpType == -1)
+		{
+			error.Success = false;
+			error.Error = "Jump type must be set if strafing.";
+			return error;
+		}
+
+		if (bulk.Strafe && bulk.StrafeYawSet)
+		{
+			error.Success = false;
+			error.Error = "Strafe yaw must be set if strafing.";
+			return error;
+		}
+
+		state.AutoJump = bulk.AutoJump;
+		state.Duckspam = bulk.Duckspam;
+		state.Jumpbug = bulk.Jumpbug;
+		state.JumpType = bulk.JumpType;
+		state.Lgagst = bulk.Lgagst;
+		state.Strafe = bulk.Strafe;
+		state.StrafeType = bulk.StrafeType;
+		state.StrafeYaw = bulk.StrafeYaw;
+
+		return error;
+	}
+
+	ErrorReturn ButtonsInput::ButtonsInputFromInternal(const std::string& line, ButtonsInput& state, _InternalFramebulk& bulk)
+	{
+		state.Attack1 = bulk.Attack1;
+		state.Attack2 = bulk.Attack2;
+		state.Duck = bulk.Duck;
+		state.Jump = bulk.Jump;
+		state.Reload = bulk.Reload;
+		state.Sprint = bulk.Sprint;
+		state.Use = bulk.Use;
+		state.Walk = bulk.Walk;
+
+		return true;
+	}
+
+	ErrorReturn AimState::AimStateFromInternal(const std::string& line, AimState& state, _InternalFramebulk& bulk)
+	{
+		state.AimFrames = bulk.AimFrames;
+		state.AimPitch = bulk.AimPitch;
+		state.AimSet = bulk.AimSet;
+		state.AimYaw = bulk.AimYaw.Yaw;
+		state.Auto = bulk.AimYaw.Auto;
+		state.Cone = bulk.Cone;
+
+		return true;
 	}
 } // namespace tas

@@ -32,5 +32,8 @@
     <ClInclude Include="include\strafe_utils.hpp">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\vector.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
