@@ -1,48 +1,48 @@
 #include "stdafx.h"
-#include "..\stdafx.hpp"
+#include "../stdafx.hpp"
 
 #include <chrono>
 #include <functional>
 #include <sstream>
 #include <time.h>
 
-#include <SPTLib\Hooks.hpp>
+#include <SPTLib/Hooks.hpp>
 #include "spt-serverplugin.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "ent_utils.hpp"
 #include "math.hpp"
 #include "string_utils.hpp"
 #include "game_detection.hpp"
-#include "..\features\generic.hpp"
-#include "..\features\playerio.hpp"
+#include "../features/generic.hpp"
+#include "../features/playerio.hpp"
 #include "custom_interfaces.hpp"
 #include "cvars.hpp"
-#include "scripts\srctas_reader.hpp"
-#include "..\feature.hpp"
-#include "vstdlib\random.h"
+#include "scripts/srctas_reader.hpp"
+#include "../feature.hpp"
+#include "vstdlib/random.h"
 
 #include "cdll_int.h"
 #include "eiface.h"
-#include "engine\iserverplugin.h"
+#include "engine/iserverplugin.h"
 #include "icliententitylist.h"
-#include "tier2\tier2.h"
-#include "tier3\tier3.h"
-#include "vgui\iinput.h"
-#include "vgui\isystem.h"
-#include "vgui\ivgui.h"
-#include "SDK\hl_movedata.h"
-#include "SDK\igamemovement.h"
+#include "tier2/tier2.h"
+#include "tier3/tier3.h"
+#include "vgui/IInput.h"
+#include "vgui/ISystem.h"
+#include "vgui/IVGui.h"
+#include "SDK/hl_movedata.h"
+#include "SDK/igamemovement.h"
 #include "interfaces.hpp"
 #include "signals.hpp"
 
 #if SSDK2007
-#include "mathlib\vmatrix.h"
+#include "mathlib/vmatrix.h"
 #endif
 
-#include "SPTLib\sptlib.hpp"
-#include "overlay\overlay-renderer.hpp"
-#include "overlay\overlays.hpp"
-#include "tier0\memdbgoff.h" // YaLTeR - switch off the memory debugging.
+#include "SPTLib/sptlib.hpp"
+#include "overlay/overlay-renderer.hpp"
+#include "overlay/overlays.hpp"
+#include "tier0/memdbgoff.h" // YaLTeR - switch off the memory debugging.
 using namespace std::literals;
 
 namespace interfaces
@@ -218,15 +218,6 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 		Warning("SPT: y_spt_stucksave has no effect.\n");
 	}
 
-	if (utils::DoesGameLookLikePortal())
-	{
-		DevMsg("SPT: This game looks like portal. Setting the tas_* cvars appropriately.\n");
-
-		tas_force_airaccelerate.SetValue(15);
-		tas_force_wishspeed_cap.SetValue(60);
-		tas_reset_surface_friction.SetValue(0);
-	}
-
 	if (!interfaces::engine_server)
 	{
 		DevWarning("SPT: Failed to get the IVEngineServer interface.\n");
@@ -287,7 +278,6 @@ void CSourcePauseTool::Unload(void)
 	DisconnectTier1Libraries();
 	DisconnectTier3Libraries();
 	Feature::UnloadFeatures();
-	Hooks::Free();
 	pluginLoaded = false;
 }
 

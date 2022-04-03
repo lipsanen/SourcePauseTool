@@ -2,7 +2,7 @@
 
 #include "cdll_int.h"
 #include "client_class.h"
-#include "engine\ivmodelinfo.h"
+#include "engine/ivmodelinfo.h"
 #include "icliententity.h"
 #include "icliententitylist.h"
 #include "iserverunknown.h"

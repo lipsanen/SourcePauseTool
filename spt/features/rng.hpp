@@ -1,5 +1,5 @@
 #pragma once
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 typedef void(__cdecl* _SetPredictionRandomSeed)(void* usercmd);
 

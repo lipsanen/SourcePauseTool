@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "..\cvars.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\strafe\strafestuff.hpp"
+#include "../cvars.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../strafe/strafestuff.hpp"
 #include "aim.hpp"
 #include "hud.hpp"
 #include "game_detection.hpp"
@@ -10,7 +10,7 @@
 #include "ent_utils.hpp"
 #include "interfaces.hpp"
 #include "signals.hpp"
-#include "..\overlay\portal_camera.hpp"
+#include "../overlay/portal_camera.hpp"
 #include "ihud.hpp"
 
 #ifdef SSDK2007

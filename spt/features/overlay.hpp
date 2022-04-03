@@ -1,5 +1,5 @@
 #ifndef OE
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 typedef void(
     __fastcall* _CViewRender__RenderView)(void* thisptr, int edx, void* cameraView, int nClearFlags, int whatToDraw);

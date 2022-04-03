@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\spt-serverplugin.hpp"
+#include "../spt-serverplugin.hpp"
 #include "tickrate.hpp"
 #include "convar.hpp"
 #include "dbg.h"

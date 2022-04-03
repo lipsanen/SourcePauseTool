@@ -1,12 +1,13 @@
 #pragma once
 
-#include <SPTLib\memutils.hpp>
-#include <SPTLib\patterns.hpp>
+#include <SPTLib/MemUtils.hpp>
+#include <SPTLib/patterns.hpp>
 #include <array>
 #include <cstddef>
 
 namespace patterns
 {
+#ifndef _LINUX
 	namespace engine
 	{
 		PATTERNS(
@@ -566,5 +567,5 @@ namespace patterns
 		         "1910503",
 		         "55 8B EC 8B 49 08 81 EC 80 00 00 00 8D 45 80 50 E8 ?? ?? ?? ?? 8B 45 08 85 C0");
 	} // namespace vphysics
-
+#endif
 } // namespace patterns

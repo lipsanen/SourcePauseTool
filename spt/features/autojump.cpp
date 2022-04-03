@@ -2,10 +2,10 @@
 #include "autojump.hpp"
 
 #include "basehandle.h"
-#include "SDK\hl_movedata.h"
+#include "SDK/hl_movedata.h"
 #include "convar.hpp"
 #include "dbg.h"
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "signals.hpp"
 
 #ifdef OE

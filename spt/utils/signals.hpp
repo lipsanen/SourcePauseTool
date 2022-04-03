@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thirdparty/Signal.h"
+#include <stdint.h>
 
 extern Gallant::Signal0<void> AdjustAngles;
 extern Gallant::Signal0<void> AfterFramesSignal;

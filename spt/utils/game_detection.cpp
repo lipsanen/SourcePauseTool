@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "..\spt-serverplugin.hpp"
-#include "SPTLib\sptlib.hpp"
+#include "../spt-serverplugin.hpp"
+#include "SPTLib/sptlib.hpp"
 #include "interfaces.hpp"
 
 namespace utils

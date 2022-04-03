@@ -4,12 +4,13 @@
 #include "feature.hpp"
 #include "interfaces.hpp"
 #include "cvars.hpp"
-#include "features\hud.hpp"
-#include "SPTLib\sptlib.hpp"
+#include "features/hud.hpp"
+#include "SPTLib/sptlib.hpp"
 #include "dbg.h"
-#include "SPTLib\Windows\detoursutils.hpp"
-#include "SPTLib\Hooks.hpp"
+#include "SPTLib/Hooks.hpp"
 #include "cvars.hpp"
+#include "SPTLib/MemUtils.hpp"
+
 
 static std::unordered_map<std::string, ModuleHookData> moduleHookData;
 static std::unordered_map<uintptr_t, int> patternIndices;
@@ -100,6 +101,8 @@ void Feature::UnloadFeatures()
 
 	moduleHookData.clear();
 	patternIndices.clear();
+
+	Hooks::Free();
 }
 
 void Feature::AddVFTableHook(VFTableHook hook, std::string moduleEnum)
@@ -231,8 +234,12 @@ void Feature::AddMatchAllPattern(MatchAllPattern hook, std::string moduleName)
 
 void ModuleHookData::UnhookModule(const std::wstring& moduleName)
 {
+#ifdef _LINUX
+	// TODO: Implement linux hooking
+#else
 	if (!hookedFunctions.empty())
 		DetoursUtils::DetachDetours(moduleName, hookedFunctions.size(), &hookedFunctions[0]);
+#endif
 
 	for (auto& vft_hook : existingVTableHooks)
 		MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, *vft_hook.origPtr);
@@ -347,8 +354,11 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 	{
 		for (auto& entry : funcPairs)
 			MemUtils::MarkAsExecutable(*(entry.first));
-
+#ifdef _LINUX
+		// TODO: Implement Linux hooking
+#else
 		DetoursUtils::AttachDetours(moduleName, funcPairs.size(), &funcPairs[0]);
+#endif
 	}
 
 	// Clear any hooks that were added

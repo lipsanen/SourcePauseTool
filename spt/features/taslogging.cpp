@@ -1,7 +1,7 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "cmodel.h"
-#include "SDK\hl_movedata.h"
+#include "SDK/hl_movedata.h"
 #include "convar.hpp"
 #include "interfaces.hpp"
 

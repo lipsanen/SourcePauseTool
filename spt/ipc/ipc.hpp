@@ -1,7 +1,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "thirdparty\json.hpp"
+#include "thirdparty/json.hpp"
 
 namespace ipc
 {

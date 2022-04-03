@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "parsed_script.hpp"
-#include "..\spt-serverplugin.hpp"
+#include "../spt-serverplugin.hpp"
 #include "file.hpp"
-#include "..\cvars.hpp"
-#include "..\features\demo.hpp"
+#include "../cvars.hpp"
+#include "../features/demo.hpp"
 #include "framebulk_handler.hpp"
-#include "thirdparty\md5.hpp"
+#include "thirdparty/md5.hpp"
 
 namespace scripts
 {

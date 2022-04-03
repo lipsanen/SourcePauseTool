@@ -7,8 +7,8 @@
 #include "game_detection.hpp"
 #include "tas.hpp"
 #include "signals.hpp"
-#include "..\cvars.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../cvars.hpp"
+#include "../sptlib-wrapper.hpp"
 
 GenericFeature spt_generic;
 

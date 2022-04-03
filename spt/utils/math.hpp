@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef OE
-#include "mathlib\vector.h"
+#include "mathlib/vector.h"
 #else
 #include "vector.h"
 #endif

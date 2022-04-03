@@ -1,12 +1,12 @@
 #pragma once
 
-#include "..\feature.hpp"
-#include "thirdparty\Signal.h"
+#include "../feature.hpp"
+#include "thirdparty/Signal.h"
 
 #if defined(OE)
 #include "vector.h"
 #else
-#include "mathlib\vector.h"
+#include "mathlib/vector.h"
 #endif
 
 typedef bool(__fastcall* _CheckJumpButton)(void* thisptr, int edx);

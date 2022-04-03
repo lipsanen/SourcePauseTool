@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "variable_container.hpp"
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "dbg.h"
 #include "srctas_reader.hpp"
 

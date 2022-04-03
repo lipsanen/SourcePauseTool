@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #ifdef OE
-#include "..\feature.hpp"
-#include "..\cvars.hpp"
+#include "../feature.hpp"
+#include "../cvars.hpp"
 
 typedef void(__fastcall* _CViewRender__OnRenderStart)(void* thisptr, int edx);
 

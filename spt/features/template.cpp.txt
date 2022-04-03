@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 // Feature description
 class TemplateFeature : public FeatureWrapper<TemplateFeature>

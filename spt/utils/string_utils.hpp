@@ -1,6 +1,6 @@
 #pragma once
 #include <wchar.h>
-#include <tier0\wchartypes.h>
+#include <tier0/wchartypes.h>
 
 bool whiteSpacesOnly(const std::string& s);
 void ReplaceAll(std::string& str, const std::string& from, const std::string& to);
@@ -20,7 +20,7 @@ inline void GetDoublet(std::istringstream& stream, std::string& out1, std::strin
 {
 	std::getline(stream, out1, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read doublet!");
+		throw std::logic_error("Unable to read doublet!");
 	std::getline(stream, out2);
 }
 
@@ -85,10 +85,10 @@ inline void GetTriplet(std::istringstream& stream, std::string& out1, std::strin
 {
 	std::getline(stream, out1, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read triplet!");
+		throw std::logic_error("Unable to read triplet!");
 	std::getline(stream, out2, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read triplet!");
+		throw std::logic_error("Unable to read triplet!");
 	std::getline(stream, out3);
 }
 
@@ -101,13 +101,13 @@ inline void GetQuadlet(std::istringstream& stream,
 {
 	std::getline(stream, out1, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read quadlet!");
+		throw std::logic_error("Unable to read quadlet!");
 	std::getline(stream, out2, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read quadlet!");
+		throw std::logic_error("Unable to read quadlet!");
 	std::getline(stream, out3, delim);
 	if (!stream.good())
-		throw std::exception("Unable to read quadlet!");
+		throw std::logic_error("Unable to read quadlet!");
 	std::getline(stream, out4);
 }
 

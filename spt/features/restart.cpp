@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include <Windows.h>
-#include "..\feature.hpp"
-#include "..\spt-serverplugin.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "SPTLib\Hooks.hpp"
+#include "../feature.hpp"
+#include "../spt-serverplugin.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "SPTLib/Hooks.hpp"
 
 // Does game restarts
 class RestartFeature : public FeatureWrapper<RestartFeature>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "datamap_wrapper.hpp"
 
 enum class PropMode

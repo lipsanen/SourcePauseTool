@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "generic.hpp"
 #include "signals.hpp"
 

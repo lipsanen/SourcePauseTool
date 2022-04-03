@@ -4,10 +4,10 @@
 
 #include <functional>
 #include <vector>
-#include "..\feature.hpp"
-#include "vgui\VGUI.h"
-#include "vgui\IScheme.h"
-#include "VGuiMatSurface\IMatSystemSurface.h"
+#include "../feature.hpp"
+#include "vgui/VGUI.h"
+#include "vgui/IScheme.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 
 typedef void(__fastcall* _StartDrawing)(void* thisptr, int edx);
 typedef void(__fastcall* _FinishDrawing)(void* thisptr, int edx);

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "physvis.hpp"
 #include "interfaces.hpp"
-#include "materialsystem\imaterialsystem.h"
+#include "materialsystem/MaterialSystemUtil.h"
 
 const matrix3x4_t matrix3x4_identity(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0);
 

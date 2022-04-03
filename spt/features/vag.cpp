@@ -2,9 +2,9 @@
 
 #if defined(SSDK2007) || defined(SSDK2013)
 
-#include "..\feature.hpp"
-#include "..\utils\game_detection.hpp"
-#include "..\cvars.hpp"
+#include "../feature.hpp"
+#include "../utils/game_detection.hpp"
+#include "../cvars.hpp"
 
 #include "dbg.h"
 

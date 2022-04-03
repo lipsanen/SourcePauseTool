@@ -4,7 +4,7 @@
 #include "cmodel.h"
 
 #ifdef OE
-#include "..\game_shared\usercmd.h"
+#include "../game_shared/usercmd.h"
 #else
 #include "usercmd.h"
 #endif

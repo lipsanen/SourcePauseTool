@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 
+#ifndef _LINUX
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
@@ -19,10 +20,12 @@
 #undef null
 #endif
 
-#include "thirdparty\json.hpp"
+#include "thirdparty/json.hpp"
 #undef and
 #undef or
 
 // Remove min/max definitions from some SDK versions
 #undef min
 #undef max
+
+#endif

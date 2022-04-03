@@ -2,9 +2,9 @@
 
 #ifndef OE
 #include <string>
-#include "engine\iserverplugin.h"
+#include "engine/iserverplugin.h"
 #include "icliententity.h"
-#include "tier2\tier2.h"
+#include "tier2/tier2.h"
 
 IClientEntity* getPortal(const char* arg, bool verbose);
 bool invalidPortal(IClientEntity* portal);

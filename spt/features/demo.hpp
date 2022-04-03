@@ -1,5 +1,5 @@
 #pragma once
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 typedef int(__fastcall* DemoPlayer__Func)(void* thisptr);
 typedef void(__fastcall* _StopRecording)(void* thisptr, int edx);

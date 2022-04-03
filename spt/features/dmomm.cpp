@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #ifdef OE
-#include "..\feature.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\utils\game_detection.hpp"
+#include "../feature.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../utils/game_detection.hpp"
 #include "afterframes.hpp"
 #include "convar.hpp"
 #include "dbg.h"

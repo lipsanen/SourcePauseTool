@@ -2,11 +2,11 @@
 #if defined(SSDK2007)
 #include "ihud.hpp"
 
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "playerio.hpp"
 #include "signals.hpp"
 #include "property_getter.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "Color.h"
 
 InputHud spt_ihud;

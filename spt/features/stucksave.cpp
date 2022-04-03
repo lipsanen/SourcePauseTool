@@ -3,11 +3,11 @@
 #if !defined(OE)
 
 #include "generic.hpp"
-#include "..\feature.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\cvars.hpp"
-#include "..\spt-serverplugin.hpp"
-#include "..\utils\ent_utils.hpp"
+#include "../feature.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../cvars.hpp"
+#include "../spt-serverplugin.hpp"
+#include "../utils/ent_utils.hpp"
 #include "signals.hpp"
 
 #include <sstream>

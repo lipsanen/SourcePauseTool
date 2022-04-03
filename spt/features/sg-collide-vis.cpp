@@ -1,12 +1,12 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "physvis.hpp"
 #include "generic.hpp"
 #include "game_detection.hpp"
-#include "..\overlay\portal_camera.hpp"
+#include "../overlay/portal_camera.hpp"
 #include "property_getter.hpp"
 #include "interfaces.hpp"
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 
 ConVar y_spt_draw_portal_env("y_spt_draw_portal_env",
                              "0",

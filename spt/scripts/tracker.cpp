@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "tracker.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "string_utils.hpp"
-#include "..\features\playerio.hpp"
+#include "../features/playerio.hpp"
 
 namespace scripts
 {

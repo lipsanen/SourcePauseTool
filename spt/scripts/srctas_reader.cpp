@@ -2,19 +2,19 @@
 
 #include "srctas_reader.hpp"
 
-#include "..\spt-serverplugin.hpp"
+#include "../spt-serverplugin.hpp"
 
-#include "..\sptlib-wrapper.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "game_detection.hpp"
 #include "file.hpp"
 #include "interfaces.hpp"
 #include "math.hpp"
 #include "string_utils.hpp"
-#include "..\cvars.hpp"
-#include "..\features\tickrate.hpp"
+#include "../cvars.hpp"
+#include "../features/tickrate.hpp"
 #include "framebulk_handler.hpp"
-#include "..\features\afterframes.hpp"
-#include "..\features\demo.hpp"
+#include "../features/afterframes.hpp"
+#include "../features/demo.hpp"
 
 namespace scripts
 {

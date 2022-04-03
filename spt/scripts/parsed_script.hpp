@@ -2,7 +2,7 @@
 
 #include <string>
 #include <vector>
-#include "..\features\afterframes.hpp"
+#include "../features/afterframes.hpp"
 
 namespace scripts
 {

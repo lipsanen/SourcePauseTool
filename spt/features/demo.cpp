@@ -2,10 +2,10 @@
 #include "demo.hpp"
 #include "generic.hpp"
 #include "signals.hpp"
-#include "..\cvars.hpp"
-#include "..\feature.hpp"
-#include "..\scripts\srctas_reader.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../cvars.hpp"
+#include "../feature.hpp"
+#include "../scripts/srctas_reader.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "dbg.h"
 
 DemoStuff spt_demostuff;

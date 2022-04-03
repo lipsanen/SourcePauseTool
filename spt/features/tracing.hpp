@@ -1,10 +1,10 @@
 #pragma once
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 #if defined(OE)
 #include "vector.h"
 #else
-#include "mathlib\vector.h"
+#include "mathlib/vector.h"
 #endif
 #include "cmodel.h"
 

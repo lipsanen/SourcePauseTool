@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\stdafx.hpp"
+#include "../stdafx.hpp"
 
 #ifdef OE
 #include "mathlib.h"
@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "const.h"
 #include "strafe_utils.hpp"
 #include "strafestuff.hpp"
@@ -18,13 +18,13 @@
 #include "game_detection.hpp"
 #include "math.hpp"
 #include "property_getter.hpp"
-#include "..\features\playerio.hpp"
-#include "..\features\tracing.hpp"
-#include "SDK\hl_movedata.h"
+#include "../features/playerio.hpp"
+#include "../features/tracing.hpp"
+#include "SDK/hl_movedata.h"
 #include "interfaces.hpp"
 
 #ifndef OE
-#include "..\overlay\portal_camera.hpp"
+#include "../overlay/portal_camera.hpp"
 #endif
 
 #ifdef max

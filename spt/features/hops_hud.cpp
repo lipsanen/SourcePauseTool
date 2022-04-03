@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #if defined(SSDK2007)
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include <algorithm>
 #include "convar.hpp"
 #include "hud.hpp"

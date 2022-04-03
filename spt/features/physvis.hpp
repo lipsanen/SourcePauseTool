@@ -1,8 +1,8 @@
 #pragma once
 
-#include "..\feature.hpp"
-#include "engine\iserverplugin.h"
-#include "tier3\tier3.h"
+#include "../feature.hpp"
+#include "engine/iserverplugin.h"
+#include "tier3/tier3.h"
 #include "cdll_int.h"
 
 extern const matrix3x4_t matrix3x4_identity;

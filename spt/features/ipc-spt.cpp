@@ -1,14 +1,14 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "convar.hpp"
 #include "file.hpp"
-#include "thirdparty\json.hpp"
+#include "thirdparty/json.hpp"
 #include "ent_utils.hpp"
 #include "property_getter.hpp"
 #include "signals.hpp"
-#include "..\scripts\srctas_reader.hpp"
-#include "..\ipc\ipc.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../scripts/srctas_reader.hpp"
+#include "../ipc/ipc.hpp"
+#include "../sptlib-wrapper.hpp"
 
 namespace ipc
 {

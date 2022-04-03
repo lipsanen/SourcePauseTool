@@ -7,21 +7,21 @@
 #include <sstream>
 #include <vector>
 
-#include "..\cvars.hpp"
-#include "..\overlay\portal_camera.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\strafe\strafestuff.hpp"
-#include "SPTLib\sptlib.hpp"
+#include "../cvars.hpp"
+#include "../overlay/portal_camera.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../strafe/strafestuff.hpp"
+#include "SPTLib/sptlib.hpp"
 #include "client_class.h"
 #include "game_detection.hpp"
 #include "property_getter.hpp"
 #include "string_utils.hpp"
 #include "math.hpp"
 #include "game_detection.hpp"
-#include "..\features\playerio.hpp"
-#include "..\features\tickrate.hpp"
-#include "..\features\tracing.hpp"
-#include "..\spt-serverplugin.hpp"
+#include "../features/playerio.hpp"
+#include "../features/tickrate.hpp"
+#include "../features/tracing.hpp"
+#include "../spt-serverplugin.hpp"
 #include "interfaces.hpp"
 
 #undef max

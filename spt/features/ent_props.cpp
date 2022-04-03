@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "ent_props.hpp"
 #include "convar.hpp"
 #include "hud.hpp"
@@ -8,8 +8,8 @@
 #include "interfaces.hpp"
 #include "ent_utils.hpp"
 #include "string_utils.hpp"
-#include "..\overlay\portal_camera.hpp"
-#include "SPTLib\patterns.hpp"
+#include "../overlay/portal_camera.hpp"
+#include "SPTLib/patterns.hpp"
 #include <string>
 #include <unordered_map>
 

@@ -3,25 +3,27 @@
 #include <array>
 #include <vector>
 #include <functional>
+#include <future>
+#include <string>
 #include <unordered_map>
-#include "SPTLib\patterns.hpp"
+#include "SPTLib/patterns.hpp"
 #include "convar.hpp"
 #include "patterns.hpp"
 
 #define ADD_RAW_HOOK(moduleName, name) \
 	AddRawHook(#moduleName, reinterpret_cast<void**>(&ORIG_##name##), reinterpret_cast<void*>(HOOKED_##name##));
 #define FIND_PATTERN(moduleName, name) \
-	AddPatternHook(patterns::##moduleName## ::##name##, \
+	AddPatternHook(patterns:: moduleName :: name, \
 	               #moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&ORIG_##name##), \
+	               reinterpret_cast<void**>(& ORIG_ ## name ), \
 	               nullptr);
 #define HOOK_FUNCTION(moduleName, name) \
-	AddPatternHook(patterns::##moduleName## ::##name##, \
+	AddPatternHook(patterns:: moduleName  :: name, \
 	               #moduleName, \
 	               #name, \
-	               reinterpret_cast<void**>(&ORIG_##name##), \
-	               reinterpret_cast<void*>(HOOKED_##name##));
+	               reinterpret_cast<void**>(&ORIG_## name ), \
+	               reinterpret_cast<void*>(HOOKED_ ## name ));
 #define InitCommand(command) InitConcommandBase(command##_command)
 
 struct VFTableHook

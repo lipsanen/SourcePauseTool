@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "cvars.hpp"
-#include "feature.hpp"
 #include "interfaces.hpp"
-#include "tier1\tier1.h"
+#include "tier1/tier1.h"
+#include <unordered_map>
 
 static std::unordered_map<ConCommandBase*, void*> cmd_to_feature;
 

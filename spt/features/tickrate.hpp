@@ -1,5 +1,5 @@
 #pragma once
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 // For getting tickrate stuff
 class TickrateMod : public FeatureWrapper<TickrateMod>

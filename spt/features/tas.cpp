@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "tas.hpp"
-#include "..\cvars.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\strafe\strafestuff.hpp"
-#include "..\scripts\srctas_reader.hpp"
+#include "../cvars.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../strafe/strafestuff.hpp"
+#include "../scripts/srctas_reader.hpp"
 #include "aim.hpp"
 #include "generic.hpp"
 #include "hud.hpp"
@@ -278,6 +278,16 @@ void TASFeature::LoadFeature()
 
 	if (tasAddressesWereFound)
 	{
+
+		if (utils::DoesGameLookLikePortal())
+		{
+			DevMsg("SPT: This game looks like portal. Setting the tas_* cvars appropriately.\n");
+
+			tas_force_airaccelerate.SetValue(15);
+			tas_force_wishspeed_cap.SetValue(60);
+			tas_reset_surface_friction.SetValue(0);
+		}
+
 		InitConcommandBase(tas_strafe);
 		InitConcommandBase(tas_strafe_type);
 		InitConcommandBase(tas_strafe_dir);

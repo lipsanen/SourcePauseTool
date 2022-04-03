@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "convar.hpp"
 
 typedef void(__cdecl* _Host_AccumulateTime)(float dt);

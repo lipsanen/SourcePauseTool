@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "generic.hpp"
 #include "convar.hpp"
 #include "signals.hpp"
@@ -32,9 +32,16 @@ static PauseFeature spt_pause;
 
 void PauseFeature::InitHooks()
 {
+#ifndef _LINUX
 	FIND_PATTERN(engine, SpawnPlayer);
+#endif
 }
 
+#ifdef _LINUX
+void PauseFeature::LoadFeature()
+{
+}
+#else
 void PauseFeature::LoadFeature()
 {
 	pM_bLoadgame = nullptr;
@@ -178,3 +185,4 @@ void PauseFeature::SetPaused(void* thisptr, int edx, bool paused)
 		DevMsg("Engine call: SetPaused( %s );\n", (paused ? "true" : "false"));
 	}
 }
+#endif

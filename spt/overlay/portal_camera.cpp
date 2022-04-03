@@ -1,22 +1,22 @@
 #include "stdafx.h"
 
 #ifndef OE
-#include "..\spt-serverplugin.hpp"
+#include "../spt-serverplugin.hpp"
 
 #include "ent_utils.hpp"
 #include "property_getter.hpp"
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "cdll_int.h"
 #include "client_class.h"
 #include "edict.h"
 #include "eiface.h"
-#include "engine\iserverplugin.h"
-#include "mathlib\vmatrix.h"
+#include "engine/iserverplugin.h"
+#include "mathlib/vmatrix.h"
 #include "overlay-renderer.hpp"
 #include "portal_camera.hpp"
-#include "tier2\tier2.h"
+#include "tier2/tier2.h"
 #include "interfaces.hpp"
-#include "..\features\ent_props.hpp"
+#include "../features/ent_props.hpp"
 
 const int INDEX_MASK = MAX_EDICTS - 1;
 

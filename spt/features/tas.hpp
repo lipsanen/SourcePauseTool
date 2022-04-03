@@ -1,5 +1,5 @@
 #pragma once
-#include "..\feature.hpp"
+#include "../feature.hpp"
 
 // Enables TAS strafing and view related functionality
 class TASFeature : public FeatureWrapper<TASFeature>

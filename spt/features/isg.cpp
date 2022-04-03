@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "hud.hpp"
-#include "..\feature.hpp"
-#include "..\utils\game_detection.hpp"
+#include "../feature.hpp"
+#include "../utils/game_detection.hpp"
 
 #include <functional>
 #include <memory>

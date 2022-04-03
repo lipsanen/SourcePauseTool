@@ -1,13 +1,13 @@
 #pragma once
 
-#include "..\feature.hpp"
-#include "..\strafe\strafestuff.hpp"
+#include "../feature.hpp"
+#include "../strafe/strafestuff.hpp"
 #include "ent_props.hpp"
 
 #ifdef OE
 #include "vector.h"
 #else
-#include "mathlib\vector.h"
+#include "mathlib/vector.h"
 #endif
 
 typedef void(__fastcall* _CalcAbsoluteVelocity)(void* thisptr, int edx);

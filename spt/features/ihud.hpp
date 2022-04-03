@@ -1,12 +1,12 @@
 #pragma once
 
 #if defined(SSDK2007)
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "hud.hpp"
 #include "basehandle.h"
 
 #ifdef OE
-#include "..\game_shared\usercmd.h"
+#include "../game_shared/usercmd.h"
 #else
 #include "usercmd.h"
 #endif

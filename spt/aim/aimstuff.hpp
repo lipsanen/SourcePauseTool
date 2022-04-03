@@ -3,7 +3,7 @@
 #ifdef OE
 #include "vector.h"
 #else
-#include "mathlib\vector.h"
+#include "mathlib/vector.h"
 #endif
 
 namespace aim

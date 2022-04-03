@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "tester.hpp"
 #include <filesystem>
-#include "..\spt-serverplugin.hpp"
-#include "..\sptlib-wrapper.hpp"
+#include "../spt-serverplugin.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "file.hpp"
 #include "srctas_reader.hpp"
 #include "dbg.h"

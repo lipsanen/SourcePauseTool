@@ -1,23 +1,32 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright ï¿½ 1996-2005, Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
 // $NoKeywords: $
 //=============================================================================//
 
-#ifndef IMOVEHELPER_H
-#define IMOVEHELPER_H
-
-#ifdef _WIN32
 #pragma once
-#endif
 
 
 //-----------------------------------------------------------------------------
 // Forward declarations
 //-----------------------------------------------------------------------------
 
-enum PLAYER_ANIM;
+enum PLAYER_ANIM
+{
+	PLAYER_IDLE,
+	PLAYER_WALK,
+	PLAYER_JUMP,
+	PLAYER_SUPERJUMP,
+	PLAYER_DIE,
+	PLAYER_ATTACK1,
+	PLAYER_IN_VEHICLE,
+
+	// TF Player animations
+	PLAYER_RELOAD,
+	PLAYER_START_AIMING,
+	PLAYER_LEAVE_AIMING,
+};
 class IPhysicsSurfaceProps;
 class Vector;
 struct model_t;
@@ -110,6 +119,3 @@ inline IMoveHelper* MoveHelper( )
 {
 	return IMoveHelper::GetSingleton();
 }
-
-
-#endif // IMOVEHELPER_H

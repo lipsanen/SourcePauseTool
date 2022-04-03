@@ -1,11 +1,11 @@
 #include "stdafx.h"
 
 #ifndef OE
-#include "..\sptlib-wrapper.hpp"
+#include "../sptlib-wrapper.hpp"
 #include "ent_utils.hpp"
 #include "math.hpp"
-#include "..\features\shadow.hpp"
-#include "..\features\playerio.hpp"
+#include "../features/shadow.hpp"
+#include "../features/playerio.hpp"
 #include "overlays.hpp"
 #include "portal_camera.hpp"
 

@@ -2,12 +2,12 @@
 
 #include "condition.hpp"
 
-#include "..\overlay\portal_camera.hpp"
+#include "../overlay/portal_camera.hpp"
 
 #include "ent_utils.hpp"
 #include "math.hpp"
 #include "property_getter.hpp"
-#include "..\features\playerio.hpp"
+#include "../features/playerio.hpp"
 
 namespace scripts
 {

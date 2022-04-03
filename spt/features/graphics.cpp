@@ -3,8 +3,8 @@
 #include "tracing.hpp"
 #include "signals.hpp"
 #include "interfaces.hpp"
-#include "..\feature.hpp"
-#include "..\vgui\lines.hpp"
+#include "../feature.hpp"
+#include "../vgui/lines.hpp"
 
 ConVar y_spt_draw_seams("y_spt_draw_seams", "0", FCVAR_CHEAT, "Draws seamshot stuff.\n");
 

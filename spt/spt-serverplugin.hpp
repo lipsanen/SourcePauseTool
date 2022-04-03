@@ -8,11 +8,10 @@
 
 #include "custom_interfaces.hpp"
 #include "eiface.h"
-#include "engine\iserverplugin.h"
-#include "engine\ivdebugoverlay.h"
+#include "engine/iserverplugin.h"
+#include "engine/ivdebugoverlay.h"
 #include "icvar.h"
-#include "vgui\ischeme.h"
-#include "vguimatsurface\imatsystemsurface.h"
+#include "vgui/IScheme.h"
 
 //---------------------------------------------------------------------------------
 // Purpose: a sample 3rd party plugin class

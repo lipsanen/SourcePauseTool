@@ -1,7 +1,7 @@
 #pragma once
 
-#include "..\feature.hpp"
-#include "thirdparty\Signal.h"
+#include "../feature.hpp"
+#include "thirdparty/Signal.h"
 
 struct afterframes_entry_t
 {

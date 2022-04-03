@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 #include "cdll_int.h"
-#include "engine\ivmodelinfo.h"
+#include "engine/ivmodelinfo.h"
 #include "client_class.h"
 #include "icliententity.h"
 #include "icliententitylist.h"

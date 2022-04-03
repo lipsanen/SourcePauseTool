@@ -1,7 +1,7 @@
 #pragma once
 
-#include "..\feature.hpp"
-#include "..\aim\aimstuff.hpp"
+#include "../feature.hpp"
+#include "../aim/aimstuff.hpp"
 
 typedef struct
 {

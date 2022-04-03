@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\cvars.hpp"
+#include "../cvars.hpp"
 #include "aim.hpp"
 #include "generic.hpp"
 #include "ent_utils.hpp"

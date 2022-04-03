@@ -8,8 +8,8 @@
 #include "interfaces.hpp"
 #include "convar.h"
 #include "string_utils.hpp"
-#include "..\sptlib-wrapper.hpp"
-#include "..\strafe\strafestuff.hpp"
+#include "../sptlib-wrapper.hpp"
+#include "../strafe/strafestuff.hpp"
 
 ConVar y_spt_hud_oob("y_spt_hud_oob", "0", FCVAR_CHEAT, "Is the player OoB?");
 Tracing spt_tracing;

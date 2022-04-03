@@ -98,9 +98,9 @@ namespace scripts
 		GetTriplet(value, initialLow, initialHigh, increment, '|');
 
 		if (increment <= 0)
-			throw std::exception("increment cannot be <= 0");
+			throw std::logic_error("increment cannot be <= 0");
 		else if (initialLow >= initialHigh)
-			throw std::exception("Low was higher than high");
+			throw std::logic_error("Low was higher than high");
 
 		lowIndex = 0;
 		highIndex = static_cast<int>((initialHigh - initialLow) / increment);
@@ -133,7 +133,7 @@ namespace scripts
 			SelectRandom();
 			break;
 		default:
-			throw std::exception("Search type is not implemented or not in search mode");
+			throw std::logic_error("Search type is not implemented or not in search mode");
 			break;
 		}
 
@@ -158,7 +158,7 @@ namespace scripts
 			highIndex = valueIndex;
 			break;
 		default:
-			throw std::exception("Unexpected search result received");
+			throw std::logic_error("Unexpected search result received");
 		}
 
 		SelectMiddle();
@@ -176,7 +176,7 @@ namespace scripts
 			highIndex = valueIndex;
 			break;
 		default:
-			throw std::exception("Unexpected search result received");
+			throw std::logic_error("Unexpected search result received");
 		}
 
 		SelectMiddle();
@@ -200,6 +200,7 @@ namespace scripts
 		return value;
 	}
 
+	template<>
 	inline float RangeVariable<float>::Normalize(float value)
 	{
 		if (isAngle)

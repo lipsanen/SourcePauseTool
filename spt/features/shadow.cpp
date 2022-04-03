@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
-#include "..\utils\game_detection.hpp"
+#include "../feature.hpp"
+#include "../utils/game_detection.hpp"
 #include "shadow.hpp"
 
 typedef int(__fastcall* _GetShadowPosition)(void* thisptr, int edx, Vector* worldPosition, QAngle* angles);

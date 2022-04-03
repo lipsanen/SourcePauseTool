@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
+#include "../feature.hpp"
 #include "convar.hpp"
 
 typedef void(__fastcall* _CInputSystem__SleepUntilInput)(void* thisptr, int edx, int nMaxSleepTimeMS);

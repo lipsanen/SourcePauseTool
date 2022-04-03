@@ -4,9 +4,9 @@
 
 class IClientMode;
 
-#include "inputsystem\buttoncode.h"
-#include "vgui\ischeme.h"
-#include "vgui_controls\controls.h"
+#include "inputsystem/ButtonCode.h"
+#include "vgui/IScheme.h"
+#include "vgui_controls/Controls.h"
 
 namespace vgui
 {
