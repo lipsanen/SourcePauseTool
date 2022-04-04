@@ -107,6 +107,9 @@ void Feature::UnloadFeatures()
 
 void Feature::AddVFTableHook(VFTableHook hook, std::string moduleEnum)
 {
+	if(hook.vftable == nullptr || hook.index < 0)
+		return;
+
 	if (moduleHookData.find(moduleEnum) == moduleHookData.end())
 	{
 		moduleHookData[moduleEnum] = ModuleHookData();
@@ -368,10 +371,16 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 	existingVTableHooks.insert(existingVTableHooks.end(), vftableHooks.begin(), vftableHooks.end());
 	vftableHooks.clear();
 }
-
-VFTableHook::VFTableHook(void** vftable, int index, void* functionToHook, void** origPtr)
+VFTableHook::VFTableHook(void*** instance, int index, void* functionToHook, void** origPtr)
 {
-	this->vftable = vftable;
+	if(instance)
+	{
+		this->vftable = *instance;
+	}
+	else
+	{
+		this->vftable = nullptr;
+	}
 	this->index = index;
 	this->functionToHook = functionToHook;
 	this->origPtr = origPtr;

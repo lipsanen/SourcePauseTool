@@ -53,6 +53,7 @@ namespace interfaces
 	vgui::ISchemeManager* scheme = nullptr;
 	IVDebugOverlay* debugOverlay = nullptr;
 	IMaterialSystem* materialSystem = nullptr;
+	IInputSystem* inputSystem = nullptr;
 	ICvar* g_pCVar = nullptr;
 	void* gm = nullptr;
 	IClientEntityList* entList;
@@ -152,6 +153,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	interfaces::engine_server = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
 	interfaces::debugOverlay = (IVDebugOverlay*)interfaceFactory(VDEBUG_OVERLAY_INTERFACE_VERSION, NULL);
 	interfaces::materialSystem = (IMaterialSystem*)interfaceFactory(MATERIAL_SYSTEM_INTERFACE_VERSION, NULL);
+	interfaces::inputSystem = (IInputSystem*)interfaceFactory(INPUTSYSTEM_INTERFACE_VERSION, NULL);
 
 	auto clientFactory = Sys_GetFactory("client");
 	interfaces::entList = (IClientEntityList*)clientFactory(VCLIENTENTITYLIST_INTERFACE_VERSION, NULL);

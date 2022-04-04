@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "../feature.hpp"
+#include "../utils/interfaces.hpp"
 #include "convar.hpp"
 
-typedef void(__fastcall* _CInputSystem__SleepUntilInput)(void* thisptr, int edx, int nMaxSleepTimeMS);
 ConVar y_spt_focus_nosleep("y_spt_focus_nosleep", "0", 0, "Improves FPS while alt-tabbed.");
 
 // Gives the option to disable sleeping to improve FPS while alt-tabbed
@@ -19,8 +19,7 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	_CInputSystem__SleepUntilInput ORIG_CInputSystem__SleepUntilInput = nullptr;
-	static void __fastcall HOOKED_CInputSystem__SleepUntilInput(void* thisptr, int edx, int nMaxSleepTimeMS);
+	DECL_DETOUR(void, CInputSystem__SleepUntilInput, int nMaxSleepTimeMS);
 };
 
 static NoSleepFeature spt_nosleep;
@@ -32,7 +31,7 @@ bool NoSleepFeature::ShouldLoadFeature()
 
 void NoSleepFeature::InitHooks()
 {
-	HOOK_FUNCTION(inputsystem, CInputSystem__SleepUntilInput);
+	HOOK_VTABLE(inputsystem, interfaces::inputSystem, &IInputSystem::SleepUntilInput, CInputSystem__SleepUntilInput);
 }
 
 void NoSleepFeature::LoadFeature()
@@ -45,9 +44,9 @@ void NoSleepFeature::LoadFeature()
 
 void NoSleepFeature::UnloadFeature() {}
 
-void __fastcall NoSleepFeature::HOOKED_CInputSystem__SleepUntilInput(void* thisptr, int edx, int nMaxSleepTimeMS)
+DETOUR(void, NoSleepFeature, CInputSystem__SleepUntilInput, int nMaxSleepTimeMS)
 {
 	if (y_spt_focus_nosleep.GetBool())
 		nMaxSleepTimeMS = 0;
-	spt_nosleep.ORIG_CInputSystem__SleepUntilInput(thisptr, edx, nMaxSleepTimeMS);
+	spt_nosleep.ORIG_CInputSystem__SleepUntilInput(thisptr, nMaxSleepTimeMS);
 }

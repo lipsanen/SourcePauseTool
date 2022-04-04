@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include "SPTLib/patterns.hpp"
 #include "convar.hpp"
+#include "platform.hpp"
 #include "patterns.hpp"
 
 #define ADD_RAW_HOOK(moduleName, name) \
@@ -28,7 +29,7 @@
 
 struct VFTableHook
 {
-	VFTableHook(void** vftable, int index, void* functionToHook, void** origPtr);
+	VFTableHook(void*** instance, int index, void* functionToHook, void** origPtr);
 
 	void** vftable;
 	int index;
