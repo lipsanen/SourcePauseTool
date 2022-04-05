@@ -1,4 +1,5 @@
 #pragma once
+#include <sstream>
 #include <wchar.h>
 #include <tier0/wchartypes.h>
 

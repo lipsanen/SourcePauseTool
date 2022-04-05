@@ -1,6 +1,7 @@
 project('spt', 'cpp')
 add_project_arguments(['-DPOSIX', '-DGNU', '-DGNUC', '-D_LINUX', '-w'], language: 'cpp')
-incdir = include_directories(['spt/utils', '.', 'SDK/steampipe/public', 'SDK/steampipe/public/tier0', 'SDK/steampipe/public/tier1', 'SDK/steampipe/common'])
+incdir = include_directories(['spt/utils', '.', 'SDK/steampipe/public', 'SDK/steampipe/public/tier0', 'SDK/steampipe/public/tier1', 'SDK/steampipe/common',
+'SDK/steampipe', 'SDK/steampipe/game/shared', 'SDK/steampipe/game/server', 'SDK/steampipe/game/client'])
 sources = [
     'spt/feature.cpp',
     'spt/cvars.cpp',
@@ -27,5 +28,6 @@ libdirs = [meson.current_source_dir() + '/SDK/steampipe/lib/public/linux32/']
 tier0 = cmplr.find_library('tier0', dirs : libdirs)
 tier1 = cmplr.find_library('tier1', static : true, dirs : libdirs)
 tier3 = cmplr.find_library('tier3', static : true, dirs : libdirs)
+mathlib = cmplr.find_library('mathlib', static : true, dirs : libdirs)
 
-library('spt', sources, name_prefix: '', include_directories : incdir, dependencies : [tier0, tier1, tier3])
+library('spt', sources, name_prefix: '', include_directories : incdir, dependencies : [tier0, tier1, tier3, mathlib])
