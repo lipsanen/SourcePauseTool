@@ -6,6 +6,9 @@
 #include "convar.hpp"
 #include "dbg.h"
 #include "../cvars.hpp"
+#include "platform.hpp"
+#include "interfaces.hpp"
+#include "../interfaces/gamemovement.hpp"
 #include "signals.hpp"
 
 #ifdef OE
@@ -27,9 +30,8 @@ bool AutojumpFeature::ShouldLoadFeature()
 
 void AutojumpFeature::InitHooks()
 {
-	HOOK_FUNCTION(server, CheckJumpButton);
-	HOOK_FUNCTION(client, CheckJumpButton_client);
-	HOOK_FUNCTION(server, FinishGravity);
+	HOOK_VTABLE(server, interfaces::gm, &interfaces::CGameMovement::CheckJumpButton, CheckJumpButton);
+	//HOOK_VTABLE(server, interfaces::gm, &interfaces::CGameMovement_HL2::FinishGravity, FinishGravity);
 }
 
 void AutojumpFeature::LoadFeature()
@@ -41,103 +43,9 @@ void AutojumpFeature::LoadFeature()
 		InitConcommandBase(_y_spt_autojump_ensure_legit);
 		JumpSignal.Works = true;
 		int ptnNumber = GetPatternIndex((void**)&ORIG_CheckJumpButton);
-		switch (ptnNumber)
-		{
-		case 0:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 1:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 2:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 3:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 4:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 5:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 6:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 7:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 8:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 9:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 10:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 11:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 12:
-			off1M_nOldButtons = 3;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 13:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 14:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 15:
-			off1M_nOldButtons = 1;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 16:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 17:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-
-		case 18:
-			off1M_nOldButtons = 2;
-			off2M_nOldButtons = 40;
-			break;
-		}
+		auto ptr_to_mv = &interfaces::CGameMovement::mv;
+		off1M_nOldButtons = *reinterpret_cast<int*>(&ptr_to_mv) / sizeof(uintptr_t*);
+		off2M_nOldButtons = 40;
 	}
 	else
 	{
@@ -206,7 +114,8 @@ void AutojumpFeature::LoadFeature()
 
 void AutojumpFeature::UnloadFeature() {}
 
-bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
+
+DETOUR(bool, AutojumpFeature, CheckJumpButton)
 {
 	const int IN_JUMP = (1 << 1);
 
@@ -238,7 +147,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton(void* thisptr, int edx)
 	spt_autojump.cantJumpNextTime = false;
 
 	spt_autojump.insideCheckJumpButton = true;
-	bool rv = spt_autojump.ORIG_CheckJumpButton(thisptr, edx); // This function can only change the jump bit.
+	bool rv = spt_autojump.ORIG_CheckJumpButton(thisptr); // This function can only change the jump bit.
 	spt_autojump.insideCheckJumpButton = false;
 
 	if (y_spt_autojump.GetBool())

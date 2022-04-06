@@ -5,8 +5,10 @@ incdir = include_directories(['spt/utils', '.', 'SDK/steampipe/public', 'SDK/ste
 sources = [
     'spt/feature.cpp',
     'spt/cvars.cpp',
+    'spt/features/autojump.cpp',
     'spt/features/nosleep.cpp',
     'spt/features/pause.cpp',
+    'spt/features/taslogging.cpp',
     'spt/spt-serverplugin.cpp',
     'spt/sptlib-wrapper.cpp',
     'spt/utils/math.cpp',

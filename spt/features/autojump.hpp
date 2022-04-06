@@ -32,11 +32,10 @@ protected:
 	virtual void UnloadFeature() override;
 
 private:
-	static bool __fastcall HOOKED_CheckJumpButton(void* thisptr, int edx);
+	DECL_DETOUR(bool, CheckJumpButton);
 	static bool __fastcall HOOKED_CheckJumpButton_client(void* thisptr, int edx);
 	static void __fastcall HOOKED_FinishGravity(void* thisptr, int edx);
 
-	_CheckJumpButton ORIG_CheckJumpButton = nullptr;
 	_CheckJumpButton_client ORIG_CheckJumpButton_client = nullptr;
 	_FinishGravity ORIG_FinishGravity = nullptr;
 	ptrdiff_t off1M_bDucked = 0;
