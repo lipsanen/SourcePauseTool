@@ -10,6 +10,8 @@
 #include "icliententitylist.h"
 #include "engine/ivmodelinfo.h"
 #include "inputsystem/iinputsystem.h"
+#include "ivrenderview.h"
+#include "VGuiMatSurface/IMatSystemSurface.h"
 
 namespace interfaces
 {
@@ -25,4 +27,6 @@ namespace interfaces
 	extern IVModelInfo* modelInfo;
 	extern IBaseClientDLL* clientInterface;
 	extern IInputSystem* inputSystem;
+	extern IVRenderView* ivrenderview;
+	extern IMatSystemSurface* matsystemsurface;
 } // namespace interfaces

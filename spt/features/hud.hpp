@@ -1,17 +1,11 @@
 #pragma once
 
-#if defined(SSDK2007)
-
 #include <functional>
 #include <vector>
 #include "../feature.hpp"
 #include "vgui/VGUI.h"
 #include "vgui/IScheme.h"
 #include "VGuiMatSurface/IMatSystemSurface.h"
-
-typedef void(__fastcall* _StartDrawing)(void* thisptr, int edx);
-typedef void(__fastcall* _FinishDrawing)(void* thisptr, int edx);
-typedef void(__fastcall* _VGui_Paint)(void* thisptr, int edx, int mode);
 
 enum class RenderTime
 {
@@ -51,14 +45,12 @@ protected:
 private:
 	void DrawHUD();
 
-	static void __fastcall HOOKED_VGui_Paint(void* thisptr, int edx, int mode);
+	DECL_MEMBER(void, FinishDrawing);
+	DECL_MEMBER(void, StartDrawing);
+	DECL_DETOUR(void, VGui_Paint, int mode);
 
 	bool callbacksSorted = true;
 	std::vector<HudCallback> hudCallbacks;
-
-	_VGui_Paint ORIG_VGui_Paint = nullptr;
-	_StartDrawing ORIG_StartDrawing = nullptr;
-	_FinishDrawing ORIG_FinishDrawing = nullptr;
 
 	int topX = 0;
 	int topVertIndex = 0;
@@ -70,5 +62,3 @@ private:
 };
 
 extern HUDFeature spt_hud;
-
-#endif

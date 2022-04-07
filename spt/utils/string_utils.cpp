@@ -1,9 +1,10 @@
 #include "stdafx.h"
 #include "string_utils.hpp"
-#include <Windows.h>
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <cstdarg>
+#include <cstring>
 
 bool whiteSpacesOnly(const std::string& s)
 {
@@ -33,7 +34,7 @@ const char* FormatTempString(const char* value, ...)
 
 	va_list args;
 	va_start(args, value);
-	vsprintf_s(FORMAT_BUFFER, ARRAYSIZE(FORMAT_BUFFER), value, args);
+	vsprintf(FORMAT_BUFFER, value, args);
 	return FORMAT_BUFFER;
 }
 
@@ -47,7 +48,7 @@ const wchar* FormatTempString(const wchar* format, ...)
 const wchar* FormatTempString(const wchar* format, va_list args)
 {
 	static wchar buffer[1024];
-	vswprintf_s(buffer, ARRAYSIZE(buffer), format, args);
+	vswprintf(buffer, sizeof(buffer), format, args);
 	return buffer;
 }
 

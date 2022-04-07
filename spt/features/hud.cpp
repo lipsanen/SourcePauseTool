@@ -1,18 +1,28 @@
 #include "stdafx.h"
-#if defined(SSDK2007)
 #include <algorithm>
 #include "hud.hpp"
 #include "convar.hpp"
 #include "interfaces.hpp"
-#include "tier0/basetypes.h"
 #include "overlay.hpp"
-#include "../vgui/vgui_utils.hpp"
 #include "../cvars.hpp"
 #include "string_utils.hpp"
+
+#include "tier0/basetypes.h"
+#include "vgui/IScheme.h"
+#include "vgui_controls/Controls.h"
 
 ConVar y_spt_hud_left("y_spt_hud_left", "0", FCVAR_CHEAT, "When set to 1, displays SPT HUD on the left.\n");
 
 HUDFeature spt_hud;
+
+static vgui::IScheme* GetScheme()
+{
+	auto scheme = vgui::scheme();
+	if(!scheme)
+		return nullptr;
+	else
+		return vgui::scheme()->GetIScheme(scheme->GetDefaultScheme());
+}
 
 bool HUDFeature::AddHudCallback(HudCallback callback)
 {
@@ -45,9 +55,9 @@ bool HUDFeature::ShouldLoadFeature()
 
 void HUDFeature::InitHooks()
 {
-	FIND_PATTERN(vguimatsurface, StartDrawing);
-	FIND_PATTERN(vguimatsurface, FinishDrawing);
-	HOOK_FUNCTION(engine, VGui_Paint);
+	//FIND_PATTERN(vguimatsurface, StartDrawing);
+	//FIND_PATTERN(vguimatsurface, FinishDrawing);
+	HOOK_VTABLE(engine, interfaces::ivrenderview, &IVRenderView::VGui_Paint, VGui_Paint);
 }
 
 void HUDFeature::LoadFeature()
@@ -57,7 +67,7 @@ void HUDFeature::LoadFeature()
 		InitConcommandBase(y_spt_hud_left);
 		cl_showpos = interfaces::g_pCVar->FindVar("cl_showpos");
 		cl_showfps = interfaces::g_pCVar->FindVar("cl_showfps");
-		scheme = vgui::GetScheme();
+		scheme = GetScheme();
 		if (scheme)
 		{
 			font = scheme->GetFont("DefaultFixedOutline", false);
@@ -75,12 +85,12 @@ void HUDFeature::UnloadFeature() {}
 void HUDFeature::DrawHUD()
 {
 	surface = (IMatSystemSurface*)vgui::surface();
-	scheme = vgui::GetScheme();
+	scheme = GetScheme();
 
 	if (!surface || !scheme)
 		return;
 
-	ORIG_StartDrawing(surface, 0);
+	ORIG_StartDrawing(surface);
 
 	try
 	{
@@ -110,6 +120,16 @@ void HUDFeature::DrawHUD()
 
 		for (auto& callback : hudCallbacks)
 		{
+			if (callback.renderTime == RenderTime::paint
+			         && callback.shouldDraw())
+			{
+				callback.draw();
+			}
+		}
+
+		/*
+		for (auto& callback : hudCallbacks)
+		{
 			if (spt_overlay.renderingOverlay && callback.renderTime == RenderTime::overlay
 			    && callback.shouldDraw())
 			{
@@ -120,18 +140,19 @@ void HUDFeature::DrawHUD()
 			{
 				callback.draw();
 			}
-		}
+		} */
 	}
 	catch (const std::exception& e)
 	{
 		Msg("Error drawing HUD: %s\n", e.what());
 	}
 
-	ORIG_FinishDrawing(surface, 0);
+	ORIG_FinishDrawing(surface);
 }
 
-void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
+DETOUR(void, HUDFeature, VGui_Paint, int mode)
 {
+	/*
 #ifndef OE
 	if (spt_hud.loadingSuccessful && (mode == 2 || spt_overlay.renderingOverlay))
 	{
@@ -140,8 +161,8 @@ void __fastcall HUDFeature::HOOKED_VGui_Paint(void* thisptr, int edx, int mode)
 	}
 
 #endif
-
-	spt_hud.ORIG_VGui_Paint(thisptr, edx, mode);
+*/
+	spt_hud.ORIG_VGui_Paint(thisptr, mode);
 }
 
 HudCallback::HudCallback(std::string key, std::function<void()> draw, std::function<bool()> shouldDraw, bool overlay)
@@ -152,4 +173,3 @@ HudCallback::HudCallback(std::string key, std::function<void()> draw, std::funct
 	this->renderTime = overlay ? RenderTime::overlay : RenderTime::paint;
 }
 
-#endif

@@ -59,6 +59,8 @@ namespace interfaces
 	IClientEntityList* entList;
 	IVModelInfo* modelInfo;
 	IBaseClientDLL* clientInterface;
+	IVRenderView* ivrenderview = nullptr;
+	IMatSystemSurface* matsystemsurface = nullptr;
 } // namespace interfaces
 
 ConVar* _viewmodel_fov = nullptr;
@@ -154,6 +156,8 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	interfaces::debugOverlay = (IVDebugOverlay*)interfaceFactory(VDEBUG_OVERLAY_INTERFACE_VERSION, NULL);
 	interfaces::materialSystem = (IMaterialSystem*)interfaceFactory(MATERIAL_SYSTEM_INTERFACE_VERSION, NULL);
 	interfaces::inputSystem = (IInputSystem*)interfaceFactory(INPUTSYSTEM_INTERFACE_VERSION, NULL);
+	interfaces::ivrenderview = (IVRenderView*)interfaceFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION, NULL);
+	interfaces::matsystemsurface = (IMatSystemSurface*)interfaceFactory(MAT_SYSTEM_SURFACE_INTERFACE_VERSION, NULL);
 
 	auto clientFactory = Sys_GetFactory("client");
 	interfaces::entList = (IClientEntityList*)clientFactory(VCLIENTENTITYLIST_INTERFACE_VERSION, NULL);
