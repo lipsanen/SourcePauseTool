@@ -43,8 +43,6 @@ void Feature::LoadFeatures()
 		ReloadFeatures();
 	}
 
-	Hooks::InitInterception(true);
-
 	for (auto feature : GetFeatures())
 	{
 		if (!feature->moduleLoaded && feature->ShouldLoadFeature())
@@ -131,7 +129,7 @@ void Feature::InitModules()
 {
 	for (auto& pair : moduleHookData)
 	{
-		pair.second.InitModule(Convert(pair.first + ".dll"));
+		pair.second.InitModule(Convert(pair.first + DLL_EXT));
 	}
 }
 
@@ -139,7 +137,7 @@ void Feature::Hook()
 {
 	for (auto& pair : moduleHookData)
 	{
-		pair.second.HookModule(Convert(pair.first + ".dll"));
+		pair.second.HookModule(Convert(pair.first + DLL_EXT));
 	}
 }
 
@@ -147,7 +145,7 @@ void Feature::Unhook()
 {
 	for (auto& pair : moduleHookData)
 	{
-		pair.second.UnhookModule(Convert(pair.first + ".dll"));
+		pair.second.UnhookModule(Convert(pair.first + DLL_EXT));
 	}
 }
 
@@ -256,11 +254,11 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 
 	if (MemUtils::GetModuleInfo(moduleName, &handle, &moduleStart, &moduleSize))
 	{
-		DevMsg("Hooking %s (start: %p; size: %x)...\n", Convert(moduleName).c_str(), moduleStart, moduleSize);
+		EngineDevMsg("Hooking %s (start: %p; size: %x)...\n", Convert(moduleName).c_str(), moduleStart, moduleSize);
 	}
 	else
 	{
-		DevMsg("Couldn't hook %s, not loaded\n", Convert(moduleName).c_str());
+		EngineDevMsg("Couldn't hook %s, not loaded\n", Convert(moduleName).c_str());
 		return;
 	}
 
@@ -292,7 +290,7 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 	{
 		auto modulePattern = matchAllPatterns[i];
 		*modulePattern.foundVec = std::move(mhooks[i].get());
-		DevMsg("[%s] Found %u instances of pattern %s\n",
+		EngineDevMsg("[%s] Found %u instances of pattern %s\n",
 		       Convert(moduleName).c_str(),
 		       modulePattern.foundVec->size(),
 		       modulePattern.patternName);
@@ -311,7 +309,7 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 				hookedFunctions.emplace_back(modulePattern.origPtr);
 			}
 
-			DevMsg("[%s] Found %s at %p (using the %s pattern).\n",
+			EngineDevMsg("[%s] Found %s at %p (using the %s pattern).\n",
 			       Convert(moduleName).c_str(),
 			       modulePattern.patternName,
 			       *modulePattern.origPtr,
@@ -321,15 +319,20 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 		}
 		else
 		{
-			DevWarning("[%s] Could not find %s.\n", Convert(moduleName).c_str(), modulePattern.patternName);
+			EngineDevWarning("[%s] Could not find %s.\n", Convert(moduleName).c_str(), modulePattern.patternName);
 		}
+	}
+
+	for (auto& vft_hook : vftableHooks)
+	{
+		*vft_hook.origPtr = vft_hook.vftable[vft_hook.index];
 	}
 
 	for (auto& offset : offsetHooks)
 	{
 		*offset.origPtr = reinterpret_cast<char*>(moduleStart) + offset.offset;
 
-		DevMsg("[%s] Found %s at %p via a fixed offset.\n",
+		EngineDevMsg("[%s] Found %s at %p via a fixed offset.\n",
 		       Convert(moduleName).c_str(),
 		       offset.patternName,
 		       *offset.origPtr);
@@ -340,6 +343,7 @@ void ModuleHookData::InitModule(const std::wstring& moduleName)
 			hookedFunctions.emplace_back(offset.origPtr);
 		}
 	}
+	
 }
 
 void ModuleHookData::HookModule(const std::wstring& moduleName)
@@ -348,7 +352,6 @@ void ModuleHookData::HookModule(const std::wstring& moduleName)
 	{
 		for (auto& vft_hook : vftableHooks)
 		{
-			*vft_hook.origPtr = vft_hook.vftable[vft_hook.index];
 			MemUtils::HookVTable(vft_hook.vftable, vft_hook.index, vft_hook.functionToHook);
 		}
 	}

@@ -567,5 +567,17 @@ namespace patterns
 		         "1910503",
 		         "55 8B EC 8B 49 08 81 EC 80 00 00 00 8D 45 80 50 E8 ?? ?? ?? ?? 8B 45 08 85 C0");
 	} // namespace vphysics
+#else
+	namespace vguimatsurface
+	{
+		PATTERNS(
+		    StartDrawing,
+		    "portal-linux",
+		    "55 89 E5 57 56 E8 ?? ?? ?? ?? 81 C6 76 E2 1F 00");
+		PATTERNS(
+		    FinishDrawing,
+		    "5135",
+		    "55 89 E5 56 E8 ?? ?? ?? ?? 81 C6 D7 DF 1F 00");
+	} // namespace vguimatsurface
 #endif
 } // namespace patterns

@@ -117,6 +117,63 @@ void DefaultFOVChangeCallback(ConVar* var, char const* pOldString)
 	}
 }
 
+template<typename T>
+bool TryToGetFunctionAddress(T& funcPtr, const char* functionName, void* moduleHandle)
+{
+	void* address = MemUtils::GetSymbolAddress(moduleHandle, functionName);
+	if(address)
+	{
+		funcPtr = reinterpret_cast<T>(address);
+	}
+
+	return address != nullptr;
+}
+
+template<typename T>
+static void SetPrintf(T& funcPtr)
+{
+	funcPtr = reinterpret_cast<T>(printf);
+}
+
+static void GetPrintFunctions()
+{
+	EngineConCmd = CallServerCommand;
+	EngineGetViewAngles = GetViewAngles;
+	EngineSetViewAngles = SetViewAngles;
+
+	SetPrintf(_EngineMsg);
+	SetPrintf(_EngineDevMsg);
+	SetPrintf(_EngineWarning);
+	SetPrintf(_EngineDevWarning);
+
+	Hooks::InitInterception(true);
+
+	const char* MSG_SYMBOL = "Msg";
+	const char* WARNING_SYMBOL = "Warning";
+	const char* CONCOLORMSG_SYMBOL = "_Z11ConColorMsgRK5ColorPKcz";
+	const char* DEVMSG_SYMBOL = "_Z6DevMsgPKcz";
+	const char* DEVWARNINGMSG_SYMBOL = "_Z10DevWarningPKcz";
+
+	void* handle = dlopen("libtier0.so", RTLD_NOLOAD);
+	dlclose(handle);
+
+	if(handle)
+	{
+		bool success = true;
+
+		success = TryToGetFunctionAddress(_EngineMsg, MSG_SYMBOL, handle) && success;
+		success = TryToGetFunctionAddress(_EngineDevMsg, DEVMSG_SYMBOL, handle) && success;
+		success = TryToGetFunctionAddress(_EngineWarning, WARNING_SYMBOL, handle) && success;
+		success = TryToGetFunctionAddress(_EngineDevWarning, DEVWARNINGMSG_SYMBOL, handle) && success;
+
+		if(success)
+		{
+			printf("Succeeded in fetching print functions from libtier0.so: %d\n");
+		}
+
+	}
+}
+
 //
 // The plugin is a static singleton that is exported as an interface
 //
@@ -137,6 +194,7 @@ EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CSourcePauseTool,
 bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
 	auto startTime = std::chrono::high_resolution_clock::now();
+	GetPrintFunctions();
 
 	if (pluginLoaded)
 	{
@@ -159,19 +217,18 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	interfaces::ivrenderview = (IVRenderView*)interfaceFactory(VENGINE_RENDERVIEW_INTERFACE_VERSION, NULL);
 	interfaces::matsystemsurface = (IMatSystemSurface*)interfaceFactory(MAT_SYSTEM_SURFACE_INTERFACE_VERSION, NULL);
 
-	auto clientFactory = Sys_GetFactory("client");
-	interfaces::entList = (IClientEntityList*)clientFactory(VCLIENTENTITYLIST_INTERFACE_VERSION, NULL);
+	interfaces::entList = (IClientEntityList*)platform::GetInterface("client.so", VCLIENTENTITYLIST_INTERFACE_VERSION);
 	interfaces::modelInfo = (IVModelInfo*)interfaceFactory(VMODELINFO_SERVER_INTERFACE_VERSION, NULL);
-	interfaces::clientInterface = (IBaseClientDLL*)clientFactory(CLIENT_DLL_INTERFACE_VERSION, NULL);
+	interfaces::clientInterface = (IBaseClientDLL*)platform::GetInterface("client.so", CLIENT_DLL_INTERFACE_VERSION);
 
 	if (interfaces::gm)
 	{
-		DevMsg("SPT: Found IGameMovement at %p.\n", interfaces::gm);
+		EngineDevMsg("SPT: Found IGameMovement at %p.\n", interfaces::gm);
 	}
 	else
 	{
-		DevWarning("SPT: Could not find IGameMovement.\n");
-		DevWarning("SPT: ProcessMovement logging with tas_log is unavailable.\n");
+		EngineDevWarning("SPT: Could not find IGameMovement.\n");
+		EngineDevWarning("SPT: ProcessMovement logging with tas_log is unavailable.\n");
 	}
 
 	if (g_pCVar)
@@ -217,44 +274,35 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 
 	if (!interfaces::engine)
 	{
-		DevWarning("SPT: Failed to get the IVEngineClient interface.\n");
-		Warning("SPT: y_spt_afterframes has no effect.\n");
-		Warning("SPT: _y_spt_setpitch and _y_spt_setyaw have no effect.\n");
-		Warning("SPT: _y_spt_pitchspeed and _y_spt_yawspeed have no effect.\n");
-		Warning("SPT: y_spt_stucksave has no effect.\n");
+		EngineDevWarning("SPT: Failed to get the IVEngineClient interface.\n");
+		EngineWarning("SPT: y_spt_afterframes has no effect.\n");
+		EngineWarning("SPT: _y_spt_setpitch and _y_spt_setyaw have no effect.\n");
+		EngineWarning("SPT: _y_spt_pitchspeed and _y_spt_yawspeed have no effect.\n");
+		EngineWarning("SPT: y_spt_stucksave has no effect.\n");
 	}
 
 	if (!interfaces::engine_server)
 	{
-		DevWarning("SPT: Failed to get the IVEngineServer interface.\n");
+		EngineDevWarning("SPT: Failed to get the IVEngineServer interface.\n");
 	}
 
 	if (!interfaces::debugOverlay)
 	{
-		DevWarning("SPT: Failed to get the debug overlay interface.\n");
-		Warning("Seam visualization has no effect.\n");
+		EngineDevWarning("SPT: Failed to get the debug overlay interface.\n");
+		EngineWarning("Seam visualization has no effect.\n");
 	}
 
 	if (!interfaces::materialSystem)
-		DevWarning("SPT: Failed to get the material system interface.\n");
+		EngineDevWarning("SPT: Failed to get the material system interface.\n");
 
 	if (!interfaces::entList)
-		DevWarning("Unable to retrieve entitylist interface.\n");
+		EngineDevWarning("Unable to retrieve entitylist interface.\n");
 
 	if (!interfaces::modelInfo)
-		DevWarning("Unable to retrieve the model info interface.\n");
+		EngineDevWarning("Unable to retrieve the model info interface.\n");
 
 	if (!interfaces::clientInterface)
-		DevWarning("Unable to retrieve the client DLL interface.\n");
-
-	EngineConCmd = CallServerCommand;
-	EngineGetViewAngles = GetViewAngles;
-	EngineSetViewAngles = SetViewAngles;
-
-	_EngineMsg = Msg;
-	_EngineDevMsg = DevMsg;
-	_EngineWarning = Warning;
-	_EngineDevWarning = DevWarning;
+		EngineDevWarning("Unable to retrieve the client DLL interface.\n");
 
 	TickSignal.Works = true;
 	Feature::LoadFeatures();
@@ -266,7 +314,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	std::ostringstream out;
 	out << "SourcePauseTool version " SPT_VERSION " was loaded in " << loadTime << "ms.\n";
 
-	Msg("%s", std::string(out.str()).c_str());
+	EngineMsg("%s", std::string(out.str()).c_str());
 
 	return true;
 }

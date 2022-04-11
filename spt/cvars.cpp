@@ -10,7 +10,7 @@ void Cvar_InitConCommandBase(ConCommandBase& concommand, void* owner)
 {
 	if (cmd_to_feature.find(&concommand) != cmd_to_feature.end())
 	{
-		Warning("Two commands trying to init concommand %s!\n", concommand.GetName());
+		EngineWarning("Two commands trying to init concommand %s!\n", concommand.GetName());
 	}
 	else
 	{
@@ -89,7 +89,7 @@ void Cvar_RegisterSPTCvars()
 			{
 				if (cmd_to_feature.find(cmd) == cmd_to_feature.end())
 				{
-					DevWarning("Command %s was unloaded, because it was not initialized!\n",
+					EngineDevWarning("Command %s was unloaded, because it was not initialized!\n",
 					           cmd->GetName());
 					todelete = cmd;
 				}

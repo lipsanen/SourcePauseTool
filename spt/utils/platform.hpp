@@ -34,4 +34,9 @@ int GetVTableIndex(T ptr)
     (void**)&ORIG_ ## name), \
 	#module);
 
+namespace platform
+{
+    void* GetInterface(const char *filename, const char *interfaceSymbol);
+}
+
 #endif

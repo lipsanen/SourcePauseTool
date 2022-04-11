@@ -49,7 +49,7 @@ void AutojumpFeature::LoadFeature()
 	}
 	else
 	{
-		Warning("y_spt_autojump has no effect.\n");
+		EngineWarning("y_spt_autojump has no effect.\n");
 	}
 
 	if (ORIG_FinishGravity)
@@ -106,7 +106,7 @@ void AutojumpFeature::LoadFeature()
 	}
 	else
 	{
-		Warning("y_spt_additional_jumpboost has no effect.\n");
+		EngineWarning("y_spt_additional_jumpboost has no effect.\n");
 		off1M_bDucked = 0;
 		off2M_bDucked = 0;
 	}
@@ -124,7 +124,7 @@ DETOUR(bool, AutojumpFeature, CheckJumpButton)
 
 	CHLMoveData* mv = (CHLMoveData*)(*((uintptr_t*)thisptr + spt_autojump.off1M_nOldButtons));
 	if (tas_log.GetBool())
-		DevMsg("[CheckJumpButton PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
+		EngineDevMsg("[CheckJumpButton PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
 		       mv->GetAbsOrigin().x,
 		       mv->GetAbsOrigin().y,
 		       mv->GetAbsOrigin().z,
@@ -226,7 +226,7 @@ bool __fastcall AutojumpFeature::HOOKED_CheckJumpButton_client(void* thisptr, in
 		}
 	}
 
-	DevMsg("Engine call: [client dll] CheckJumpButton() => %s\n", (rv ? "true" : "false"));
+	EngineDevMsg("Engine call: [client dll] CheckJumpButton() => %s\n", (rv ? "true" : "false"));
 
 	return rv;
 }

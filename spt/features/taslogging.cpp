@@ -41,7 +41,7 @@ DETOUR(void, TASLogging, ProcessMovement, void* pPlayer, void* pMove)
 {
 	CHLMoveData* mv = reinterpret_cast<CHLMoveData*>(pMove);
 	if (tas_log.GetBool())
-		DevMsg("[ProcessMovement PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
+		EngineDevMsg("[ProcessMovement PRE ] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
 		       mv->GetAbsOrigin().x,
 		       mv->GetAbsOrigin().y,
 		       mv->GetAbsOrigin().z,
@@ -52,7 +52,7 @@ DETOUR(void, TASLogging, ProcessMovement, void* pPlayer, void* pMove)
 	spt_taslogging.ORIG_ProcessMovement(thisptr, pPlayer, pMove);
 
 	if (tas_log.GetBool())
-		DevMsg("[ProcessMovement POST] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
+		EngineDevMsg("[ProcessMovement POST] origin: %.8f %.8f %.8f; velocity: %.8f %.8f %.8f\n",
 		       mv->GetAbsOrigin().x,
 		       mv->GetAbsOrigin().y,
 		       mv->GetAbsOrigin().z,

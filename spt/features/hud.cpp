@@ -3,10 +3,10 @@
 #include "hud.hpp"
 #include "convar.hpp"
 #include "interfaces.hpp"
+#include "rectprovider.hpp"
 #include "overlay.hpp"
 #include "../cvars.hpp"
 #include "string_utils.hpp"
-
 #include "tier0/basetypes.h"
 #include "vgui/IScheme.h"
 #include "vgui_controls/Controls.h"
@@ -50,13 +50,13 @@ void HUDFeature::DrawTopHudElement(const wchar* format, ...)
 
 bool HUDFeature::ShouldLoadFeature()
 {
-	return true;
+	return spt_rectprovider.ShouldLoadFeature();
 }
 
 void HUDFeature::InitHooks()
 {
-	//FIND_PATTERN(vguimatsurface, StartDrawing);
-	//FIND_PATTERN(vguimatsurface, FinishDrawing);
+	FIND_PATTERN(vguimatsurface, StartDrawing);
+	FIND_PATTERN(vguimatsurface, FinishDrawing);
 	HOOK_VTABLE(engine, interfaces::ivrenderview, &IVRenderView::VGui_Paint, VGui_Paint);
 }
 
@@ -84,6 +84,7 @@ void HUDFeature::UnloadFeature() {}
 
 void HUDFeature::DrawHUD()
 {
+	auto screen = spt_rectprovider.GetRect();
 	surface = (IMatSystemSurface*)vgui::surface();
 	scheme = GetScheme();
 
@@ -111,7 +112,7 @@ void HUDFeature::DrawHUD()
 		}
 		else
 		{
-			topX = screen->width - 300 + 2;
+			topX = screen.width - 300 + 2;
 			if (cl_showpos && cl_showpos->GetBool())
 				topVertIndex += 3;
 			if (cl_showfps && cl_showfps->GetBool())
@@ -144,7 +145,7 @@ void HUDFeature::DrawHUD()
 	}
 	catch (const std::exception& e)
 	{
-		Msg("Error drawing HUD: %s\n", e.what());
+		EngineMsg("Error drawing HUD: %s\n", e.what());
 	}
 
 	ORIG_FinishDrawing(surface);
@@ -162,6 +163,11 @@ DETOUR(void, HUDFeature, VGui_Paint, int mode)
 
 #endif
 */
+	if (spt_hud.loadingSuccessful && mode == 2)
+	{
+		spt_hud.DrawHUD();
+	}
+
 	spt_hud.ORIG_VGui_Paint(thisptr, mode);
 }
 

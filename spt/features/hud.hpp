@@ -34,7 +34,6 @@ public:
 	IMatSystemSurface* surface = nullptr;
 	vgui::IScheme* scheme = nullptr;
 	vgui::HFont font = 0;
-	vrect_t* screen = nullptr;
 
 protected:
 	virtual void InitHooks() override;
