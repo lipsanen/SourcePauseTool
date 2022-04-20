@@ -240,7 +240,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -309,7 +309,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -379,7 +379,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -449,7 +449,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <PreprocessToFile>false</PreprocessToFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -522,7 +522,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PreprocessToFile>false</PreprocessToFile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
@@ -599,7 +599,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PreprocessToFile>false</PreprocessToFile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
@@ -677,7 +677,7 @@
       <ErrorReporting>Prompt</ErrorReporting>
       <PreprocessToFile>false</PreprocessToFile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
     </ClCompile>
@@ -833,7 +833,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <ErrorReporting>Prompt</ErrorReporting>
       <PreprocessToFile>false</PreprocessToFile>
-      <LanguageStandard>stdcpp14</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
@@ -1155,8 +1155,8 @@
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\stucksave.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
-    <ClCompile Include="spt\features\taslogging.cpp" />
     <ClCompile Include="spt\features\taspause.cpp" />
+    <ClCompile Include="spt\features\tas_new.cpp" />
     <ClCompile Include="spt\features\test.cpp" />
     <ClCompile Include="spt\features\tickrate.cpp" />
     <ClCompile Include="spt\features\timer.cpp" />
@@ -1261,6 +1261,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug blank|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release OE|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="spt\srctas\cmd_parsing.cpp" />
+    <ClCompile Include="spt\srctas\controller.cpp" />
+    <ClCompile Include="spt\srctas\framebulk.cpp" />
+    <ClCompile Include="spt\srctas\script.cpp" />
+    <ClCompile Include="spt\srctas\utils.cpp" />
     <ClCompile Include="spt\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug 2013|Win32'">Create</PrecompiledHeader>
@@ -1377,6 +1382,11 @@
     <ClInclude Include="sptlib\sptlib.hpp" />
     <ClInclude Include="sptlib\sptlib-stdafx.hpp" />
     <ClInclude Include="spt\sptlib-wrapper.hpp" />
+    <ClInclude Include="spt\srctas\cmd_parsing.hpp" />
+    <ClInclude Include="spt\srctas\controller.hpp" />
+    <ClInclude Include="spt\srctas\framebulk.hpp" />
+    <ClInclude Include="spt\srctas\script.hpp" />
+    <ClInclude Include="spt\srctas\utils.hpp" />
     <ClInclude Include="spt\stdafx.hpp" />
     <ClInclude Include="spt\strafe\strafestuff.hpp" />
     <ClInclude Include="spt\strafe\strafe_utils.hpp" />

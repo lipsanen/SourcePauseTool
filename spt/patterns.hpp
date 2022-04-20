@@ -115,6 +115,8 @@ namespace patterns
 		         "1910503",
 		         "55 8B EC 81 EC 3C 02 00 00 53 33 DB 56 57 39 5D 0C 75 20");
 		PATTERNS(GetScreenAspect, "5135", "83 EC 0C A1 ?? ?? ?? ?? F3");
+		PATTERNS(Cmd_ExecuteCommand, "5135", "55 8B 6C 24 ?? 8B 45 00 85 C0");
+		PATTERNS(CCommandBuffer__DequeueNextCommand, "5135", "53 56 8B F1 8D 9E");
 	} // namespace engine
 
 	namespace client

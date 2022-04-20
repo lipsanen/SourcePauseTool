@@ -103,9 +103,6 @@
     <ClCompile Include="spt\features\tracing.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\taslogging.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\stucksave.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
@@ -237,6 +234,24 @@
     </ClCompile>
     <ClCompile Include="spt\utils\command.cpp">
       <Filter>spt\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\features\tas_new.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\srctas\cmd_parsing.cpp">
+      <Filter>spt\srctas</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\srctas\controller.cpp">
+      <Filter>spt\srctas</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\srctas\framebulk.cpp">
+      <Filter>spt\srctas</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\srctas\script.cpp">
+      <Filter>spt\srctas</Filter>
+    </ClCompile>
+    <ClCompile Include="spt\srctas\utils.cpp">
+      <Filter>spt\srctas</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -516,6 +531,21 @@
     <ClInclude Include="spt\utils\command.hpp">
       <Filter>spt\utils</Filter>
     </ClInclude>
+    <ClInclude Include="spt\srctas\cmd_parsing.hpp">
+      <Filter>spt\srctas</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\srctas\controller.hpp">
+      <Filter>spt\srctas</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\srctas\framebulk.hpp">
+      <Filter>spt\srctas</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\srctas\script.hpp">
+      <Filter>spt\srctas</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\srctas\utils.hpp">
+      <Filter>spt\srctas</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\lib\public\mathlib.lib">
@@ -576,6 +606,9 @@
     </Filter>
     <Filter Include="spt\aim">
       <UniqueIdentifier>{dddef7ec-c95f-4baa-9f56-d47554ea2e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spt\srctas">
+      <UniqueIdentifier>{81133cd1-ee10-49d3-a30c-eb835a9d945e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -5,6 +5,7 @@
 #include "ent_utils.hpp"
 #include "math.hpp"
 #include "playerio.hpp"
+#include <charconv>
 
 #undef min
 #undef max
@@ -169,7 +170,17 @@ CON_COMMAND(_y_spt_setpitch, "Sets the pitch. Usage: _y_spt_setpitch <pitch>")
 		return;
 	}
 
-	spt_aim.SetPitch(atof(args.Arg(1)));
+	const char* arg = args.Arg(1);
+	const char* end = arg;
+
+	while (*end)
+	{
+		++end;
+	}
+
+	float value;
+	std::from_chars(arg, end, value);
+	spt_aim.SetPitch(value);
 }
 
 CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
@@ -180,7 +191,17 @@ CON_COMMAND(_y_spt_setyaw, "Sets the yaw. Usage: _y_spt_setyaw <yaw>")
 		return;
 	}
 
-	spt_aim.SetYaw(atof(args.Arg(1)));
+	const char* arg = args.Arg(1);
+	const char* end = arg;
+
+	while (*end)
+	{
+		++end;
+	}
+
+	float value;
+	std::from_chars(arg, end, value);
+	spt_aim.SetYaw(value);
 }
 
 CON_COMMAND(_y_spt_resetpitchyaw, "Resets pitch/yaw commands.")

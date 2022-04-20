@@ -9,6 +9,7 @@ void rtrim(std::string& s);
 const char* FormatTempString(const char* fmt, ...);
 const wchar* FormatTempString(const wchar* format, ...);
 const wchar* FormatTempString(const wchar* format, va_list args);
+const char* FloatToCString(float value);
 bool IsValidUTF8(const char* string);
 
 template<typename T>

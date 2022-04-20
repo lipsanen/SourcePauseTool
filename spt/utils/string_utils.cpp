@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstdint>
 
 bool whiteSpacesOnly(const std::string& s)
@@ -49,6 +50,15 @@ const wchar* FormatTempString(const wchar* format, va_list args)
 	static wchar buffer[1024];
 	vswprintf_s(buffer, ARRAYSIZE(buffer), format, args);
 	return buffer;
+}
+
+const char* FloatToCString(float value)
+{
+	thread_local static char BUFFER[128];
+	auto result = std::to_chars(BUFFER, BUFFER + sizeof(BUFFER) - 1, value);
+	*result.ptr = '\0';
+
+	return BUFFER;
 }
 
 // UTF-8 detection code, with minor additions

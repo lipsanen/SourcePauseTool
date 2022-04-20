@@ -61,7 +61,7 @@ void TASPause::LoadFeature()
 
 	if (ORIG_Host_AccumulateTime && ORIG__Host_RunFrame)
 	{
-		InitConcommandBase(tas_pause);
+		//InitConcommandBase(tas_pause);
 	}
 }
 
