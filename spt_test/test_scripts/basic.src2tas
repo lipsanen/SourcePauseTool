@@ -1,0 +1,5 @@
+version 1
+
+frames
+// Comment only line here
+s012lj|wasd|jdu12rws|5|2.5|40.5|1|echo "Hello, world!" // This is a test comment

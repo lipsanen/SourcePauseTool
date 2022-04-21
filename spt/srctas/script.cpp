@@ -2,6 +2,7 @@
 #include "script.hpp"
 #include "utils.hpp"
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 
@@ -36,6 +37,13 @@ namespace srctas
 	{
 		Error error;
 		std::ofstream stream;
+
+		// Call the error code version to avoid any exceptions thrown
+		// Create path if doesn't already exist
+		std::error_code code;
+		std::filesystem::path path = filepath;
+		std::filesystem::create_directories(path.parent_path(), code);
+
 		stream.open(filepath);
 
 		if (!stream.is_open())

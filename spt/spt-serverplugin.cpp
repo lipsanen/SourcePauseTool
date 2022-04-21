@@ -145,7 +145,6 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	pluginLoaded = true;
 
 	ConnectTier1Libraries(&interfaceFactory, 1);
-	ConnectTier3Libraries(&interfaceFactory, 1);
 
 	interfaces::gm = gameServerFactory(INTERFACENAME_GAMEMOVEMENT, NULL);
 	interfaces::g_pCVar = g_pCVar;
@@ -285,7 +284,6 @@ void CSourcePauseTool::Unload(void)
 
 	Cvar_UnregisterSPTCvars();
 	DisconnectTier1Libraries();
-	DisconnectTier3Libraries();
 	Feature::UnloadFeatures();
 	Hooks::Free();
 	pluginLoaded = false;

@@ -4,7 +4,7 @@
 
 namespace srctas
 {
-	struct Error
+	struct __declspec(dllexport) Error
 	{
 		std::string m_sMessage;
 		bool m_bError = false;

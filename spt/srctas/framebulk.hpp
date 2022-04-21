@@ -6,21 +6,21 @@
 
 namespace srctas
 {
-	enum class KeyState : uint8_t
+	enum class __declspec(dllexport) KeyState : uint8_t
 	{
 		Noop = 0,
 		Unpressed = 1,
 		Pressed = 2
 	};
 
-	struct FrameBulkError
+	struct __declspec(dllexport) FrameBulkError
 	{
 		bool m_bError;
 		int m_iIndex;
 		std::string m_sMessage;
 	};
 
-	struct FrameBulkValue
+	struct __declspec(dllexport) FrameBulkValue
 	{
 		union
 		{
@@ -44,7 +44,7 @@ namespace srctas
 		}
 	};
 
-	class FrameBulk
+	class __declspec(dllexport) FrameBulk
 	{
 	public:
 		FrameBulk();

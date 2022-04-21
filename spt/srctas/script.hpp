@@ -7,7 +7,7 @@
 
 namespace srctas
 {
-	struct Script
+	struct __declspec(dllexport) Script
 	{
 	public:
 		Script(){};

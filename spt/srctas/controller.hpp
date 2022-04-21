@@ -6,14 +6,14 @@
 
 namespace srctas
 {
-	struct FrameBulkState
+	struct __declspec(dllexport) FrameBulkState
 	{
 		FrameBulk* m_sCurrent;
 		int m_iTickInBulk;
 	};
 
 	// Add error handling stuff to interface
-	class ScriptController
+	class __declspec(dllexport) ScriptController
 	{
 	public:
 		Error InitEmptyScript(const char* filepath);
