@@ -79,9 +79,6 @@
     <ClCompile Include="spt\features\hud.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
-    <ClCompile Include="spt\features\taspause.cpp">
-      <Filter>spt\features</Filter>
-    </ClCompile>
     <ClCompile Include="spt\features\tickrate.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
@@ -545,6 +542,12 @@
     </ClInclude>
     <ClInclude Include="spt\srctas\utils.hpp">
       <Filter>spt\srctas</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\utils\platform.hpp">
+      <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\pause.hpp">
+      <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

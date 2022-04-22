@@ -1155,7 +1155,6 @@
     <ClCompile Include="spt\features\shadow.cpp" />
     <ClCompile Include="spt\features\stucksave.cpp" />
     <ClCompile Include="spt\features\tas.cpp" />
-    <ClCompile Include="spt\features\taspause.cpp" />
     <ClCompile Include="spt\features\tas_new.cpp" />
     <ClCompile Include="spt\features\test.cpp" />
     <ClCompile Include="spt\features\tickrate.cpp" />
@@ -1356,6 +1355,7 @@
     <ClInclude Include="spt\features\hud.hpp" />
     <ClInclude Include="spt\features\ihud.hpp" />
     <ClInclude Include="spt\features\overlay.hpp" />
+    <ClInclude Include="spt\features\pause.hpp" />
     <ClInclude Include="spt\features\physvis.hpp" />
     <ClInclude Include="spt\features\playerio.hpp" />
     <ClInclude Include="spt\features\rng.hpp" />
@@ -1399,6 +1399,7 @@
     <ClInclude Include="spt\utils\game_detection.hpp" />
     <ClInclude Include="spt\utils\interfaces.hpp" />
     <ClInclude Include="spt\utils\math.hpp" />
+    <ClInclude Include="spt\utils\platform.hpp" />
     <ClInclude Include="spt\utils\property_getter.hpp" />
     <ClInclude Include="spt\utils\signals.hpp" />
     <ClInclude Include="spt\utils\string_utils.hpp" />

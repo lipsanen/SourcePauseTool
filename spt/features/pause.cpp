@@ -1,34 +1,21 @@
 #include "stdafx.h"
-#include "..\feature.hpp"
 #include "generic.hpp"
-#include "convar.hpp"
+#include "pause.hpp"
+#include "interfaces.hpp"
 #include "signals.hpp"
 #include "dbg.h"
 
 ConVar y_spt_pause("y_spt_pause", "0", FCVAR_ARCHIVE);
 
-extern ConVar tas_pause;
+PauseFeature spt_pause;
 
-// y_spt_pause stuff
-class PauseFeature : public FeatureWrapper<PauseFeature>
+bool PauseFeature::InLoad()
 {
-public:
-protected:
-	virtual void InitHooks() override;
-
-	virtual void LoadFeature() override;
-
-private:
-	uintptr_t ORIG_SpawnPlayer = 0;
-	bool* pM_bLoadgame = nullptr;
-	void* pGameServer = nullptr;
-
-	void SV_ActivateServer(bool result);
-	void FinishRestore(void* thisptr, int edx);
-	void SetPaused(void* thisptr, int edx, bool paused);
-};
-
-static PauseFeature spt_pause;
+	if (pM_bLoadgame)
+		return *pM_bLoadgame;
+	else
+		return false;
+}
 
 void PauseFeature::InitHooks()
 {
@@ -134,11 +121,6 @@ void PauseFeature::LoadFeature()
 void PauseFeature::SV_ActivateServer(bool result)
 {
 	DevMsg("Engine call: SV_ActivateServer() => %s;\n", (result ? "true" : "false"));
-
-	if (tas_pause.GetBool())
-	{
-		tas_pause.SetValue(0);
-	}
 
 	if (spt_generic.ORIG_SetPaused && pM_bLoadgame && pGameServer)
 	{

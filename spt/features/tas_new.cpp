@@ -8,6 +8,7 @@
 #include "spt\srctas\controller.hpp"
 #include "spt\sptlib-wrapper.hpp"
 #include "string_utils.hpp"
+#include "pause.hpp"
 #include "playerio.hpp"
 #include "SDK\hl_movedata.h"
 #include "tier1\CommandBuffer.h"
@@ -38,18 +39,20 @@ public:
 	virtual void UnloadFeature() override;
 
 	void OnFrame();
+	uintptr_t ORIG__Host_RunFrame = 0;
+	CDECL_DETOUR(void, Host_AccumulateTime, float dt);
 	static void __fastcall HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove);
 	static bool __fastcall HOOKED_CCommandBuffer__DequeueNextCommand(CCommandBuffer* thisptr, int edx);
 
 	_ProcessMovement ORIG_ProcessMovement = nullptr;
 	_CCommandBuffer__DequeueNextCommand ORIG_CCommandBuffer__DequeueNextCommand = nullptr;
+	float* pHost_Frametime = nullptr;
+	float* pHost_Realtime = nullptr;
 };
 
 struct TASState
 {
 	srctas::ScriptController controller;
-	bool m_bPlayingTAS = false;
-	bool m_bRecording = false;
 	QAngle m_prevAngle;
 	bool m_bAngleValid = false;
 };
@@ -65,6 +68,8 @@ bool NewTASFeature::ShouldLoadFeature()
 void NewTASFeature::InitHooks()
 {
 	HOOK_FUNCTION(engine, CCommandBuffer__DequeueNextCommand);
+	FIND_PATTERN(engine, _Host_RunFrame);
+	HOOK_FUNCTION(engine, Host_AccumulateTime);
 
 	if (interfaces::gm)
 	{
@@ -79,34 +84,19 @@ void NewTASFeature::UnloadFeature() {}
 
 void NewTASFeature::OnFrame()
 {
-	if (!tas_state.m_bPlayingTAS && !tas_state.m_bRecording)
+	srctas::Error error = tas_state.controller.OnFrame();
+	if(error.m_bError)
 	{
+		DevWarning(error.m_sMessage.c_str());
 		return;
 	}
+	error = srctas::Error();
+	auto cmd = tas_state.controller.GetCommandForCurrentTick(error);
 
-	if (tas_state.m_bPlayingTAS)
-	{
-		srctas::Error error;
-		std::string command = tas_state.controller.GetCommandForCurrentTick(error);
-
-		if (error.m_bError)
-		{
-			DevWarning("Couldn't get command for tick, error: %s\n", error.m_sMessage.c_str());
-		}
-		else
-		{
-			EngineConCmd(command.c_str());
-		}
-	}
-
-	if (tas_state.m_bPlayingTAS && tas_state.controller.LastTick())
-	{
-		tas_state.m_bPlayingTAS = false;
-	}
-	else
-	{
-		tas_state.controller.Advance(1);
-	}
+	if (error.m_bError)
+		DevWarning(error.m_sMessage.c_str());
+	else if(!cmd.empty())
+		EngineConCmd(cmd.c_str());
 }
 
 static char* ToString(const CCommand& command)
@@ -150,12 +140,25 @@ static bool IsRecordable(const CCommand& command)
 	return true;
 }
 
+CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
+{
+	if(tas_state.controller.m_bPaused && !spt_pause.InLoad())
+	{
+		*spt_tas.pHost_Realtime += dt;
+		*spt_tas.pHost_Frametime = 0;
+	}
+	else
+	{
+		spt_tas.ORIG_Host_AccumulateTime(dt);
+	}
+}
+
 void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, void* pPlayer, void* pMove)
 {
 	CHLMoveData* mv = reinterpret_cast<CHLMoveData*>(pMove);
 	QAngle newAngle;
 
-	if (tas_state.m_bRecording)
+	if (tas_state.controller.m_bRecording)
 	{
 		bool angleChanged = false;
 		newAngle = mv->m_vecAngles;
@@ -188,7 +191,7 @@ bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CComman
 	if (rval)
 	{
 		auto command = thisptr->GetCommand();
-		if (tas_state.m_bRecording && IsRecordable(command))
+		if (tas_state.controller.m_bRecording && IsRecordable(command))
 		{
 			const char* cmd = ToString(command);
 			tas_state.controller.AddCommands(cmd);
@@ -249,56 +252,86 @@ CON_COMMAND(tas_init, "Inits an empty TAS.")
 
 CON_COMMAND(tas_play, "Starts playing the TAS.")
 {
-	tas_state.controller.SetToTick(0);
-	tas_state.m_bPlayingTAS = true;
+	tas_state.controller.Play();
 }
 
 CON_COMMAND(tas_skip, "Skip to tick in TAS.")
 {
-	tas_state.controller.SetToTick(0);
-	tas_state.m_bPlayingTAS = false;
-	tas_state.m_bRecording = false;
+	auto error = tas_state.controller.Skip();
+	if (error.m_bError)
+	{
+		Warning(error.m_sMessage.c_str());
+	}
 }
 
 CON_COMMAND(tas_record_start, "Starts recording a TAS.")
 {
-	tas_state.m_bPlayingTAS = false;
-	tas_state.m_bRecording = true;
+	tas_state.controller.Record_Start();
 	tas_state.m_bAngleValid = false;
 }
 
 CON_COMMAND(tas_record_stop, "Stops a TAS recording.")
 {
-	tas_state.m_bRecording = false;
-}
-
-CON_COMMAND(tas_resume, "Resumes playing the TAS.")
-{
-	tas_state.m_bPlayingTAS = true;
+	tas_state.controller.Record_Stop();
 }
 
 CON_COMMAND(tas_pause, "Pauses TAS playback.")
 {
-	tas_state.m_bPlayingTAS = false;
-	tas_state.m_bRecording = false;
+	auto error = tas_state.controller.Pause();
+	if(error.m_bError)
+	{
+		Warning(error.m_sMessage.c_str());
+	}
+}
+
+CON_COMMAND(tas_stop, "Stops TAS playback.")
+{
+	auto error = tas_state.controller.Stop();
+	if (error.m_bError)
+	{
+		Warning(error.m_sMessage.c_str());
+	}
 }
 
 void NewTASFeature::LoadFeature()
 {
 	if (FrameSignal.Works)
 	{
+		tas_state.controller.SetCallbacks(EngineConCmd);
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
 		InitCommand(tas_init);
 		InitCommand(tas_load);
-		InitCommand(tas_pause);
+		InitCommand(tas_stop);
 		InitCommand(tas_play);
 		InitCommand(tas_record_start);
 		InitCommand(tas_record_stop);
-		InitCommand(tas_resume);
 		InitCommand(tas_save);
 		InitCommand(tas_skip);
 		InitConcommandBase(tas_loop_cmd);
 		InitConcommandBase(tas_record_optimizebulks);
+	}
+
+	if (ORIG__Host_RunFrame)
+	{
+		pHost_Frametime = *reinterpret_cast<float**>((uintptr_t)ORIG__Host_RunFrame + 227);
+}
+	else
+	{
+		pHost_Frametime = nullptr;
+	}
+
+	if (ORIG_Host_AccumulateTime)
+	{
+		pHost_Realtime = *reinterpret_cast<float**>((uintptr_t)ORIG_Host_AccumulateTime + 5);
+	}
+	else
+	{
+		pHost_Realtime = nullptr;
+	}
+
+	if (ORIG_Host_AccumulateTime && ORIG__Host_RunFrame)
+	{
+		InitCommand(tas_pause);
 	}
 }
 #else

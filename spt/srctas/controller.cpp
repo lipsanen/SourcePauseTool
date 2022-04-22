@@ -5,6 +5,12 @@
 
 namespace srctas
 {
+	void ScriptController::SetCallbacks(std::function<void(const char*)> execConCmd)
+	{
+		this->execConCmd = execConCmd;
+		this->m_bCallbacksSet = true;
+	}
+
 	Error ScriptController::InitEmptyScript(const char* filepath)
 	{
 		Error error;
@@ -197,10 +203,9 @@ namespace srctas
 	{
 		std::string output;
 
-		if (m_iCurrentFramebulkIndex < 0)
+		if (m_iCurrentFramebulkIndex < 0 || m_sScript.m_vFrameBulks.empty())
 		{
-			error.m_sMessage = "Tried to ask for a command while no framebulk selected";
-			error.m_bError = true;
+			return ""; // No bulks or no bulk selected
 		}
 		else if (m_iTickInBulk == 0)
 		{
@@ -272,5 +277,101 @@ namespace srctas
 		}
 
 		return state;
+	}
+
+	Error ScriptController::Play()
+	{
+		SetToTick(0);
+		m_bPlayingTAS = true;
+		m_bPaused = false;
+		m_bRecording = false;
+		return Error();
+	}
+
+	Error ScriptController::Pause()
+	{
+		Error error;
+
+		if (!m_bPlayingTAS && !m_bRecording)
+		{
+			error.m_sMessage = "Not playing a TAS or recording, cannot pause\n";
+			error.m_bError = true;
+			return error;
+		}
+
+		if (m_bPaused)
+		{
+			m_bPaused = false;
+
+			if (!m_bRecording)
+			{
+				m_bPlayingTAS = true;
+			}
+		}
+		else
+		{
+			m_bPaused = true;
+		}
+
+		return Error();
+	}
+
+	Error ScriptController::Record_Start()
+	{
+		m_bRecording = true;
+		return Error();
+	}
+
+	Error ScriptController::Record_Stop()
+	{
+		m_bRecording = false;
+		return Error();
+	}
+
+	Error ScriptController::Skip()
+	{
+		return Error();
+	}
+
+	Error ScriptController::Stop()
+	{
+		m_bPlayingTAS = false;
+		m_bRecording = false;
+		m_bPaused = false;
+		return Error();
+	}
+
+	Error ScriptController::OnFrame()
+	{
+		if (!m_bCallbacksSet || m_bPaused || (!m_bPlayingTAS && !m_bRecording))
+		{
+			return Error();
+		}
+
+		if (m_bPlayingTAS)
+		{
+			srctas::Error error;
+			std::string command = GetCommandForCurrentTick(error);
+
+			if (error.m_bError)
+			{
+				return error;
+			}
+			else
+			{
+				execConCmd(command.c_str());
+			}
+		}
+
+		if (m_bPlayingTAS && LastTick())
+		{
+			m_bPlayingTAS = false;
+		}
+		else
+		{
+			Advance(1);
+		}
+
+		return Error();
 	}
 } // namespace srctas
