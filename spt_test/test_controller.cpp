@@ -216,3 +216,49 @@ TEST(Controller, RenameWorks)
     controller.SaveToFile(newPath);
     GTEST_ASSERT_EQ(stat(newPath, &s), 0);
 }
+
+TEST(Controller, RecordWorks)
+{
+    srctas::ScriptController controller;
+
+    controller.InitEmptyScript("test.src2tas");
+    controller.Record_Start();
+    GTEST_ASSERT_EQ(controller.m_bRecording, true);
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+    controller.OnFrame();
+    controller.AddCommands("echo test");
+    controller.Record_Stop();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    GTEST_ASSERT_EQ(controller.m_bRecording, false);
+    srctas::Error err;
+    std::string history = controller.GetFrameBulkHistory(2, err);
+    std::string expected = ">>>>>>|>>>>|>>>>>>>>|>|>|>|1|\n"
+                           ">>>>>>|>>>>|>>>>>>>>|>|>|>|1|echo test";
+    GTEST_ASSERT_EQ(history, expected);
+}
+
+TEST(Controller, OnFrameExecutesCommands)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/basic.src2tas");
+    std::string executed;
+    int timesExecuted = 0;
+    controller.m_fExecConCmd = [&](auto cmd) 
+    {
+        executed = cmd;
+        ++timesExecuted;
+    };
+
+    controller.Play();
+    controller.OnFrame();
+    std::cout << executed << std::endl;
+    GTEST_ASSERT_EQ(timesExecuted, 1);
+    GTEST_ASSERT_NE(executed, "");
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+
+    // Extra OnFrame calls should do nothing, we're at the end of script
+    controller.OnFrame();
+    GTEST_ASSERT_NE(executed, "");
+    GTEST_ASSERT_EQ(timesExecuted, 1);
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+}

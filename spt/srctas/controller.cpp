@@ -5,23 +5,37 @@
 
 namespace srctas
 {
-	void ScriptController::SetCallbacks(std::function<void(const char*)> execConCmd)
+	#define CHECK_INIT() if(!m_bScriptInit) \
+	{ \
+		Error err; \
+		err.m_bError = true; \
+		err.m_sMessage = "No script initialized"; \
+		return err; \
+	}
+
+	ScriptController::ScriptController()
 	{
-		this->execConCmd = execConCmd;
-		this->m_bCallbacksSet = true;
+		m_fExecConCmd = [](auto a) {};
+		m_fSetTimeScale = [](auto a) {};
+		m_fSetView = [](auto a, auto b) {};
+		m_fResetView = []() {};
+		m_fRewindState = []() { return 0; };
 	}
 
 	Error ScriptController::InitEmptyScript(const char* filepath)
 	{
 		Error error;
 		m_sScript.Clear();
-		SetToTick(0);
+		_ResetState();
 		m_sFilepath = filepath;
+		m_bScriptInit = true;
 		return error;
 	}
 
 	Error ScriptController::SaveToFile(const char* filepath)
 	{
+		CHECK_INIT();
+
 		if (filepath)
 		{
 			m_sFilepath = filepath;
@@ -49,16 +63,23 @@ namespace srctas
 		if (!error.m_bError)
 		{
 			m_sFilepath = filepath;
+			m_bScriptInit = true;
 		}
 		else
 		{
-			m_sFilepath = ""; // Load failed, we might be in some weird half loaded state
+			// Load failed, we might be in some weird half loaded state so clear everything
+			m_sFilepath = ""; 
+			_ResetState();
+			m_sScript.Clear();
+			m_bScriptInit = false;
 		}
 		return error;
 	}
 
 	Error ScriptController::SetToTick(int tick)
 	{
+		CHECK_INIT();
+
 		Error error;
 		m_iCurrentTick = 0;
 		m_iTickInBulk = 0;
@@ -87,6 +108,8 @@ namespace srctas
 
 	Error ScriptController::Advance(int ticks)
 	{
+		CHECK_INIT();
+
 		Error error;
 		error.m_bError = false;
 
@@ -100,6 +123,19 @@ namespace srctas
 		}
 
 		return error;
+	}
+
+	void ScriptController::_ResetState()
+	{
+		m_iCurrentPlaybackTick = 0;
+		m_iCurrentTick = 0;
+		m_iTargetTick = -1;
+		m_iTickInBulk = 0;
+		m_iCurrentFramebulkIndex = 0;
+		m_fSetTimeScale(1);
+		m_bPaused = false;
+		m_bRecording = false;
+		m_bPlayingTAS = false;
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -131,6 +167,8 @@ namespace srctas
 
 	Error ScriptController::AddCommands(const char* commandsExecuted)
 	{
+		CHECK_INIT();
+
 		Error error;
 
 		if (m_iCurrentFramebulkIndex < 0)
@@ -184,6 +222,7 @@ namespace srctas
 		// Use this sledgehammer to fix the bulk indexing.
 		// Could be done faster, but this is the most idiot proof way
 		SetToTick(m_iCurrentTick);
+		m_iCurrentPlaybackTick = m_iCurrentTick; // Set the playback tick to current tick, script has been modified
 		auto state = GetCurrentFramebulk();
 		if (state.m_sCurrent == nullptr)
 		{
@@ -203,7 +242,7 @@ namespace srctas
 	{
 		std::string output;
 
-		if (m_iCurrentFramebulkIndex < 0 || m_sScript.m_vFrameBulks.empty())
+		if (!m_bScriptInit || m_sScript.m_vFrameBulks.empty())
 		{
 			return ""; // No bulks or no bulk selected
 		}
@@ -219,6 +258,11 @@ namespace srctas
 
 	std::string ScriptController::GetFrameBulkHistory(int length, Error& error)
 	{
+		if (!m_bScriptInit)
+		{
+			return "";
+		}
+
 		std::string output;
 		int start = std::max(0, m_iCurrentFramebulkIndex - length);
 
@@ -240,7 +284,10 @@ namespace srctas
 
 	int ScriptController::GetCurrentTick(Error& error)
 	{
-		return m_iCurrentTick;
+		if(m_bScriptInit)
+			return m_iCurrentTick;
+		else
+			return 0;
 	}
 
 	int ScriptController::GetTotalTicks(Error& error)
@@ -281,15 +328,15 @@ namespace srctas
 
 	Error ScriptController::Play()
 	{
-		SetToTick(0);
+		CHECK_INIT();
+		_ResetState();
 		m_bPlayingTAS = true;
-		m_bPaused = false;
-		m_bRecording = false;
 		return Error();
 	}
 
 	Error ScriptController::Pause()
 	{
+		CHECK_INIT();
 		Error error;
 
 		if (!m_bPlayingTAS && !m_bRecording)
@@ -318,49 +365,83 @@ namespace srctas
 
 	Error ScriptController::Record_Start()
 	{
+		CHECK_INIT();
+		SetToTick(m_iCurrentPlaybackTick);
 		m_bRecording = true;
 		return Error();
 	}
 
 	Error ScriptController::Record_Stop()
 	{
+		CHECK_INIT();
+		SetToTick(m_iCurrentPlaybackTick);
 		m_bRecording = false;
 		return Error();
 	}
 
-	Error ScriptController::Skip()
+	Error ScriptController::Skip(int tick)
 	{
+		CHECK_INIT();
+		_ResetState();
+		m_bPlayingTAS = true;
+		m_iTargetTick = tick;
+		m_fSetTimeScale(9999);
 		return Error();
 	}
 
 	Error ScriptController::Stop()
 	{
-		m_bPlayingTAS = false;
-		m_bRecording = false;
-		m_bPaused = false;
+		CHECK_INIT();
+		_ResetState();
 		return Error();
 	}
 
 	Error ScriptController::OnFrame()
 	{
-		if (!m_bCallbacksSet || m_bPaused || (!m_bPlayingTAS && !m_bRecording))
+		if (!m_bScriptInit || m_bPaused || (!m_bPlayingTAS && !m_bRecording))
 		{
 			return Error();
 		}
 
-		if (m_bPlayingTAS)
+		if (m_bPlayingTAS && !m_bPaused)
 		{
-			srctas::Error error;
-			std::string command = GetCommandForCurrentTick(error);
+			return OnFrame_Playing();
+		}
+		else if (m_bPaused)
+		{
+			return OnFrame_Paused();
+		}
 
-			if (error.m_bError)
-			{
-				return error;
-			}
-			else
-			{
-				execConCmd(command.c_str());
-			}
+		return Error();
+	}
+
+	Error ScriptController::OnFrame_Playing()
+	{
+		if (m_iCurrentTick > m_iCurrentPlaybackTick)
+		{
+			Skip(m_iCurrentTick); // Trying to playback the TAS when ahead of playback causes it to fast forward to current point
+		}
+		else
+		{
+			m_iCurrentPlaybackTick = m_iCurrentTick;
+		}
+
+		if (m_iTargetTick == m_iCurrentTick && !m_bPaused)
+		{
+			m_fSetTimeScale(1);
+			return Pause();
+		}
+
+		srctas::Error error;
+		std::string command = GetCommandForCurrentTick(error);
+
+		if (error.m_bError)
+		{
+			return error;
+		}
+		else if (!command.empty())
+		{
+			m_fExecConCmd(command.c_str());
 		}
 
 		if (m_bPlayingTAS && LastTick())
@@ -369,9 +450,31 @@ namespace srctas
 		}
 		else
 		{
+			m_iCurrentPlaybackTick += 1;
 			Advance(1);
 		}
 
+		return error;
+	}
+
+	Error ScriptController::OnFrame_Paused()
+	{
+		int state = m_fRewindState();
+
+		if (state < 0)
+		{
+			Advance(-1);
+		}
+		else if (state > 0)
+		{
+			Advance(1);
+		}
+
+		return Error();
+	}
+
+	Error ScriptController::OnMove(float pos[3], float ang[3])
+	{
 		return Error();
 	}
 } // namespace srctas

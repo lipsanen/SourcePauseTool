@@ -257,11 +257,11 @@ CON_COMMAND(tas_play, "Starts playing the TAS.")
 
 CON_COMMAND(tas_skip, "Skip to tick in TAS.")
 {
-	auto error = tas_state.controller.Skip();
+	/*auto error = tas_state.controller.Skip();
 	if (error.m_bError)
 	{
 		Warning(error.m_sMessage.c_str());
-	}
+	}*/
 }
 
 CON_COMMAND(tas_record_start, "Starts recording a TAS.")
@@ -297,7 +297,7 @@ void NewTASFeature::LoadFeature()
 {
 	if (FrameSignal.Works)
 	{
-		tas_state.controller.SetCallbacks(EngineConCmd);
+		tas_state.controller.m_fExecConCmd = EngineConCmd;
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
 		InitCommand(tas_init);
 		InitCommand(tas_load);
