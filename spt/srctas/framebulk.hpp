@@ -3,24 +3,25 @@
 #include <map>
 #include <vector>
 #include "cmd_parsing.hpp"
+#include "platform.hpp"
 
 namespace srctas
 {
-	enum class __declspec(dllexport) KeyState : uint8_t
+	enum class DLL_EXPORT KeyState : uint8_t
 	{
 		Noop = 0,
 		Unpressed = 1,
 		Pressed = 2
 	};
 
-	struct __declspec(dllexport) FrameBulkError
+	struct DLL_EXPORT FrameBulkError
 	{
 		bool m_bError;
 		int m_iIndex;
 		std::string m_sMessage;
 	};
 
-	struct __declspec(dllexport) FrameBulkValue
+	struct DLL_EXPORT FrameBulkValue
 	{
 		union
 		{
@@ -44,7 +45,7 @@ namespace srctas
 		}
 	};
 
-	class __declspec(dllexport) FrameBulk
+	class DLL_EXPORT FrameBulk
 	{
 	public:
 		FrameBulk();

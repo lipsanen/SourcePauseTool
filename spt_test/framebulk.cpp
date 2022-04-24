@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include <iostream>
-#include "spt\srctas\framebulk.hpp"
+#include "spt/srctas/framebulk.hpp"
 
 TEST(FrameBulk, FrameBulkString)
 {

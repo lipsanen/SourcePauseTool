@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
+#include "platform.hpp"
 
 namespace srctas
 {
-	struct __declspec(dllexport) Error
+	struct DLL_EXPORT Error
 	{
 		std::string m_sMessage;
 		bool m_bError = false;

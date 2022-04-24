@@ -31,4 +31,18 @@ namespace srctas
 
 		return arg0;
 	}
+
+	void RemoveKeyCode(char* command)
+	{
+		while (command && *command && (std::isspace(*command) || *command == '"'))
+			++command;
+
+		if(!command || *command == '\0' || (*command != '+' && *command != '-'))
+			return;
+
+		while(!std::isspace(*command) && *command != ';')
+			++command;
+
+		*command = '\0';
+	}
 } // namespace srctas

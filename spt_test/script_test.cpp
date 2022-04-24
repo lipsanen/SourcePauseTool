@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "spt\srctas\script.hpp"
+#include "spt/srctas/script.hpp"
 #include <iostream>
 
 TEST(Script, NullFilepath)

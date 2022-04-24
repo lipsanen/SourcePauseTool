@@ -172,9 +172,9 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 
 		if (!tas_state.m_bAngleValid || angleChanged || !tas_record_optimizebulks.GetBool())
 		{
-			tas_state.controller.AddCommands(
+			tas_state.controller.OnCommandExecuted(
 			    FormatTempString("_y_spt_setyaw %s", FloatToCString(mv->m_vecAngles[YAW])));
-			tas_state.controller.AddCommands(
+			tas_state.controller.OnCommandExecuted(
 			    FormatTempString("_y_spt_setpitch %s", FloatToCString(mv->m_vecAngles[PITCH])));
 		}
 
@@ -194,7 +194,7 @@ bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CComman
 		if (tas_state.controller.m_bRecording && IsRecordable(command))
 		{
 			const char* cmd = ToString(command);
-			tas_state.controller.AddCommands(cmd);
+			tas_state.controller.OnCommandExecuted(cmd);
 		}
 	}
 

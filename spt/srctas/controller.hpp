@@ -1,5 +1,6 @@
 #pragma once
 
+#include "platform.hpp"
 #include "script.hpp"
 #include "utils.hpp"
 #include <functional>
@@ -7,7 +8,10 @@
 
 namespace srctas
 {
-	struct __declspec(dllexport) FrameBulkState
+	extern DLL_EXPORT const int NOT_PLAYING;
+	extern DLL_EXPORT const int PLAY_TO_END;
+
+	struct DLL_EXPORT FrameBulkState
 	{
 		FrameBulk* m_sCurrent;
 		int m_iTickInBulk;
@@ -17,10 +21,16 @@ namespace srctas
 	{
 		float pos[3];
 		float ang[3];
+		bool valid = false;
+	};
+
+	enum class PauseState
+	{
+		Auto, Paused, Unpaused
 	};
 
 	// Add error handling stuff to interface
-	class __declspec(dllexport) ScriptController
+	class DLL_EXPORT ScriptController
 	{
 	public:
 		ScriptController();
@@ -29,8 +39,6 @@ namespace srctas
 		Error SaveToFile(const char* filepath = nullptr);
 		Error LoadFromFile(const char* filepath);
 		Error SetToTick(int tick);
-		Error Advance(int ticks);
-		Error AddCommands(const char* commandsExecuted);
 		std::string GetCommandForCurrentTick(Error& error);
 		std::string GetFrameBulkHistory(int length, Error& error);
 		int GetCurrentTick(Error& error);
@@ -38,25 +46,30 @@ namespace srctas
 		bool LastTick();
 		FrameBulkState GetCurrentFramebulk();
 		Error Play();
-		Error Pause();
+		Error Pause(PauseState state = PauseState::Auto);
 		Error Record_Start();
 		Error Record_Stop();
-		Error Skip(int tick);
+		Error Skip(int tick, float timescale=9999);
 		Error Stop();
-		Error OnFrame();
+		bool ShouldPause();
+		int GetPlayState();
+		bool IsRecording(PauseState pauseState = PauseState::Auto);
+		Error TEST_Advance(int ticks);
+
+		Error OnFrame(PauseState pauseState = PauseState::Auto);
 		Error OnMove(float pos[3], float ang[3]);
+		Error OnCommandExecuted(const char* commandsExecuted);
 
 		Script m_sScript;
 		std::string m_sFilepath;
-		int m_iCurrentTick = -1;
-		int m_iCurrentPlaybackTick = -1;
-		int m_iTickInBulk = -1;
-		int m_iCurrentFramebulkIndex = -1;
-		int m_iTargetTick = -1;
+		int m_iCurrentTick = 0;
+		int m_iCurrentPlaybackTick = 0;
+		int m_iLastValidTick = 0;
+		int m_iTickInBulk = 0;
+		int m_iCurrentFramebulkIndex = 0;
+		int m_iTargetTick = -2;
 		bool m_bScriptInit = false;
-		bool m_bPlayingTAS = false;
-		bool m_bRecording = false;
-		bool m_bPaused = false;
+		std::vector<MoveHistory> m_vecMoves;
 		std::function<void(const char*)> m_fExecConCmd = nullptr;
 		std::function<void(float)> m_fSetTimeScale = nullptr;
 		std::function<void(float*, float*)> m_fSetView = nullptr;
@@ -64,8 +77,12 @@ namespace srctas
 		std::function<int()> m_fRewindState = nullptr;
 
 	private:
+		Error Advance(int ticks);
+		bool m_bPaused = false;
 		Error OnFrame_Playing();
+		Error OnFrame_Recording();
 		Error OnFrame_Paused();
+		void OnFrame_HandleEdits();
 		void _ResetState();
 		void _ForwardAdvance(int ticks);
 		void _BackwardAdvance(int ticks);

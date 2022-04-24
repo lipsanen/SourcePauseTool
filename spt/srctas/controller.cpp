@@ -5,6 +5,9 @@
 
 namespace srctas
 {
+	const int NOT_PLAYING = -2;
+	const int PLAYING = -1;
+
 	#define CHECK_INIT() if(!m_bScriptInit) \
 	{ \
 		Error err; \
@@ -129,13 +132,11 @@ namespace srctas
 	{
 		m_iCurrentPlaybackTick = 0;
 		m_iCurrentTick = 0;
-		m_iTargetTick = -1;
+		m_iTargetTick = NOT_PLAYING;
 		m_iTickInBulk = 0;
 		m_iCurrentFramebulkIndex = 0;
+		m_iLastValidTick = 0;
 		m_fSetTimeScale(1);
-		m_bPaused = false;
-		m_bRecording = false;
-		m_bPlayingTAS = false;
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -165,7 +166,7 @@ namespace srctas
 		SetToTick(std::max(0, m_iCurrentTick - ticks));
 	}
 
-	Error ScriptController::AddCommands(const char* commandsExecuted)
+	Error ScriptController::OnCommandExecuted(const char* commandsExecuted)
 	{
 		CHECK_INIT();
 
@@ -222,8 +223,13 @@ namespace srctas
 		// Use this sledgehammer to fix the bulk indexing.
 		// Could be done faster, but this is the most idiot proof way
 		SetToTick(m_iCurrentTick);
-		m_iCurrentPlaybackTick = m_iCurrentTick; // Set the playback tick to current tick, script has been modified
 		auto state = GetCurrentFramebulk();
+
+		if(m_iCurrentTick != m_iCurrentPlaybackTick)
+		{
+			m_iLastValidTick = std::min(m_iLastValidTick, m_iCurrentTick); // Current playback no longer valid
+		}
+
 		if (state.m_sCurrent == nullptr)
 		{
 			error.m_bError = true;
@@ -330,62 +336,71 @@ namespace srctas
 	{
 		CHECK_INIT();
 		_ResetState();
-		m_bPlayingTAS = true;
-		return Error();
+		srctas::Error error;
+		int ticks = GetTotalTicks(error);
+		if(error.m_bError)
+			return error;
+		error = Skip(ticks, 1);
+		return error;
 	}
 
-	Error ScriptController::Pause()
+	Error ScriptController::Pause(PauseState state)
 	{
 		CHECK_INIT();
 		Error error;
 
-		if (!m_bPlayingTAS && !m_bRecording)
-		{
-			error.m_sMessage = "Not playing a TAS or recording, cannot pause\n";
-			error.m_bError = true;
-			return error;
-		}
+		bool paused;
 
-		if (m_bPaused)
-		{
-			m_bPaused = false;
+		if(state == PauseState::Auto)
+			paused = ShouldPause();
+		else
+			paused = state == PauseState::Paused;
 
-			if (!m_bRecording)
-			{
-				m_bPlayingTAS = true;
-			}
+		if (paused)
+		{
+			int ticks = GetTotalTicks(error);
+			if(error.m_bError)
+				return error;
+			error = Skip(ticks, 1);
 		}
 		else
 		{
-			m_bPaused = true;
+			m_iTargetTick = m_iCurrentTick;
 		}
 
-		return Error();
+		return error;
 	}
 
 	Error ScriptController::Record_Start()
 	{
 		CHECK_INIT();
-		SetToTick(m_iCurrentPlaybackTick);
-		m_bRecording = true;
+		m_iTargetTick = PLAYING;
 		return Error();
 	}
 
 	Error ScriptController::Record_Stop()
 	{
 		CHECK_INIT();
-		SetToTick(m_iCurrentPlaybackTick);
-		m_bRecording = false;
+		m_iTargetTick = m_iCurrentTick;
 		return Error();
 	}
 
-	Error ScriptController::Skip(int tick)
+	Error ScriptController::Skip(int tick, float timescale)
 	{
 		CHECK_INIT();
-		_ResetState();
-		m_bPlayingTAS = true;
+
+		if(tick < m_iCurrentPlaybackTick || (m_iLastValidTick < tick && m_iLastValidTick != m_iCurrentPlaybackTick))
+		{
+			_ResetState();
+		}
+		else if(m_iCurrentTick != m_iCurrentPlaybackTick)
+		{
+			SetToTick(m_iCurrentPlaybackTick);
+		}
+
 		m_iTargetTick = tick;
-		m_fSetTimeScale(9999);
+		m_fSetTimeScale(timescale);
+
 		return Error();
 	}
 
@@ -396,40 +411,84 @@ namespace srctas
 		return Error();
 	}
 
-	Error ScriptController::OnFrame()
+	Error ScriptController::OnFrame(PauseState pauseState)
 	{
-		if (!m_bScriptInit || m_bPaused || (!m_bPlayingTAS && !m_bRecording))
+		Error err;
+		if (!m_bScriptInit)
 		{
-			return Error();
+			m_fResetView();
+		}
+		else
+		{
+			int state = GetPlayState();
+
+			if (pauseState == PauseState::Unpaused || state > 0)
+			{
+				err = OnFrame_Playing();
+			}
+			else if (state <= 0)
+			{
+				err = OnFrame_Paused();
+			}
+
+			if(m_iCurrentTick != m_iCurrentPlaybackTick && m_iCurrentTick < m_vecMoves.size() && m_vecMoves[m_iCurrentTick].valid)
+			{
+				m_fSetView(m_vecMoves[m_iCurrentTick].pos, m_vecMoves[m_iCurrentTick].ang);
+			}
+			else
+			{
+				m_fResetView();
+			}
 		}
 
-		if (m_bPlayingTAS && !m_bPaused)
-		{
-			return OnFrame_Playing();
-		}
-		else if (m_bPaused)
-		{
-			return OnFrame_Paused();
-		}
+		return err;
+	}
 
-		return Error();
+	void ScriptController::OnFrame_HandleEdits()
+	{
+		if(m_iLastValidTick <= m_iCurrentTick && m_iLastValidTick < m_iCurrentPlaybackTick)
+		{
+			int target = m_iTargetTick;
+			_ResetState();
+			m_iTargetTick = target;
+		}
+	}
+
+	bool ScriptController::IsRecording(PauseState pauseState)
+	{
+		if(!m_bScriptInit)
+			return false;
+
+		Error err;
+		bool paused;
+		if(pauseState == PauseState::Auto)
+			paused = ShouldPause();
+		else
+			paused = pauseState == PauseState::Paused;
+
+		if(!paused)
+		{
+			return m_iTargetTick == PLAYING;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	Error ScriptController::TEST_Advance(int ticks)
+	{
+		return Advance(ticks);
 	}
 
 	Error ScriptController::OnFrame_Playing()
 	{
-		if (m_iCurrentTick > m_iCurrentPlaybackTick)
-		{
-			Skip(m_iCurrentTick); // Trying to playback the TAS when ahead of playback causes it to fast forward to current point
-		}
-		else
-		{
-			m_iCurrentPlaybackTick = m_iCurrentTick;
-		}
+		OnFrame_HandleEdits();
 
-		if (m_iTargetTick == m_iCurrentTick && !m_bPaused)
+		if(m_iCurrentTick < m_iCurrentPlaybackTick)
 		{
-			m_fSetTimeScale(1);
-			return Pause();
+			Advance(1);
+			return Error();
 		}
 
 		srctas::Error error;
@@ -444,17 +503,25 @@ namespace srctas
 			m_fExecConCmd(command.c_str());
 		}
 
-		if (m_bPlayingTAS && LastTick())
+		m_iCurrentPlaybackTick += 1;
+		m_iLastValidTick = m_iCurrentPlaybackTick;
+		Advance(1);
+
+		if (m_iTargetTick <= m_iCurrentTick && m_iTargetTick >= 0)
 		{
-			m_bPlayingTAS = false;
-		}
-		else
-		{
-			m_iCurrentPlaybackTick += 1;
-			Advance(1);
+			m_fSetTimeScale(1);
+			return Pause(PauseState::Unpaused);
 		}
 
 		return error;
+	}
+
+	Error ScriptController::OnFrame_Recording()
+	{
+		m_iCurrentPlaybackTick += 1;
+		m_iLastValidTick = m_iCurrentPlaybackTick;
+		Advance(1);
+		return Error();
 	}
 
 	Error ScriptController::OnFrame_Paused()
@@ -475,6 +542,71 @@ namespace srctas
 
 	Error ScriptController::OnMove(float pos[3], float ang[3])
 	{
+		int startIndex = m_vecMoves.size();
+		m_vecMoves.resize(m_iCurrentTick + 1);
+		for(int i=startIndex; i <= m_iCurrentTick; ++i)
+		{
+			m_vecMoves[i] = MoveHistory();
+		}
+
+		for(int i=0; i < 3; ++i)
+		{
+			m_vecMoves[m_iCurrentTick].ang[i] = ang[i];
+			m_vecMoves[m_iCurrentTick].pos[i] = pos[i];
+		}
+
+		m_vecMoves[m_iCurrentTick].valid = true;
 		return Error();
+	}
+
+	int ScriptController::GetPlayState()
+	{
+		int rewind = m_fRewindState();
+
+		if(rewind != 0)
+		{
+			return rewind;
+		}
+
+		if(m_iTargetTick == NOT_PLAYING)
+		{
+			return 0;
+		}
+
+		if(m_iCurrentTick != m_iCurrentPlaybackTick)
+		{
+			return 0;
+		}
+		else if(m_iCurrentTick == m_iTargetTick)
+		{
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
+	}
+
+	bool ScriptController::ShouldPause()
+	{
+		if(!m_bScriptInit)
+			return false;
+
+		int state = GetPlayState();
+
+		if(m_iCurrentPlaybackTick == 0 && m_iTargetTick == NOT_PLAYING)
+		{
+			return false;
+		}
+
+		if(m_iCurrentTick < m_iCurrentPlaybackTick)
+		{
+			return true;
+		}
+		else
+		{
+			return state <= 0;
+		}
+
 	}
 } // namespace srctas

@@ -4,10 +4,11 @@
 #include "utils.hpp"
 #include <string>
 #include <vector>
+#include "platform.hpp"
 
 namespace srctas
 {
-	struct __declspec(dllexport) Script
+	struct DLL_EXPORT Script
 	{
 	public:
 		Script(){};

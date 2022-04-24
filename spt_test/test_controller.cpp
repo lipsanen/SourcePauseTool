@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "spt\srctas\controller.hpp"
+#include "spt/srctas/controller.hpp"
 
 TEST(Controller, AddFrameBulkWorks)
 {
@@ -7,7 +7,7 @@ TEST(Controller, AddFrameBulkWorks)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(error.m_bError, false);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(error.m_bError, false);
     
     auto commands = controller.GetCommandForCurrentTick(error);
@@ -25,10 +25,10 @@ TEST(Controller, FrameBulkSplittingWorks)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(10);
+    error = controller.TEST_Advance(10);
     std::cout << error.m_sMessage << std::endl;
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
 
     std::string output1 = controller.m_sScript.m_vFrameBulks[0].GetFramebulkString();
@@ -43,9 +43,9 @@ TEST(Controller, FrameBulkAdvanceWorks)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(10);
+    error = controller.TEST_Advance(10);
     auto state = controller.GetCurrentFramebulk();
     GTEST_ASSERT_NE(state.m_sCurrent, nullptr);
     GTEST_ASSERT_EQ(state.m_iTickInBulk, 10);
@@ -57,10 +57,10 @@ TEST(Controller, FrameBulkAdvanceWorksNegative)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(10);
-    error = controller.Advance(-5);
+    error = controller.TEST_Advance(10);
+    error = controller.TEST_Advance(-5);
     auto state = controller.GetCurrentFramebulk();
     GTEST_ASSERT_NE(state.m_sCurrent, nullptr);
     GTEST_ASSERT_EQ(state.m_iTickInBulk, 5);
@@ -73,13 +73,13 @@ TEST(Controller, FrameBulkSplittingWorks2)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(10);
+    error = controller.TEST_Advance(10);
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(-5);
+    error = controller.TEST_Advance(-5);
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+attack2");
+    error = controller.OnCommandExecuted("+attack2");
 
     std::string output1 = controller.m_sScript.m_vFrameBulks[0].GetFramebulkString();
     std::string output2 = controller.m_sScript.m_vFrameBulks[1].GetFramebulkString();
@@ -95,13 +95,13 @@ TEST(Controller, FrameBulkSplittingWorks3)
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(10);
+    error = controller.TEST_Advance(10);
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+tas_strafe;+attack");
+    error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.Advance(-1);
+    error = controller.TEST_Advance(-1);
     GTEST_ASSERT_EQ(false, error.m_bError);
-    error = controller.AddCommands("+attack2");
+    error = controller.OnCommandExecuted("+attack2");
 
     std::string output1 = controller.m_sScript.m_vFrameBulks[0].GetFramebulkString();
     std::string output2 = controller.m_sScript.m_vFrameBulks[1].GetFramebulkString();
@@ -115,12 +115,12 @@ TEST(Controller, FrameBulkSplittingWorks4)
 {
     srctas::ScriptController controller;
     controller.InitEmptyScript("/tmp/test.src2tas");
-    controller.Advance(10);
-    controller.AddCommands("+tas_strafe;+attack");
-    controller.Advance(-1);
-    controller.AddCommands("+attack2");
-    controller.Advance(1);
-    controller.AddCommands("tas_strafe_type 0; tas_strafe_jumptype 1; +tas_lgagst");
+    controller.TEST_Advance(10);
+    controller.OnCommandExecuted("+tas_strafe;+attack");
+    controller.TEST_Advance(-1);
+    controller.OnCommandExecuted("+attack2");
+    controller.TEST_Advance(1);
+    controller.OnCommandExecuted("tas_strafe_type 0; tas_strafe_jumptype 1; +tas_lgagst");
 
     std::string output1 = controller.m_sScript.m_vFrameBulks[0].GetFramebulkString();
     std::string output2 = controller.m_sScript.m_vFrameBulks[1].GetFramebulkString();
@@ -134,10 +134,10 @@ TEST(Controller, FrameBulkSplittingWorks5)
 {
     srctas::ScriptController controller;
     controller.InitEmptyScript("/tmp/test.src2tas");
-    controller.Advance(100);
-    controller.AddCommands("+forward");
-    controller.Advance(200);
-    controller.AddCommands("-forward; echo stop");
+    controller.TEST_Advance(100);
+    controller.OnCommandExecuted("+forward");
+    controller.TEST_Advance(200);
+    controller.OnCommandExecuted("-forward; echo stop");
 
     std::string output1 = controller.m_sScript.m_vFrameBulks[0].GetFramebulkString();
     std::string output2 = controller.m_sScript.m_vFrameBulks[1].GetFramebulkString();
@@ -153,12 +153,12 @@ TEST(Controller, FrameBulkHistoryWorks)
     srctas::ScriptController controller;
     srctas::Error error;
     controller.InitEmptyScript("/tmp/test.src2tas");
-    controller.Advance(10);
-    controller.AddCommands("+tas_strafe;+attack");
-    controller.Advance(-1);
-    controller.AddCommands("+attack2");
-    controller.Advance(1);
-    controller.AddCommands("tas_strafe_type 0; tas_strafe_jumptype 1; +tas_lgagst");
+    controller.TEST_Advance(10);
+    controller.OnCommandExecuted("+tas_strafe;+attack");
+    controller.TEST_Advance(-1);
+    controller.OnCommandExecuted("+attack2");
+    controller.TEST_Advance(1);
+    controller.OnCommandExecuted("tas_strafe_type 0; tas_strafe_jumptype 1; +tas_lgagst");
 
     std::string output1 = controller.GetFrameBulkHistory(3, error);
     std::string expectedHistory =   ">>>>>>|>>>>|>>>>>>>>|>|>|>|9|\n"
@@ -167,7 +167,7 @@ TEST(Controller, FrameBulkHistoryWorks)
 
     GTEST_ASSERT_EQ(output1, expectedHistory);
 
-    controller.Advance(-1);
+    controller.TEST_Advance(-1);
     std::string output2 = controller.GetFrameBulkHistory(3, error);
     std::string expectedHistory2 =  ">>>>>>|>>>>|>>>>>>>>|>|>|>|9|\n"
                                     ">>>>>>|>>>>|>>>>2>>>|>|>|>|1|";
@@ -223,13 +223,12 @@ TEST(Controller, RecordWorks)
 
     controller.InitEmptyScript("test.src2tas");
     controller.Record_Start();
-    GTEST_ASSERT_EQ(controller.m_bRecording, true);
+    GTEST_ASSERT_EQ(controller.IsRecording(), true);
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
     controller.OnFrame();
-    controller.AddCommands("echo test");
+    controller.OnCommandExecuted("echo test");
     controller.Record_Stop();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
-    GTEST_ASSERT_EQ(controller.m_bRecording, false);
     srctas::Error err;
     std::string history = controller.GetFrameBulkHistory(2, err);
     std::string expected = ">>>>>>|>>>>|>>>>>>>>|>|>|>|1|\n"
@@ -261,4 +260,294 @@ TEST(Controller, OnFrameExecutesCommands)
     GTEST_ASSERT_NE(executed, "");
     GTEST_ASSERT_EQ(timesExecuted, 1);
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+}
+
+
+TEST(Controller, RewindWorks)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/basic.src2tas");
+    std::string executed;
+    int rewind = 0;
+    controller.m_fRewindState = [&rewind]() 
+    {
+        return rewind;
+    };
+
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+
+    rewind = 1;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+
+    rewind = -1;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+}
+
+
+TEST(Controller, CameraWorks)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/basic.src2tas");
+    std::string executed;
+    int rewind = 0;
+    float pos1[3] = {0, 0, 0};
+    float ang1[3] = {0, 0, 0};
+    float pos2[3] = {1, 2, 3};
+    float ang2[3] = {4, 5, 6};
+
+    float pos[3] = {-999, -999, -999};
+    float ang[3] = {-999, -999, -999};
+
+    controller.m_fRewindState = [&rewind]() 
+    {
+        return rewind;
+    };
+
+    controller.m_fResetView = [&pos, &ang]()
+    {
+        pos[0] = -1;
+        pos[1] = -1;
+        pos[2] = -1;
+        ang[0] = -1;
+        ang[1] = -1;
+        ang[2] = -1;
+    };
+
+    controller.m_fSetView = [&pos, &ang](auto newpos, auto newang)
+    {
+        pos[0] = newpos[0];
+        pos[1] = newpos[1];
+        pos[2] = newpos[2];
+        ang[0] = newang[0];
+        ang[1] = newang[1];
+        ang[2] = newang[2];
+    };
+
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+
+    rewind = 1;
+    controller.OnMove(pos1, ang1);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(pos[0], -1); // Should reset view
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), false);
+
+    controller.OnMove(pos2, ang2);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), false);
+
+    rewind = -1;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    GTEST_ASSERT_EQ(pos[0], 1);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
+
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+    GTEST_ASSERT_EQ(pos[0], 0);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
+
+    // Extra rewind should do nothing, already at the beginning
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+    GTEST_ASSERT_EQ(pos[0], 0);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
+
+    // Rewind forwards again
+    rewind = 1;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    GTEST_ASSERT_EQ(pos[0], 1);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
+
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+    GTEST_ASSERT_EQ(pos[0], -1);
+    GTEST_ASSERT_EQ(controller.ShouldPause(), false); // Should be unpaused now, we are live
+}
+
+TEST(Controller, DoesNotAutoPlay)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+}
+
+TEST(Controller, SkipWorks)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(1);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+}
+
+TEST(Controller, SkipWorks2)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(2);
+    controller.OnFrame();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+    controller.OnFrame(); // Extra tick here does nothing
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+
+    controller.Skip(1);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+}
+
+TEST(Controller, CanOverridePause)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(2);
+    controller.OnFrame();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+    controller.OnFrame(srctas::PauseState::Unpaused); // Extra tick here does something, we have specified we aren't paused
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 3);
+}
+
+
+TEST(Controller, SkipDoesNotStartFromBeginningWhenSkipPointAheadOfPlayback)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(1);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    controller.Skip(2);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+}
+
+TEST(Controller, SkipJumpsToPlaybackTick)
+{
+    srctas::ScriptController controller;
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(5);
+    for(int i=0; i < 5; ++i)
+        controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
+    controller.TEST_Advance(-4);
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    controller.Skip(6);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 6);
+    GTEST_ASSERT_EQ(controller.m_iCurrentPlaybackTick, 6);
+}
+
+TEST(Controller, PlaybackAutoRollsback)
+{
+    srctas::ScriptController controller;
+    int rewind = 0;
+    controller.m_fRewindState = [&rewind]() 
+    {
+        return rewind;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(5);
+    for(int i=0; i < 5; ++i)
+        controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
+    rewind = -1;
+    for(int i=0; i < 4; ++i)
+        controller.OnFrame();
+    controller.OnCommandExecuted("echo test");
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    rewind = 1;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    GTEST_ASSERT_EQ(controller.m_iCurrentPlaybackTick, 1);
+}
+
+
+TEST(Controller, PlaybackDoesNotRollbackBad)
+{
+    srctas::ScriptController controller;
+    int rewind = 0;
+    controller.m_fRewindState = [&rewind]() 
+    {
+        return rewind;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(5);
+    for(int i=0; i < 5; ++i)
+        controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
+    rewind = -1;
+    controller.OnFrame();
+    controller.OnCommandExecuted("echo test");
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 4);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 3);
+}
+
+TEST(Controller, SkipTimescaleWorks)
+{
+    srctas::ScriptController controller;
+    float timescale = 1;
+    controller.m_fSetTimeScale = [&timescale](float t) 
+    {
+        timescale = t;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Skip(5);
+    for(int i=0; i < 5; ++i)
+    {
+        GTEST_ASSERT_GT(timescale, 1);
+        controller.OnFrame();
+    }
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
+    GTEST_ASSERT_EQ(timescale, 1);
+}
+
+TEST(Controller, PlayDoesntTimescale)
+{
+    srctas::ScriptController controller;
+    float timescale = 1;
+    controller.m_fSetTimeScale = [&timescale](float t) 
+    {
+        timescale = t;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Play();
+    for(int i=0; i < 2; ++i)
+    {
+        GTEST_ASSERT_EQ(timescale, 1);
+        controller.OnFrame();
+    }
+}
+
+TEST(Controller, PauseWorks)
+{
+    srctas::ScriptController controller;
+    float timescale = 1;
+    controller.m_fSetTimeScale = [&timescale](float t) 
+    {
+        timescale = t;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Play();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    controller.Pause();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
+    controller.Pause();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
 }
