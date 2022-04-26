@@ -13,5 +13,5 @@ namespace srctas
 		static CommandArg ParseArg(const char*& command);
 	};
 
-	void RemoveKeyCode(char* command);
+	void DLL_EXPORT RemoveKeyCode(char* command);
 } // namespace srctas

@@ -412,7 +412,7 @@ TEST(Controller, CanOverridePause)
     controller.OnFrame();
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
-    controller.OnFrame(srctas::PauseState::Unpaused); // Extra tick here does something, we have specified we aren't paused
+    controller.OnFrame(); // Extra tick here does something, we have specified we aren't paused
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 3);
 }
 
@@ -550,4 +550,36 @@ TEST(Controller, PauseWorks)
     controller.Pause();
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
+}
+
+TEST(Controller, RecordDoesntMultiplyCommands)
+{
+    srctas::ScriptController controller;
+    std::string output;
+    controller.m_fExecConCmd = [&output](const char* cmd) { output = cmd; };
+
+    auto error = controller.InitEmptyScript("test");
+    controller.Record_Start();
+    controller.OnCommandExecuted("map c1a0");
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(output, "");
+}
+
+
+TEST(Controller, PausedRecordsCommands)
+{
+    srctas::ScriptController controller;
+    std::string output;
+    controller.m_fExecConCmd = [&output](const char* cmd) { output = cmd; };
+
+    auto error = controller.InitEmptyScript("test");
+    controller.m_bAutoPause = false;
+    controller.OnFrame();
+    controller.SetPaused(true);
+    controller.OnCommandExecuted("map c1a0");
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(output, "");
+    controller.SetPaused(false);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(output.empty(), false);
 }

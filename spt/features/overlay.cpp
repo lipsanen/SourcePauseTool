@@ -1,5 +1,5 @@
 #include "stdafx.h"
-
+#include "signals.hpp"
 #include "convar.hpp"
 
 ConVar _y_spt_overlay("_y_spt_overlay",
@@ -70,6 +70,8 @@ void Overlay::LoadFeature()
 {
 	if (ORIG_CViewRender__RenderView != nullptr && ORIG_CViewRender__Render != nullptr)
 	{
+		CViewRender__RenderViewSignal.Works = true;
+
 		InitConcommandBase(_y_spt_overlay);
 		InitConcommandBase(_y_spt_overlay_type);
 		InitConcommandBase(_y_spt_overlay_portal);
@@ -154,6 +156,11 @@ void __fastcall Overlay::HOOKED_CViewRender__RenderView(void* thisptr,
 			{
 				g_OverlayRenderer.modifyBigScreenFlags(nClearFlags, whatToDraw);
 			}
+		}
+
+		if (!spt_overlay.renderingOverlay)
+		{
+			CViewRender__RenderViewSignal(cameraView, nClearFlags, whatToDraw);
 		}
 
 		spt_overlay.ORIG_CViewRender__RenderView(thisptr, edx, cameraView, nClearFlags, whatToDraw);

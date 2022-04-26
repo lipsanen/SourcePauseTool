@@ -24,11 +24,6 @@ namespace srctas
 		bool valid = false;
 	};
 
-	enum class PauseState
-	{
-		Auto, Paused, Unpaused
-	};
-
 	// Add error handling stuff to interface
 	class DLL_EXPORT ScriptController
 	{
@@ -46,17 +41,17 @@ namespace srctas
 		bool LastTick();
 		FrameBulkState GetCurrentFramebulk();
 		Error Play();
-		Error Pause(PauseState state = PauseState::Auto);
+		Error Pause();
 		Error Record_Start();
 		Error Record_Stop();
 		Error Skip(int tick, float timescale=9999);
 		Error Stop();
 		bool ShouldPause();
 		int GetPlayState();
-		bool IsRecording(PauseState pauseState = PauseState::Auto);
+		bool IsRecording();
 		Error TEST_Advance(int ticks);
 
-		Error OnFrame(PauseState pauseState = PauseState::Auto);
+		Error OnFrame();
 		Error OnMove(float pos[3], float ang[3]);
 		Error OnCommandExecuted(const char* commandsExecuted);
 
@@ -69,6 +64,8 @@ namespace srctas
 		int m_iCurrentFramebulkIndex = 0;
 		int m_iTargetTick = -2;
 		bool m_bScriptInit = false;
+		bool m_bPaused = false;
+		bool m_bAutoPause = true;
 		std::vector<MoveHistory> m_vecMoves;
 		std::function<void(const char*)> m_fExecConCmd = nullptr;
 		std::function<void(float)> m_fSetTimeScale = nullptr;
@@ -76,9 +73,10 @@ namespace srctas
 		std::function<void()> m_fResetView = nullptr;
 		std::function<int()> m_fRewindState = nullptr;
 
+		void SetPaused(bool paused) { m_bPaused = paused; }
+
 	private:
 		Error Advance(int ticks);
-		bool m_bPaused = false;
 		Error OnFrame_Playing();
 		Error OnFrame_Recording();
 		Error OnFrame_Paused();

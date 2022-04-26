@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="framebulk.cpp" />
+    <ClCompile Include="parsing_test.cpp" />
     <ClCompile Include="script_test.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="test_controller.cpp" />

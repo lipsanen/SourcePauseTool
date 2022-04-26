@@ -344,19 +344,12 @@ namespace srctas
 		return error;
 	}
 
-	Error ScriptController::Pause(PauseState state)
+	Error ScriptController::Pause()
 	{
 		CHECK_INIT();
 		Error error;
 
-		bool paused;
-
-		if(state == PauseState::Auto)
-			paused = ShouldPause();
-		else
-			paused = state == PauseState::Paused;
-
-		if (paused)
+		if (m_bPaused)
 		{
 			int ticks = GetTotalTicks(error);
 			if(error.m_bError)
@@ -411,7 +404,7 @@ namespace srctas
 		return Error();
 	}
 
-	Error ScriptController::OnFrame(PauseState pauseState)
+	Error ScriptController::OnFrame()
 	{
 		Error err;
 		if (!m_bScriptInit)
@@ -421,8 +414,7 @@ namespace srctas
 		else
 		{
 			int state = GetPlayState();
-
-			if (pauseState == PauseState::Unpaused || state > 0)
+			if (!m_bPaused && state > 0)
 			{
 				err = OnFrame_Playing();
 			}
@@ -441,6 +433,11 @@ namespace srctas
 			}
 		}
 
+		if (m_bAutoPause)
+		{
+			SetPaused(ShouldPause());
+		}
+
 		return err;
 	}
 
@@ -454,19 +451,12 @@ namespace srctas
 		}
 	}
 
-	bool ScriptController::IsRecording(PauseState pauseState)
+	bool ScriptController::IsRecording()
 	{
 		if(!m_bScriptInit)
 			return false;
 
-		Error err;
-		bool paused;
-		if(pauseState == PauseState::Auto)
-			paused = ShouldPause();
-		else
-			paused = pauseState == PauseState::Paused;
-
-		if(!paused)
+		if(!m_bPaused)
 		{
 			return m_iTargetTick == PLAYING;
 		}
@@ -510,7 +500,8 @@ namespace srctas
 		if (m_iTargetTick <= m_iCurrentTick && m_iTargetTick >= 0)
 		{
 			m_fSetTimeScale(1);
-			return Pause(PauseState::Unpaused);
+			SetPaused(false);
+			return Pause();
 		}
 
 		return error;

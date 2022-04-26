@@ -12,6 +12,7 @@
 #include "playerio.hpp"
 #include "SDK\hl_movedata.h"
 #include "tier1\CommandBuffer.h"
+#include "view_shared.h"
 
 typedef bool(__fastcall* _CCommandBuffer__DequeueNextCommand)(CCommandBuffer* thisptr, int edx);
 typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
@@ -55,6 +56,44 @@ struct TASState
 	srctas::ScriptController controller;
 	QAngle m_prevAngle;
 	bool m_bAngleValid = false;
+	bool m_bSetView = false;
+	float m_currentAngle[3];
+	float m_currentPos[3];
+	int m_iRewindState = 0;
+
+	void SetView(float* pos, float* ang)
+	{
+		m_bSetView = true;
+		for (int i = 0; i < 3; ++i)
+		{
+			m_currentPos[i] = pos[i];
+			m_currentAngle[i] = ang[i];
+		}
+	}
+
+	void ResetView()
+	{
+		m_bSetView = false;
+	}
+
+	void SetupView(void* cameraView, int& nClearFlags, int& whatToDraw)
+	{
+		if(!m_bSetView)
+			return;
+
+		m_bSetView = false;
+		CViewSetup* view = reinterpret_cast<CViewSetup*>(&cameraView);
+		for (int i = 0; i < 3; ++i)
+		{
+			view->origin[i] = m_currentPos[i];
+			view->angles[i] = m_currentAngle[i];
+		}
+	}
+
+	int GetRewindState()
+	{
+		return m_iRewindState;
+	}
 };
 
 static TASState tas_state;
@@ -84,19 +123,14 @@ void NewTASFeature::UnloadFeature() {}
 
 void NewTASFeature::OnFrame()
 {
-	srctas::Error error = tas_state.controller.OnFrame();
+	srctas::Error error;
+	error = tas_state.controller.OnFrame();
+
 	if(error.m_bError)
 	{
 		DevWarning(error.m_sMessage.c_str());
 		return;
 	}
-	error = srctas::Error();
-	auto cmd = tas_state.controller.GetCommandForCurrentTick(error);
-
-	if (error.m_bError)
-		DevWarning(error.m_sMessage.c_str());
-	else if(!cmd.empty())
-		EngineConCmd(cmd.c_str());
 }
 
 static char* ToString(const CCommand& command)
@@ -142,7 +176,7 @@ static bool IsRecordable(const CCommand& command)
 
 CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
 {
-	if(tas_state.controller.m_bPaused && !spt_pause.InLoad())
+	if(tas_state.controller.ShouldPause() && !spt_pause.InLoad())
 	{
 		*spt_tas.pHost_Realtime += dt;
 		*spt_tas.pHost_Frametime = 0;
@@ -158,7 +192,7 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 	CHLMoveData* mv = reinterpret_cast<CHLMoveData*>(pMove);
 	QAngle newAngle;
 
-	if (tas_state.controller.m_bRecording)
+	if (tas_state.controller.IsRecording())
 	{
 		bool angleChanged = false;
 		newAngle = mv->m_vecAngles;
@@ -191,7 +225,7 @@ bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CComman
 	if (rval)
 	{
 		auto command = thisptr->GetCommand();
-		if (tas_state.controller.m_bRecording && IsRecordable(command))
+		if (tas_state.controller.IsRecording() && IsRecordable(command))
 		{
 			const char* cmd = ToString(command);
 			tas_state.controller.OnCommandExecuted(cmd);
@@ -293,11 +327,30 @@ CON_COMMAND(tas_stop, "Stops TAS playback.")
 	}
 }
 
+static void TAS_Forward(const CCommand& args)
+{
+	tas_state.m_iRewindState += 1;
+}
+
+static void TAS_Backward(const CCommand& args)
+{
+	tas_state.m_iRewindState -= 1;
+}
+
+static ConCommand TAS_PlusForward("+tas_backward", TAS_Backward, "Go forward in TAS");
+static ConCommand TAS_MinusForward("-tas_backward", TAS_Forward, "Go forward in TAS");
+static ConCommand TAS_PlusBackward("+tas_forward", TAS_Forward, "Go forward in TAS");
+static ConCommand TAS_MinusBackward("-tas_forward", TAS_Backward, "Go forward in TAS");
+
 void NewTASFeature::LoadFeature()
 {
 	if (FrameSignal.Works)
 	{
 		tas_state.controller.m_fExecConCmd = EngineConCmd;
+		tas_state.controller.m_fResetView = []() { tas_state.ResetView(); };
+		tas_state.controller.m_fSetView = [](float* pos, float* ang) { tas_state.SetView(pos, ang); };
+		tas_state.controller.m_fRewindState = []() { return tas_state.GetRewindState(); };
+
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
 		InitCommand(tas_init);
 		InitCommand(tas_load);
@@ -309,6 +362,10 @@ void NewTASFeature::LoadFeature()
 		InitCommand(tas_skip);
 		InitConcommandBase(tas_loop_cmd);
 		InitConcommandBase(tas_record_optimizebulks);
+		InitConcommandBase(TAS_PlusForward);
+		InitConcommandBase(TAS_MinusForward);
+		InitConcommandBase(TAS_PlusBackward);
+		InitConcommandBase(TAS_MinusBackward);
 	}
 
 	if (ORIG__Host_RunFrame)

@@ -13,3 +13,4 @@ extern Gallant::Signal3<void*, int, bool> SetPausedSignal;
 extern Gallant::Signal1<bool> SV_ActivateServerSignal;
 extern Gallant::Signal1<uintptr_t> CreateMoveSignal;
 extern Gallant::Signal0<void> VagCrashSignal;
+extern Gallant::Signal3<void*, int&, int&> CViewRender__RenderViewSignal;
