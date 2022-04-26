@@ -47,13 +47,14 @@ namespace srctas
 		Error Skip(int tick, float timescale=9999);
 		Error Stop();
 		bool ShouldPause();
+		bool ShouldAbductCommand();
 		int GetPlayState();
 		bool IsRecording();
 		Error TEST_Advance(int ticks);
-
 		Error OnFrame();
 		Error OnMove(float pos[3], float ang[3]);
 		Error OnCommandExecuted(const char* commandsExecuted);
+		void SetRewindState(int state);
 
 		Script m_sScript;
 		std::string m_sFilepath;
@@ -71,15 +72,13 @@ namespace srctas
 		std::function<void(float)> m_fSetTimeScale = nullptr;
 		std::function<void(float*, float*)> m_fSetView = nullptr;
 		std::function<void()> m_fResetView = nullptr;
-		std::function<int()> m_fRewindState = nullptr;
-
 		void SetPaused(bool paused) { m_bPaused = paused; }
 
 	private:
 		Error Advance(int ticks);
 		Error OnFrame_Playing();
 		Error OnFrame_Recording();
-		Error OnFrame_Paused();
+		Error OnFrame_Paused(int state);
 		void OnFrame_HandleEdits();
 		void _ResetState();
 		void _ForwardAdvance(int ticks);

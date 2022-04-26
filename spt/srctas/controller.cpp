@@ -6,7 +6,7 @@
 namespace srctas
 {
 	const int NOT_PLAYING = -2;
-	const int PLAYING = -1;
+	const int PLAY_TO_END = -1;
 
 	#define CHECK_INIT() if(!m_bScriptInit) \
 	{ \
@@ -22,7 +22,6 @@ namespace srctas
 		m_fSetTimeScale = [](auto a) {};
 		m_fSetView = [](auto a, auto b) {};
 		m_fResetView = []() {};
-		m_fRewindState = []() { return 0; };
 	}
 
 	Error ScriptController::InitEmptyScript(const char* filepath)
@@ -137,6 +136,7 @@ namespace srctas
 		m_iCurrentFramebulkIndex = 0;
 		m_iLastValidTick = 0;
 		m_fSetTimeScale(1);
+		m_bPaused = false;
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -242,6 +242,26 @@ namespace srctas
 		}
 
 		return error;
+	}
+
+	void ScriptController::SetRewindState(int rewind)
+	{
+		if(!m_bScriptInit)
+			return;
+
+		if(rewind > 0)
+		{
+			m_iTargetTick = std::max(m_iCurrentTick + 1, 0);
+		}
+		else if(rewind < 0)
+		{
+			m_iTargetTick = std::max(m_iCurrentTick - 1, 0);
+		}
+
+		if(m_bAutoPause)
+		{
+			SetPaused(ShouldPause());
+		}
 	}
 
 	std::string ScriptController::GetCommandForCurrentTick(Error& error)
@@ -351,14 +371,16 @@ namespace srctas
 
 		if (m_bPaused)
 		{
-			int ticks = GetTotalTicks(error);
-			if(error.m_bError)
-				return error;
-			error = Skip(ticks, 1);
+			m_iTargetTick = PLAY_TO_END;
 		}
 		else
 		{
 			m_iTargetTick = m_iCurrentTick;
+		}
+
+		if(m_bAutoPause)
+		{
+			SetPaused(ShouldPause());
 		}
 
 		return error;
@@ -367,7 +389,7 @@ namespace srctas
 	Error ScriptController::Record_Start()
 	{
 		CHECK_INIT();
-		m_iTargetTick = PLAYING;
+		m_iTargetTick = PLAY_TO_END;
 		return Error();
 	}
 
@@ -394,6 +416,11 @@ namespace srctas
 		m_iTargetTick = tick;
 		m_fSetTimeScale(timescale);
 
+		if (m_bAutoPause)
+		{
+			SetPaused(ShouldPause());
+		}
+
 		return Error();
 	}
 
@@ -407,30 +434,36 @@ namespace srctas
 	Error ScriptController::OnFrame()
 	{
 		Error err;
-		if (!m_bScriptInit)
-		{
-			m_fResetView();
-		}
-		else
+		bool setview = false;
+
+		if(m_bScriptInit && m_iTargetTick != NOT_PLAYING)
 		{
 			int state = GetPlayState();
-			if (!m_bPaused && state > 0)
-			{
-				err = OnFrame_Playing();
-			}
-			else if (state <= 0)
-			{
-				err = OnFrame_Paused();
-			}
+			if(state > 0)
+				OnFrame_HandleEdits();
 
-			if(m_iCurrentTick != m_iCurrentPlaybackTick && m_iCurrentTick < m_vecMoves.size() && m_vecMoves[m_iCurrentTick].valid)
+			if (!m_bPaused)
 			{
-				m_fSetView(m_vecMoves[m_iCurrentTick].pos, m_vecMoves[m_iCurrentTick].ang);
+				if(IsRecording())
+					err = OnFrame_Recording();
+				else
+					err = OnFrame_Playing();
 			}
 			else
 			{
-				m_fResetView();
+				err = OnFrame_Paused(state);
+
+				if(m_iCurrentTick != m_iCurrentPlaybackTick && m_iCurrentTick < m_vecMoves.size() && m_vecMoves[m_iCurrentTick].valid)
+				{
+					m_fSetView(m_vecMoves[m_iCurrentTick].pos, m_vecMoves[m_iCurrentTick].ang);
+					setview = true;
+				}
 			}
+		}
+
+		if(!setview)
+		{
+			m_fResetView();
 		}
 
 		if (m_bAutoPause)
@@ -458,7 +491,7 @@ namespace srctas
 
 		if(!m_bPaused)
 		{
-			return m_iTargetTick == PLAYING;
+			return m_iTargetTick == PLAY_TO_END;
 		}
 		else
 		{
@@ -473,8 +506,6 @@ namespace srctas
 
 	Error ScriptController::OnFrame_Playing()
 	{
-		OnFrame_HandleEdits();
-
 		if(m_iCurrentTick < m_iCurrentPlaybackTick)
 		{
 			Advance(1);
@@ -500,8 +531,6 @@ namespace srctas
 		if (m_iTargetTick <= m_iCurrentTick && m_iTargetTick >= 0)
 		{
 			m_fSetTimeScale(1);
-			SetPaused(false);
-			return Pause();
 		}
 
 		return error;
@@ -515,10 +544,8 @@ namespace srctas
 		return Error();
 	}
 
-	Error ScriptController::OnFrame_Paused()
+	Error ScriptController::OnFrame_Paused(int state)
 	{
-		int state = m_fRewindState();
-
 		if (state < 0)
 		{
 			Advance(-1);
@@ -552,29 +579,22 @@ namespace srctas
 
 	int ScriptController::GetPlayState()
 	{
-		int rewind = m_fRewindState();
-
-		if(rewind != 0)
-		{
-			return rewind;
-		}
-
 		if(m_iTargetTick == NOT_PLAYING)
 		{
 			return 0;
 		}
 
-		if(m_iCurrentTick != m_iCurrentPlaybackTick)
+		if(m_iCurrentTick < m_iTargetTick)
 		{
-			return 0;
+			return 1;
 		}
-		else if(m_iCurrentTick == m_iTargetTick)
+		else if(m_iTargetTick == m_iCurrentTick)
 		{
 			return 0;
 		}
 		else
 		{
-			return 1;
+			return -1;
 		}
 	}
 
@@ -585,7 +605,7 @@ namespace srctas
 
 		int state = GetPlayState();
 
-		if(m_iCurrentPlaybackTick == 0 && m_iTargetTick == NOT_PLAYING)
+		if(m_iTargetTick < 0)
 		{
 			return false;
 		}
@@ -599,5 +619,12 @@ namespace srctas
 			return state <= 0;
 		}
 
+	}
+
+	bool ScriptController::ShouldAbductCommand()
+	{
+		if(!m_bScriptInit)
+			return false;
+		return m_bPaused && IsRecording();
 	}
 } // namespace srctas

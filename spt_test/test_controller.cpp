@@ -268,19 +268,14 @@ TEST(Controller, RewindWorks)
     srctas::ScriptController controller;
     auto error = controller.LoadFromFile("./test_scripts/basic.src2tas");
     std::string executed;
-    int rewind = 0;
-    controller.m_fRewindState = [&rewind]() 
-    {
-        return rewind;
-    };
 
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
 
-    rewind = 1;
+    controller.SetRewindState(1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
 
-    rewind = -1;
+    controller.SetRewindState(-1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
 }
@@ -299,11 +294,6 @@ TEST(Controller, CameraWorks)
 
     float pos[3] = {-999, -999, -999};
     float ang[3] = {-999, -999, -999};
-
-    controller.m_fRewindState = [&rewind]() 
-    {
-        return rewind;
-    };
 
     controller.m_fResetView = [&pos, &ang]()
     {
@@ -327,46 +317,43 @@ TEST(Controller, CameraWorks)
 
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
 
-    rewind = 1;
+    controller.SetRewindState(1);
     controller.OnMove(pos1, ang1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(pos[0], -1); // Should reset view
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), false);
 
+    controller.SetRewindState(1);
     controller.OnMove(pos2, ang2);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), false);
 
-    rewind = -1;
+    controller.SetRewindState(-1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
     GTEST_ASSERT_EQ(pos[0], 1);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
 
+    controller.SetRewindState(-1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
     GTEST_ASSERT_EQ(pos[0], 0);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
 
     // Extra rewind should do nothing, already at the beginning
+    controller.SetRewindState(-1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
     GTEST_ASSERT_EQ(pos[0], 0);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
 
     // Rewind forwards again
-    rewind = 1;
+    controller.SetRewindState(1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
     GTEST_ASSERT_EQ(pos[0], 1);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), true);
 
+    controller.SetRewindState(1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
     GTEST_ASSERT_EQ(pos[0], -1);
-    GTEST_ASSERT_EQ(controller.ShouldPause(), false); // Should be unpaused now, we are live
 }
 
 TEST(Controller, DoesNotAutoPlay)
@@ -412,7 +399,8 @@ TEST(Controller, CanOverridePause)
     controller.OnFrame();
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 2);
-    controller.OnFrame(); // Extra tick here does something, we have specified we aren't paused
+    controller.SetPaused(false);
+    controller.OnFrame(); // Extra tick here does something, we have set paused to false
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 3);
 }
 
@@ -448,23 +436,19 @@ TEST(Controller, SkipJumpsToPlaybackTick)
 TEST(Controller, PlaybackAutoRollsback)
 {
     srctas::ScriptController controller;
-    int rewind = 0;
-    controller.m_fRewindState = [&rewind]() 
-    {
-        return rewind;
-    };
-
     auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
     controller.Skip(5);
     for(int i=0; i < 5; ++i)
         controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
-    rewind = -1;
     for(int i=0; i < 4; ++i)
+    {
+        controller.SetRewindState(-1);
         controller.OnFrame();
+    }
     controller.OnCommandExecuted("echo test");
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
-    rewind = 1;
+    controller.SetRewindState(1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 1);
     GTEST_ASSERT_EQ(controller.m_iCurrentPlaybackTick, 1);
@@ -475,20 +459,17 @@ TEST(Controller, PlaybackDoesNotRollbackBad)
 {
     srctas::ScriptController controller;
     int rewind = 0;
-    controller.m_fRewindState = [&rewind]() 
-    {
-        return rewind;
-    };
 
     auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
     controller.Skip(5);
     for(int i=0; i < 5; ++i)
         controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
-    rewind = -1;
+    controller.SetRewindState(-1);
     controller.OnFrame();
     controller.OnCommandExecuted("echo test");
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 4);
+    controller.SetRewindState(-1);
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 3);
 }
@@ -565,7 +546,6 @@ TEST(Controller, RecordDoesntMultiplyCommands)
     GTEST_ASSERT_EQ(output, "");
 }
 
-
 TEST(Controller, PausedRecordsCommands)
 {
     srctas::ScriptController controller;
@@ -574,12 +554,32 @@ TEST(Controller, PausedRecordsCommands)
 
     auto error = controller.InitEmptyScript("test");
     controller.m_bAutoPause = false;
-    controller.OnFrame();
+    controller.Play();
+    controller.Pause();
     controller.SetPaused(true);
+    controller.OnFrame();
     controller.OnCommandExecuted("map c1a0");
     controller.OnFrame();
     GTEST_ASSERT_EQ(output, "");
     controller.SetPaused(false);
     controller.OnFrame();
     GTEST_ASSERT_EQ(output.empty(), false);
+}
+
+
+TEST(Controller, PauseAbductsCommands)
+{
+    srctas::ScriptController controller;
+    std::string output;
+    controller.m_fExecConCmd = [&output](const char* cmd) { output = cmd; };
+
+    auto error = controller.InitEmptyScript("test");
+    controller.m_bAutoPause = false;
+    GTEST_ASSERT_EQ(controller.ShouldAbductCommand(), false);
+    controller.Play();
+    controller.Pause();
+    controller.SetPaused(true);
+    GTEST_ASSERT_EQ(controller.ShouldAbductCommand(), true);
+    controller.SetPaused(false);
+    GTEST_ASSERT_EQ(controller.ShouldAbductCommand(), false);
 }
