@@ -6,6 +6,7 @@ TEST(Controller, AddFrameBulkWorks)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(error.m_bError, false);
     error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(error.m_bError, false);
@@ -24,6 +25,7 @@ TEST(Controller, FrameBulkSplittingWorks)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(false, error.m_bError);
     error = controller.TEST_Advance(10);
     std::cout << error.m_sMessage << std::endl;
@@ -42,6 +44,7 @@ TEST(Controller, FrameBulkAdvanceWorks)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(false, error.m_bError);
     error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
@@ -56,6 +59,7 @@ TEST(Controller, FrameBulkAdvanceWorksNegative)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(false, error.m_bError);
     error = controller.OnCommandExecuted("+tas_strafe;+attack");
     GTEST_ASSERT_EQ(false, error.m_bError);
@@ -72,6 +76,7 @@ TEST(Controller, FrameBulkSplittingWorks2)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(false, error.m_bError);
     error = controller.TEST_Advance(10);
     GTEST_ASSERT_EQ(false, error.m_bError);
@@ -94,6 +99,7 @@ TEST(Controller, FrameBulkSplittingWorks3)
     srctas::ScriptController controller;
     srctas::Error error;
     error = controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     GTEST_ASSERT_EQ(false, error.m_bError);
     error = controller.TEST_Advance(10);
     GTEST_ASSERT_EQ(false, error.m_bError);
@@ -115,6 +121,7 @@ TEST(Controller, FrameBulkSplittingWorks4)
 {
     srctas::ScriptController controller;
     controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     controller.TEST_Advance(10);
     controller.OnCommandExecuted("+tas_strafe;+attack");
     controller.TEST_Advance(-1);
@@ -134,6 +141,7 @@ TEST(Controller, FrameBulkSplittingWorks5)
 {
     srctas::ScriptController controller;
     controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     controller.TEST_Advance(100);
     controller.OnCommandExecuted("+forward");
     controller.TEST_Advance(200);
@@ -153,6 +161,7 @@ TEST(Controller, FrameBulkHistoryWorks)
     srctas::ScriptController controller;
     srctas::Error error;
     controller.InitEmptyScript("/tmp/test.src2tas");
+    controller.Record_Start();
     controller.TEST_Advance(10);
     controller.OnCommandExecuted("+tas_strafe;+attack");
     controller.TEST_Advance(-1);
@@ -582,4 +591,27 @@ TEST(Controller, PauseAbductsCommands)
     GTEST_ASSERT_EQ(controller.ShouldAbductCommand(), true);
     controller.SetPaused(false);
     GTEST_ASSERT_EQ(controller.ShouldAbductCommand(), false);
+}
+
+TEST(Controller, RecordingPlayback)
+{
+    srctas::ScriptController controller;
+    std::string commands;
+    int count = 0;
+
+    controller.m_fExecConCmd = [&count, &commands](auto cmd) {
+        commands = cmd;
+        ++count;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/recording.src2tas");
+    controller.OnCommandExecuted("tas_play");
+    controller.Play();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(count, 1);
+    GTEST_ASSERT_EQ(commands, ";map testchmb_a_06;host_framerate 0.015;y_spt_autojump 1;fps_max 66.6666;sv_cheats 1");
+    commands.clear();
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(count, 1);
+    GTEST_ASSERT_EQ(commands, "");
 }

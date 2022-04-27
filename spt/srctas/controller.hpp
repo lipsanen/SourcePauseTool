@@ -67,6 +67,7 @@ namespace srctas
 		bool m_bScriptInit = false;
 		bool m_bPaused = false;
 		bool m_bAutoPause = true;
+		bool m_bRecording = false;
 		std::vector<MoveHistory> m_vecMoves;
 		std::function<void(const char*)> m_fExecConCmd = nullptr;
 		std::function<void(float)> m_fSetTimeScale = nullptr;

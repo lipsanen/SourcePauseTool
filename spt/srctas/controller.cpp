@@ -137,6 +137,7 @@ namespace srctas
 		m_iLastValidTick = 0;
 		m_fSetTimeScale(1);
 		m_bPaused = false;
+		m_bRecording = false;
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -171,6 +172,9 @@ namespace srctas
 		CHECK_INIT();
 
 		Error error;
+
+		if(!IsRecording())
+			return error;
 
 		if (m_iCurrentFramebulkIndex < 0)
 		{
@@ -389,6 +393,7 @@ namespace srctas
 	Error ScriptController::Record_Start()
 	{
 		CHECK_INIT();
+		m_bRecording = true;
 		m_iTargetTick = PLAY_TO_END;
 		return Error();
 	}
@@ -396,6 +401,7 @@ namespace srctas
 	Error ScriptController::Record_Stop()
 	{
 		CHECK_INIT();
+		m_bRecording = false;
 		m_iTargetTick = m_iCurrentTick;
 		return Error();
 	}
@@ -489,14 +495,7 @@ namespace srctas
 		if(!m_bScriptInit)
 			return false;
 
-		if(!m_bPaused)
-		{
-			return m_iTargetTick == PLAY_TO_END;
-		}
-		else
-		{
-			return true;
-		}
+		return m_bRecording;
 	}
 
 	Error ScriptController::TEST_Advance(int ticks)

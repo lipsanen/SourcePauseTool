@@ -61,6 +61,11 @@ struct TASState
 	float m_currentPos[3];
 	int m_iRewindState = 0;
 
+	TASState()
+	{
+		controller.m_bAutoPause = false;
+	}
+
 	void SetView(float* pos, float* ang)
 	{
 		m_bSetView = true;
@@ -82,7 +87,7 @@ struct TASState
 			return;
 
 		m_bSetView = false;
-		CViewSetup* view = reinterpret_cast<CViewSetup*>(&cameraView);
+		CViewSetup* view = reinterpret_cast<CViewSetup*>(cameraView);
 		for (int i = 0; i < 3; ++i)
 		{
 			view->origin[i] = m_currentPos[i];
@@ -125,6 +130,7 @@ void NewTASFeature::OnFrame()
 {
 	srctas::Error error;
 	error = tas_state.controller.OnFrame();
+	tas_state.controller.SetRewindState(tas_state.m_iRewindState);
 
 	if(error.m_bError)
 	{
@@ -180,9 +186,11 @@ CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
 	{
 		*spt_tas.pHost_Realtime += dt;
 		*spt_tas.pHost_Frametime = 0;
+		tas_state.controller.SetPaused(true);
 	}
 	else
 	{
+		tas_state.controller.SetPaused(false);
 		spt_tas.ORIG_Host_AccumulateTime(dt);
 	}
 }
@@ -214,6 +222,17 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 
 		tas_state.m_bAngleValid = true;
 		tas_state.m_prevAngle = mv->m_vecAngles;
+	}
+
+	if (tas_state.controller.GetPlayState() > 0)
+	{
+		float pos[3];
+		float ang[3];
+		Vector temp = mv->GetAbsOrigin();
+		for (int i = 0; i < 3; ++i)
+			pos[i] = temp[i];
+		EngineGetViewAngles(ang);
+		tas_state.controller.OnMove(pos, ang);
 	}
 
 	spt_tas.ORIG_ProcessMovement(thisptr, edx, pPlayer, pMove);
@@ -349,7 +368,6 @@ void NewTASFeature::LoadFeature()
 		tas_state.controller.m_fExecConCmd = EngineConCmd;
 		tas_state.controller.m_fResetView = []() { tas_state.ResetView(); };
 		tas_state.controller.m_fSetView = [](float* pos, float* ang) { tas_state.SetView(pos, ang); };
-		tas_state.controller.m_fRewindState = []() { return tas_state.GetRewindState(); };
 
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
 		InitCommand(tas_init);
@@ -366,6 +384,11 @@ void NewTASFeature::LoadFeature()
 		InitConcommandBase(TAS_MinusForward);
 		InitConcommandBase(TAS_PlusBackward);
 		InitConcommandBase(TAS_MinusBackward);
+	}
+
+	if(CViewRender__RenderViewSignal.Works)
+	{
+		CViewRender__RenderViewSignal.Connect(&tas_state, &TASState::SetupView);
 	}
 
 	if (ORIG__Host_RunFrame)
