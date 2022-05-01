@@ -138,6 +138,7 @@ namespace srctas
 		m_fSetTimeScale(1);
 		m_bPaused = false;
 		m_bRecording = false;
+		m_recordingNewBulk = FrameBulk();
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -167,21 +168,24 @@ namespace srctas
 		SetToTick(std::max(0, m_iCurrentTick - ticks));
 	}
 
-	Error ScriptController::OnCommandExecuted(const char* commandsExecuted)
+	void ScriptController::_AddRecordingBulk()
 	{
-		CHECK_INIT();
+		auto cmd = m_recordingNewBulk.GetCommand();
+
+		// Ignore empty bulks
+		if(cmd.empty())
+		{
+			// Extend the current bulk if we are recording
+			if (m_sScript.m_vFrameBulks.size() != 0 && IsRecording())
+			{
+				m_sScript.m_vFrameBulks[m_iCurrentFramebulkIndex].m_iTicks =
+				    m_iTickInBulk;
+			}
+
+			return;
+		}
 
 		Error error;
-
-		if(!IsRecording())
-			return error;
-
-		if (m_iCurrentFramebulkIndex < 0)
-		{
-			error.m_sMessage = "Tried to add commands while no framebulk selected";
-			error.m_bError = true;
-			return error;
-		}
 
 		if (m_sScript.m_vFrameBulks.size() == 0)
 		{
@@ -192,12 +196,10 @@ namespace srctas
 				FrameBulk bulk;
 				bulk.m_iTicks = m_iCurrentTick;
 				m_sScript.m_vFrameBulks.push_back(bulk);
-				m_sScript.m_vFrameBulks.push_back(FrameBulk());
+				++m_iCurrentFramebulkIndex;
 			}
-			else
-			{
-				m_sScript.m_vFrameBulks.push_back(FrameBulk());
-			}
+
+			m_sScript.m_vFrameBulks.push_back(m_recordingNewBulk);
 		}
 		else
 		{
@@ -206,8 +208,8 @@ namespace srctas
 			if (m_iTickInBulk >= ticksInCurrentBulk)
 			{
 				m_sScript.m_vFrameBulks[m_iCurrentFramebulkIndex].m_iTicks =
-				    m_iTickInBulk; // Extend the previous tick bulk to this one
-				m_sScript.m_vFrameBulks.push_back(FrameBulk());
+				    m_iTickInBulk;
+				m_sScript.m_vFrameBulks.push_back(m_recordingNewBulk);
 			}
 			else if (m_iTickInBulk > 0)
 			{
@@ -217,33 +219,22 @@ namespace srctas
 				m_sScript.m_vFrameBulks[m_iCurrentFramebulkIndex].m_iTicks =
 				    m_iTickInBulk; // Fix the old tick count
 
-				FrameBulk bulk;
-				bulk.m_iTicks = remainingTicks;
+				m_recordingNewBulk.m_iTicks = remainingTicks;
 				auto iterator = m_sScript.m_vFrameBulks.begin() + m_iCurrentFramebulkIndex + 1;
-				m_sScript.m_vFrameBulks.insert(iterator, bulk);
+				m_sScript.m_vFrameBulks.insert(iterator, m_recordingNewBulk);
 			}
+			++m_iCurrentFramebulkIndex;
 		}
 
-		// Use this sledgehammer to fix the bulk indexing.
-		// Could be done faster, but this is the most idiot proof way
-		SetToTick(m_iCurrentTick);
-		auto state = GetCurrentFramebulk();
+		m_iTickInBulk = 0;		
+	}
 
-		if(m_iCurrentTick != m_iCurrentPlaybackTick)
-		{
-			m_iLastValidTick = std::min(m_iLastValidTick, m_iCurrentTick); // Current playback no longer valid
-		}
+	Error ScriptController::OnCommandExecuted(const char* commandsExecuted)
+	{
+		CHECK_INIT();
+		Error error;
 
-		if (state.m_sCurrent == nullptr)
-		{
-			error.m_bError = true;
-			error.m_sMessage =
-			    "Controller state machine broke, can't find the framebulk to add commands to";
-		}
-		else
-		{
-			state.m_sCurrent->ApplyCommand(commandsExecuted);
-		}
+		m_recordingNewBulk.ApplyCommand(commandsExecuted);
 
 		return error;
 	}
@@ -335,7 +326,9 @@ namespace srctas
 	bool ScriptController::LastTick()
 	{
 		Error err;
-		return GetCurrentTick(err) >= GetTotalTicks(err);
+		int current = GetCurrentTick(err);
+		int total = GetTotalTicks(err);
+		return current >= total;
 	}
 
 	FrameBulkState ScriptController::GetCurrentFramebulk()
@@ -393,6 +386,15 @@ namespace srctas
 	Error ScriptController::Record_Start()
 	{
 		CHECK_INIT();
+
+		if(!LastTick())
+		{
+			Error err;
+			err.m_bError = true;
+			err.m_sMessage = "Not at the end of the TAS, cannot start recording.";
+			return err;
+		}
+
 		m_bRecording = true;
 		m_iTargetTick = PLAY_TO_END;
 		return Error();
@@ -409,6 +411,14 @@ namespace srctas
 	Error ScriptController::Skip(int tick, float timescale)
 	{
 		CHECK_INIT();
+
+		Error err;
+
+		if(tick < 0)
+		{
+			int totalTicks = GetTotalTicks(err);
+			tick = totalTicks + tick + 1;
+		}
 
 		if(tick < m_iCurrentPlaybackTick || (m_iLastValidTick < tick && m_iLastValidTick != m_iCurrentPlaybackTick))
 		{
@@ -450,6 +460,8 @@ namespace srctas
 
 			if (!m_bPaused)
 			{
+				_AddRecordingBulk();
+				m_recordingNewBulk = FrameBulk();
 				if(IsRecording())
 					err = OnFrame_Recording();
 				else
@@ -496,11 +508,6 @@ namespace srctas
 			return false;
 
 		return m_bRecording;
-	}
-
-	Error ScriptController::TEST_Advance(int ticks)
-	{
-		return Advance(ticks);
 	}
 
 	Error ScriptController::OnFrame_Playing()

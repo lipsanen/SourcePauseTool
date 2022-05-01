@@ -50,7 +50,6 @@ namespace srctas
 		bool ShouldAbductCommand();
 		int GetPlayState();
 		bool IsRecording();
-		Error TEST_Advance(int ticks);
 		Error OnFrame();
 		Error OnMove(float pos[3], float ang[3]);
 		Error OnCommandExecuted(const char* commandsExecuted);
@@ -58,6 +57,7 @@ namespace srctas
 
 		Script m_sScript;
 		std::string m_sFilepath;
+		FrameBulk m_recordingNewBulk;
 		int m_iCurrentTick = 0;
 		int m_iCurrentPlaybackTick = 0;
 		int m_iLastValidTick = 0;
@@ -84,5 +84,6 @@ namespace srctas
 		void _ResetState();
 		void _ForwardAdvance(int ticks);
 		void _BackwardAdvance(int ticks);
+		void _AddRecordingBulk();
 	};
 } // namespace srctas
