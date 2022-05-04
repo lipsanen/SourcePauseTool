@@ -1,15 +1,17 @@
 #include "stdafx.h"
-#ifndef OE
 #include "..\feature.hpp"
 #include "command.hpp"
 #include "file.hpp"
+#include "generic.hpp"
 #include "interfaces.hpp"
+#include "math.hpp"
 #include "signals.hpp"
 #include "spt\srctas\controller.hpp"
 #include "spt\sptlib-wrapper.hpp"
 #include "string_utils.hpp"
 #include "pause.hpp"
 #include "playerio.hpp"
+#include "taslogging.hpp"
 #include "SDK\hl_movedata.h"
 #include "tier1\CommandBuffer.h"
 #include "view_shared.h"
@@ -21,7 +23,6 @@ ConVar tas_loop_cmd("tas_loop_cmd",
                     "",
                     0,
                     "This command is executed every frame when a TAS is played back or recorded\n");
-ConVar tas_log("tas_log", "0", 0, "If enabled, dumps a whole bunch of different stuff into the console.");
 ConVar tas_record_optimizebulks("tas_record_optimizebulks",
                                 "0",
                                 0,
@@ -120,7 +121,6 @@ void NewTASFeature::InitHooks()
 		auto vftable = *reinterpret_cast<void***>(interfaces::gm);
 		AddVFTableHook(VFTableHook(vftable, 1, (void*)HOOKED_ProcessMovement, (void**)&ORIG_ProcessMovement),
 		               "server");
-		InitConcommandBase(tas_log);
 	}
 }
 
@@ -182,7 +182,7 @@ static bool IsRecordable(const CCommand& command)
 
 CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
 {
-	if(tas_state.controller.ShouldPause() && !spt_pause.InLoad())
+	if(tas_state.controller.ShouldPause() && !spt_pause.InLoad() && spt_tas.ORIG__Host_RunFrame)
 	{
 		*spt_tas.pHost_Realtime += dt;
 		*spt_tas.pHost_Frametime = 0;
@@ -199,43 +199,60 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 {
 	CHLMoveData* mv = reinterpret_cast<CHLMoveData*>(pMove);
 	QAngle newAngle;
+	float ang[3];
+	float pos[3];
+	utils::VectorCopy(pos, spt_generic.GetCameraOrigin());
+	EngineGetViewAngles(ang);
+	tas_state.controller.OnMove(pos, ang);
 
 	if (tas_state.controller.IsRecording())
 	{
-		bool angleChanged = false;
-		newAngle = mv->m_vecAngles;
 
-		if (tas_state.m_bAngleValid)
-		{
-			angleChanged = (newAngle[0] != tas_state.m_prevAngle[0])
-			               || (newAngle[1] != tas_state.m_prevAngle[1])
-			               || (newAngle[2] != tas_state.m_prevAngle[2]);
-		}
-
-		if (!tas_state.m_bAngleValid || angleChanged || !tas_record_optimizebulks.GetBool())
-		{
 			tas_state.controller.OnCommandExecuted(
-			    FormatTempString("_y_spt_setyaw %s", FloatToCString(mv->m_vecAngles[YAW])));
+			    FormatTempString("_y_spt_setyaw %s", FloatToCString(ang[YAW])));
 			tas_state.controller.OnCommandExecuted(
-			    FormatTempString("_y_spt_setpitch %s", FloatToCString(mv->m_vecAngles[PITCH])));
-		}
-
-		tas_state.m_bAngleValid = true;
-		tas_state.m_prevAngle = mv->m_vecAngles;
+			    FormatTempString("_y_spt_setpitch %s", FloatToCString(ang[PITCH])));
 	}
 
-	if (tas_state.controller.GetPlayState() > 0)
-	{
-		float pos[3];
-		float ang[3];
-		Vector temp = mv->GetAbsOrigin();
-		for (int i = 0; i < 3; ++i)
-			pos[i] = temp[i];
-		EngineGetViewAngles(ang);
-		tas_state.controller.OnMove(pos, ang);
-	}
+	spt_taslogging.Log(
+	    "PRE ProcessMovement: POS (%.8f, %.8f, %.8f), ANG (%.8f, %.8f, %.8f), PUNCH (%.8f, %.8f, %.8f), VEL (%.8f, %.8f, %.8f), MOVE (%.8f, %.8f, %.8f), MAX %.8f",
+	    mv->GetAbsOrigin().x,
+	    mv->GetAbsOrigin().y,
+	    mv->GetAbsOrigin().z,
+	    mv->m_vecViewAngles.x,
+	    mv->m_vecViewAngles.y,
+	    mv->m_vecViewAngles.z,
+	    spt_playerio.m_vecPunchAngle.GetValue().x,
+	    spt_playerio.m_vecPunchAngle.GetValue().y,
+	    spt_playerio.m_vecPunchAngle.GetValue().z,
+	    mv->m_vecVelocity.x,
+	    mv->m_vecVelocity.y,
+	    mv->m_vecVelocity.z,
+	    mv->m_flForwardMove,
+	    mv->m_flSideMove,
+	    mv->m_flUpMove,
+	    mv->m_flMaxSpeed);
 
 	spt_tas.ORIG_ProcessMovement(thisptr, edx, pPlayer, pMove);
+
+	spt_taslogging.Log(
+	    "POST ProcessMovement: POS (%.8f, %.8f, %.8f), ANG (%.8f, %.8f, %.8f), PUNCH (%.8f, %.8f, %.8f), VEL (%.8f, %.8f, %.8f), MOVE (%.8f, %.8f, %.8f), MAX %.8f",
+	    mv->GetAbsOrigin().x,
+	    mv->GetAbsOrigin().y,
+	    mv->GetAbsOrigin().z,
+	    mv->m_vecViewAngles.x,
+	    mv->m_vecViewAngles.y,
+	    mv->m_vecViewAngles.z,
+	    spt_playerio.m_vecPunchAngle.GetValue().x,
+	    spt_playerio.m_vecPunchAngle.GetValue().y,
+	    spt_playerio.m_vecPunchAngle.GetValue().z,
+	    mv->m_vecVelocity.x,
+	    mv->m_vecVelocity.y,
+	    mv->m_vecVelocity.z,
+	    mv->m_flForwardMove,
+	    mv->m_flSideMove,
+	    mv->m_flUpMove,
+	    mv->m_flMaxSpeed);
 }
 
 bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CCommandBuffer* thisptr, int edx)
@@ -252,6 +269,18 @@ bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CComman
 	}
 
 	return rval;
+}
+
+CON_COMMAND(tas_freetimes, "print freetimes")
+{
+	for (int i = 0; i < 2048; ++i)
+	{
+		auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
+		if (ent)
+		{
+			Msg("%d: %f\n", i, ent->freetime);
+		}
+	}
 }
 
 CON_COMMAND_AUTOCOMPLETEFILE(
@@ -386,6 +415,8 @@ void NewTASFeature::LoadFeature()
 		InitConcommandBase(TAS_MinusBackward);
 	}
 
+	InitCommand(tas_freetimes);
+
 	if(CViewRender__RenderViewSignal.Works)
 	{
 		CViewRender__RenderViewSignal.Connect(&tas_state, &TASState::SetupView);
@@ -414,7 +445,3 @@ void NewTASFeature::LoadFeature()
 		InitCommand(tas_pause);
 	}
 }
-#else
-#include "convar.hpp"
-ConVar tas_log("tas_log", "0", 0, "If enabled, dumps a whole bunch of different stuff into the console.");
-#endif

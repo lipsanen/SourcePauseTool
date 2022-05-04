@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "generic.hpp"
+#include "ent_utils.hpp"
 #include "pause.hpp"
 #include "interfaces.hpp"
 #include "signals.hpp"
@@ -12,9 +13,11 @@ PauseFeature spt_pause;
 bool PauseFeature::InLoad()
 {
 	if (pM_bLoadgame)
-		return *pM_bLoadgame;
+	{
+		return !utils::playerEntityAvailable() || *pM_bLoadgame;
+	}
 	else
-		return false;
+		return true;
 }
 
 void PauseFeature::InitHooks()

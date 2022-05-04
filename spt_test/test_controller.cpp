@@ -563,3 +563,13 @@ TEST_F(ControllerTest, PausedRecordingWorks)
     auto framebulk = controller.m_sScript.m_vFrameBulks[1];
     GTEST_ASSERT_EQ(framebulk.GetCommand(), ";echo test");
 }
+
+
+TEST_F(ControllerTest, CantRewindToNegative)
+{
+    TEST_Skip(0);
+    controller.SetRewindState(-1);
+    controller.m_bPaused = true;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
+}

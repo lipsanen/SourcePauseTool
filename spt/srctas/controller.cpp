@@ -566,6 +566,9 @@ namespace srctas
 
 	Error ScriptController::OnMove(float pos[3], float ang[3])
 	{
+		if(GetPlayState() <= 0)
+			return Error();
+
 		int startIndex = m_vecMoves.size();
 		m_vecMoves.resize(m_iCurrentTick + 1);
 		for(int i=startIndex; i <= m_iCurrentTick; ++i)

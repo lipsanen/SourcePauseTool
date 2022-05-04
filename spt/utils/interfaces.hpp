@@ -9,6 +9,7 @@
 #include "cdll_int.h"
 #include "icliententitylist.h"
 #include "engine\ivmodelinfo.h"
+#include "vstdlib\random.h"
 
 namespace interfaces
 {
@@ -23,4 +24,5 @@ namespace interfaces
 	extern IClientEntityList* entList;
 	extern IVModelInfo* modelInfo;
 	extern IBaseClientDLL* clientInterface;
+	extern IUniformRandomStream* randomStream;
 } // namespace interfaces

@@ -250,6 +250,9 @@
     <ClCompile Include="spt\srctas\utils.cpp">
       <Filter>spt\srctas</Filter>
     </ClCompile>
+    <ClCompile Include="spt\features\taslogging.cpp">
+      <Filter>spt\features</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -547,6 +550,9 @@
       <Filter>spt\utils</Filter>
     </ClInclude>
     <ClInclude Include="spt\features\pause.hpp">
+      <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\features\taslogging.hpp">
       <Filter>spt\features</Filter>
     </ClInclude>
   </ItemGroup>

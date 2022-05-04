@@ -19,4 +19,11 @@ namespace utils
 	float RandomFloat(float min, float max);
 	void NormalizeQAngle(QAngle& angle);
 	void GetMiddlePoint(const QAngle& angle1, const QAngle& angle2, QAngle& out);
+	
+	template<typename T, typename U>
+	void VectorCopy(T lhs, U rhs)
+	{
+		for(int i=0; i < 3; ++i)
+			lhs[i] = rhs[i];
+	}
 }; // namespace utils

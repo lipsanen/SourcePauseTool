@@ -53,6 +53,7 @@ namespace interfaces
 	vgui::ISchemeManager* scheme = nullptr;
 	IVDebugOverlay* debugOverlay = nullptr;
 	IMaterialSystem* materialSystem = nullptr;
+	IUniformRandomStream* randomStream = nullptr;
 	ICvar* g_pCVar = nullptr;
 	void* gm = nullptr;
 	IClientEntityList* entList;
@@ -152,6 +153,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	interfaces::engine_server = (IVEngineServer*)interfaceFactory(INTERFACEVERSION_VENGINESERVER, NULL);
 	interfaces::debugOverlay = (IVDebugOverlay*)interfaceFactory(VDEBUG_OVERLAY_INTERFACE_VERSION, NULL);
 	interfaces::materialSystem = (IMaterialSystem*)interfaceFactory(MATERIAL_SYSTEM_INTERFACE_VERSION, NULL);
+	interfaces::randomStream = (IUniformRandomStream*)interfaceFactory(VENGINE_SERVER_RANDOM_INTERFACE_VERSION, NULL);
 
 	auto clientFactory = Sys_GetFactory("client");
 	interfaces::entList = (IClientEntityList*)clientFactory(VCLIENTENTITYLIST_INTERFACE_VERSION, NULL);
@@ -270,6 +272,7 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	out << "SourcePauseTool version " SPT_VERSION " was loaded in " << loadTime << "ms.\n";
 
 	Msg("%s", std::string(out.str()).c_str());
+	Msg("RNG'd %d\n", interfaces::randomStream->RandomInt(0, 32767));
 
 	return true;
 }
