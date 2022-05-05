@@ -169,5 +169,6 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
-/packages/Microsoft.googletest.v140.windesktop.msvcstl.static.rt-dyn.1.8.1.4
 /spt_test/temp
+/packages/
+/Test

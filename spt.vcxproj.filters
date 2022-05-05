@@ -253,6 +253,9 @@
     <ClCompile Include="spt\features\taslogging.cpp">
       <Filter>spt\features</Filter>
     </ClCompile>
+    <ClCompile Include="spt\utils\logfile.cpp">
+      <Filter>spt\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -554,6 +557,9 @@
     </ClInclude>
     <ClInclude Include="spt\features\taslogging.hpp">
       <Filter>spt\features</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\utils\logfile.hpp">
+      <Filter>spt\utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
