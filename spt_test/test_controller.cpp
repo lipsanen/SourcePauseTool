@@ -573,3 +573,40 @@ TEST_F(ControllerTest, CantRewindToNegative)
     controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 0);
 }
+
+TEST_F(ControllerTest, AnglesGetSaved)
+{
+    float pos[3];
+    float ang[3];
+    pos[0] = pos[1] = pos[2] = 1.0f;
+    ang[0] = ang[1] = ang[2] = 2.0f;
+    controller.Record_Start();
+    controller.OnMove(pos, ang);
+    controller.m_bPaused = false;
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_sScript.m_vFrameBulks.size(), 1);
+    auto& framebulk = controller.m_sScript.m_vFrameBulks[0];
+    GTEST_ASSERT_EQ(framebulk.GetCommand(), ";_y_spt_setpitch 2;_y_spt_setyaw 2");
+}
+
+TEST_F(ControllerTest, AngleChangeDetectionWorks)
+{
+    float pos[3];
+    float ang[3];
+    pos[0] = pos[1] = pos[2] = 1.0f;
+    ang[0] = ang[1] = ang[2] = 2.0f;
+    controller.Record_Start();
+    controller.OnMove(pos, ang);
+    controller.OnFrame();
+    controller.OnMove(pos, ang);
+    controller.OnFrame();
+    ang[0] = ang[1] = ang[2] = 3.0f;
+    controller.OnMove(pos, ang);
+    controller.OnFrame();
+    GTEST_ASSERT_EQ(controller.m_sScript.m_vFrameBulks.size(), 2);
+    auto& framebulk1 = controller.m_sScript.m_vFrameBulks[0];
+    GTEST_ASSERT_EQ(framebulk1.m_iTicks, 2);
+    GTEST_ASSERT_EQ(framebulk1.GetCommand(), ";_y_spt_setpitch 2;_y_spt_setyaw 2");
+    auto& framebulk2 = controller.m_sScript.m_vFrameBulks[1];
+    GTEST_ASSERT_EQ(framebulk2.GetCommand(), ";_y_spt_setpitch 3;_y_spt_setyaw 3");
+}

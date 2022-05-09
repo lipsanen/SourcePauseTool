@@ -45,7 +45,7 @@
     <ClCompile Include="logfile_test.cpp" />
     <ClCompile Include="parsing_test.cpp" />
     <ClCompile Include="script_test.cpp" />
-    <ClCompile Include="test.cpp" />
+    <ClCompile Include="test_kbutton.cpp" />
     <ClCompile Include="test_controller.cpp" />
   </ItemGroup>
   <ItemDefinitionGroup />

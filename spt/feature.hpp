@@ -24,6 +24,7 @@
 	               reinterpret_cast<void**>(&ORIG_##name##), \
 	               reinterpret_cast<void*>(HOOKED_##name##));
 #define InitCommand(command) InitConcommandBase(command##_command)
+#define InitToggle(toggle) InitConcommandBase(toggle ## _plus); InitConcommandBase(toggle ## _minus); 
 
 struct VFTableHook
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "convar.h"
+#include "kbutton.hpp"
 
 #ifdef OE
 #include "interfaces.hpp"
@@ -48,3 +49,15 @@ struct ArgsWrapper
 	static void name(ArgsWrapper args)
 
 #endif
+
+#define CON_COMMAND_TOGGLE(toggle, description) static kbutton_t keyState_ ## toggle; \
+static void toggle ## _plusFunc(const CCommand& args) \
+{	\
+	keyState_ ## toggle.KeyUp(args.Arg(1));\
+}	\
+static void toggle ## _minusFunc(const CCommand& args) \
+{	\
+	keyState_ ## toggle.KeyDown(args.Arg(1));\
+}	\
+static ConCommand toggle ## _plus("+" #toggle, toggle ## _plusFunc, description); \
+static ConCommand toggle ## _minus("-" #toggle, toggle ## _minusFunc, description);

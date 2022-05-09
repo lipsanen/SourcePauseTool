@@ -24,6 +24,22 @@ namespace srctas
 		bool valid = false;
 	};
 
+	struct Angle
+	{
+		float ang[3];
+		bool valid;
+		Angle()
+		{
+			ang[0] = ang[1] = ang[2] = 0.0f;
+			valid = false;
+		}
+
+		void Reset()
+		{
+			valid = false;
+		}
+	};
+
 	// Add error handling stuff to interface
 	class DLL_EXPORT ScriptController
 	{
@@ -68,6 +84,7 @@ namespace srctas
 		bool m_bPaused = false;
 		bool m_bAutoPause = true;
 		bool m_bRecording = false;
+		Angle m_sPrevRecordingAngle;
 		std::vector<MoveHistory> m_vecMoves;
 		std::function<void(const char*)> m_fExecConCmd = nullptr;
 		std::function<void(float)> m_fSetTimeScale = nullptr;
@@ -85,5 +102,6 @@ namespace srctas
 		void _ForwardAdvance(int ticks);
 		void _BackwardAdvance(int ticks);
 		void _AddRecordingBulk();
+		bool _ShouldIgnoreRecordingBulk();
 	};
 } // namespace srctas

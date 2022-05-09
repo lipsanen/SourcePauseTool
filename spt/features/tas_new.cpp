@@ -27,6 +27,8 @@ ConVar tas_record_optimizebulks("tas_record_optimizebulks",
                                 "0",
                                 0,
                                 "When set to 1, view commands will not be recorded if the view does not change.\n");
+CON_COMMAND_TOGGLE(tas_forward, "Play back TAS forward");
+CON_COMMAND_TOGGLE(tas_backward, "Play back TAS backward");
 
 // New TASing system
 class NewTASFeature : public FeatureWrapper<NewTASFeature>
@@ -55,12 +57,9 @@ public:
 struct TASState
 {
 	srctas::ScriptController controller;
-	QAngle m_prevAngle;
-	bool m_bAngleValid = false;
 	bool m_bSetView = false;
 	float m_currentAngle[3];
 	float m_currentPos[3];
-	int m_iRewindState = 0;
 
 	TASState()
 	{
@@ -95,11 +94,6 @@ struct TASState
 			view->angles[i] = m_currentAngle[i];
 		}
 	}
-
-	int GetRewindState()
-	{
-		return m_iRewindState;
-	}
 };
 
 static TASState tas_state;
@@ -126,11 +120,23 @@ void NewTASFeature::InitHooks()
 
 void NewTASFeature::UnloadFeature() {}
 
+int GetRewindState()
+{
+	float state = keyState_tas_forward.KeyState() - keyState_tas_backward.KeyState();
+
+	if (state > 0)
+		return 1;
+	else if (state == 0)
+		return 0;
+	else
+		return -1;
+}
+
 void NewTASFeature::OnFrame()
 {
 	srctas::Error error;
 	error = tas_state.controller.OnFrame();
-	tas_state.controller.SetRewindState(tas_state.m_iRewindState);
+	tas_state.controller.SetRewindState(GetRewindState());
 
 	if(error.m_bError)
 	{
@@ -158,8 +164,6 @@ static const char* IGNORED_COMMAND_PREFIXES[] = {"exec",
                                                  "connect",
                                                  "give",
                                                  "autosave",
-                                                 "gameui_allowescapetoshow",
-                                                 "gameui_hide",
                                                  "changelevel2",
                                                  "cl_predict",
                                                  "dsp_player"};
@@ -204,15 +208,6 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 	utils::VectorCopy(pos, spt_generic.GetCameraOrigin());
 	EngineGetViewAngles(ang);
 	tas_state.controller.OnMove(pos, ang);
-
-	if (tas_state.controller.IsRecording())
-	{
-
-			tas_state.controller.OnCommandExecuted(
-			    FormatTempString("_y_spt_setyaw %s", FloatToCString(ang[YAW])));
-			tas_state.controller.OnCommandExecuted(
-			    FormatTempString("_y_spt_setpitch %s", FloatToCString(ang[PITCH])));
-	}
 
 	spt_taslogging.Log(
 	    "PRE ProcessMovement: POS (%.8f, %.8f, %.8f), ANG (%.8f, %.8f, %.8f), PUNCH (%.8f, %.8f, %.8f), VEL (%.8f, %.8f, %.8f), MOVE (%.8f, %.8f, %.8f), MAX %.8f",
@@ -349,7 +344,6 @@ CON_COMMAND(tas_skip, "Skip to tick in TAS.")
 CON_COMMAND(tas_record_start, "Starts recording a TAS.")
 {
 	tas_state.controller.Record_Start();
-	tas_state.m_bAngleValid = false;
 }
 
 CON_COMMAND(tas_record_stop, "Stops a TAS recording.")
@@ -375,21 +369,6 @@ CON_COMMAND(tas_stop, "Stops TAS playback.")
 	}
 }
 
-static void TAS_Forward(const CCommand& args)
-{
-	tas_state.m_iRewindState += 1;
-}
-
-static void TAS_Backward(const CCommand& args)
-{
-	tas_state.m_iRewindState -= 1;
-}
-
-static ConCommand TAS_PlusForward("+tas_backward", TAS_Backward, "Go forward in TAS");
-static ConCommand TAS_MinusForward("-tas_backward", TAS_Forward, "Go forward in TAS");
-static ConCommand TAS_PlusBackward("+tas_forward", TAS_Forward, "Go forward in TAS");
-static ConCommand TAS_MinusBackward("-tas_forward", TAS_Backward, "Go forward in TAS");
-
 void NewTASFeature::LoadFeature()
 {
 	if (FrameSignal.Works)
@@ -409,10 +388,8 @@ void NewTASFeature::LoadFeature()
 		InitCommand(tas_skip);
 		InitConcommandBase(tas_loop_cmd);
 		InitConcommandBase(tas_record_optimizebulks);
-		InitConcommandBase(TAS_PlusForward);
-		InitConcommandBase(TAS_MinusForward);
-		InitConcommandBase(TAS_PlusBackward);
-		InitConcommandBase(TAS_MinusBackward);
+		InitToggle(tas_forward);
+		InitToggle(tas_backward);
 	}
 
 	InitCommand(tas_freetimes);

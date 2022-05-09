@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "controller.hpp"
 #include "utils.hpp"
+#include "string_utils.hpp"
 #include <algorithm>
 
 namespace srctas
@@ -139,6 +140,7 @@ namespace srctas
 		m_bPaused = false;
 		m_bRecording = false;
 		m_recordingNewBulk = FrameBulk();
+		m_sPrevRecordingAngle.Reset();
 	}
 
 	void ScriptController::_ForwardAdvance(int ticks)
@@ -170,10 +172,8 @@ namespace srctas
 
 	void ScriptController::_AddRecordingBulk()
 	{
-		auto cmd = m_recordingNewBulk.GetCommand();
-
 		// Ignore empty bulks
-		if(cmd.empty())
+		if(_ShouldIgnoreRecordingBulk())
 		{
 			// Extend the current bulk if we are recording
 			if (m_sScript.m_vFrameBulks.size() != 0 && IsRecording())
@@ -227,6 +227,13 @@ namespace srctas
 		}
 
 		m_iTickInBulk = 0;		
+	}
+
+	bool ScriptController::_ShouldIgnoreRecordingBulk()
+	{
+		auto cmd = m_recordingNewBulk.GetCommand();
+
+		return cmd.empty();
 	}
 
 	Error ScriptController::OnCommandExecuted(const char* commandsExecuted)
@@ -397,6 +404,7 @@ namespace srctas
 
 		m_bRecording = true;
 		m_iTargetTick = PLAY_TO_END;
+		m_sPrevRecordingAngle.Reset();
 		return Error();
 	}
 
@@ -566,6 +574,25 @@ namespace srctas
 
 	Error ScriptController::OnMove(float pos[3], float ang[3])
 	{
+		if (IsRecording())
+		{
+			if (!m_sPrevRecordingAngle.valid || m_sPrevRecordingAngle.ang[0] != ang[0]
+				|| m_sPrevRecordingAngle.ang[1] != ang[1])
+			{
+				char BUFFER[256];
+				const char* flt = FloatToCString(ang[0]);
+				snprintf(BUFFER, sizeof(BUFFER), "_y_spt_setpitch %s", flt);
+				OnCommandExecuted(BUFFER);
+				flt = FloatToCString(ang[1]);
+				snprintf(BUFFER, sizeof(BUFFER), "_y_spt_setyaw %s", flt);
+				OnCommandExecuted(BUFFER);
+				m_sPrevRecordingAngle.ang[0] = ang[0];
+				m_sPrevRecordingAngle.ang[1] = ang[1];
+				m_sPrevRecordingAngle.valid = true;
+			}
+
+		}
+
 		if(GetPlayState() <= 0)
 			return Error();
 

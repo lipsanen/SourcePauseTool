@@ -256,6 +256,9 @@
     <ClCompile Include="spt\utils\logfile.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
+    <ClCompile Include="spt\utils\kbutton.cpp">
+      <Filter>spt\utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -559,6 +562,9 @@
       <Filter>spt\features</Filter>
     </ClInclude>
     <ClInclude Include="spt\utils\logfile.hpp">
+      <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\utils\kbutton.hpp">
       <Filter>spt\utils</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1422,6 +1422,7 @@
     <ClCompile Include="spt\utils\ent_utils.cpp" />
     <ClCompile Include="spt\utils\file.cpp" />
     <ClCompile Include="spt\utils\game_detection.cpp" />
+    <ClCompile Include="spt\utils\kbutton.cpp" />
     <ClCompile Include="spt\utils\logfile.cpp" />
     <ClCompile Include="spt\utils\math.cpp" />
     <ClCompile Include="spt\utils\property_getter.cpp" />
@@ -1527,6 +1528,7 @@
     <ClInclude Include="spt\utils\file.hpp" />
     <ClInclude Include="spt\utils\game_detection.hpp" />
     <ClInclude Include="spt\utils\interfaces.hpp" />
+    <ClInclude Include="spt\utils\kbutton.hpp" />
     <ClInclude Include="spt\utils\logfile.hpp" />
     <ClInclude Include="spt\utils\math.hpp" />
     <ClInclude Include="spt\utils\platform.hpp" />
