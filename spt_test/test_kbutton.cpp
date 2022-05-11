@@ -31,6 +31,17 @@ TEST(kbutton, OneKeyPressWorks)
 	button.KeyDown("100");
 	button.KeyUp("100");
 	EXPECT_EQ(button.KeyState(), 0.25f);
+	EXPECT_EQ(button.KeyState(), 0.0f);
+}
+
+TEST(kbutton, ImpulseWorksWithTwoKeysDown)
+{
+	kbutton_t button;
+	button.KeyDown("100");
+	button.KeyDown("101");
+	EXPECT_EQ(button.KeyState(), 0.5f);
+	button.KeyUp("");
+	EXPECT_EQ(button.KeyState(), 0.0f);
 }
 
 TEST(kbutton, MultipleKeyWorks)

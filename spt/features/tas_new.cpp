@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
 #include "command.hpp"
+#include "hud.hpp"
 #include "file.hpp"
 #include "generic.hpp"
 #include "interfaces.hpp"
@@ -29,6 +30,7 @@ ConVar tas_record_optimizebulks("tas_record_optimizebulks",
                                 "When set to 1, view commands will not be recorded if the view does not change.\n");
 CON_COMMAND_TOGGLE(tas_forward, "Play back TAS forward");
 CON_COMMAND_TOGGLE(tas_backward, "Play back TAS backward");
+ConVar tas_hud("tas_hud", "1", 0, "Enables TAS hud");
 
 // New TASing system
 class NewTASFeature : public FeatureWrapper<NewTASFeature>
@@ -166,7 +168,12 @@ static const char* IGNORED_COMMAND_PREFIXES[] = {"exec",
                                                  "autosave",
                                                  "changelevel2",
                                                  "cl_predict",
-                                                 "dsp_player"};
+                                                 "dsp_player",
+												 "+tas_forward",
+												 "-tas_forward",
+												 "+tas_backward",
+												 "-tas_backward",
+												 "tas_record"};
 
 static bool IsRecordable(const CCommand& command)
 {
@@ -421,4 +428,13 @@ void NewTASFeature::LoadFeature()
 	{
 		InitCommand(tas_pause);
 	}
+
+	AddHudCallback(
+	    "TAS",
+	    [this]()
+	    {
+		    spt_hud.DrawTopHudElement(L"TAS tick: %d", tas_state.controller.m_iCurrentTick);
+		    spt_hud.DrawTopHudElement(L"TAS playback tick: %d", tas_state.controller.m_iCurrentPlaybackTick);
+	    },
+	    tas_hud);
 }

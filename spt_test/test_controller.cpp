@@ -610,3 +610,45 @@ TEST_F(ControllerTest, AngleChangeDetectionWorks)
     auto& framebulk2 = controller.m_sScript.m_vFrameBulks[1];
     GTEST_ASSERT_EQ(framebulk2.GetCommand(), ";_y_spt_setpitch 3;_y_spt_setyaw 3");
 }
+
+TEST_F(ControllerTest, StopDoesntHang)
+{
+    float pos[3];
+    float ang[3];
+    pos[0] = pos[1] = pos[2] = 1.0f;
+    ang[0] = ang[1] = ang[2] = 2.0f;
+    controller.Record_Start();
+    controller.OnMove(pos, ang);
+    controller.OnFrame();
+    controller.OnMove(pos, ang);
+    controller.OnFrame();
+    controller.OnFrame();
+    controller.Record_Stop();
+    controller.OnFrame();
+    controller.SetRewindState(-1);
+    controller.OnFrame();
+    EXPECT_EQ(controller.m_iCurrentTick, 3);
+    controller.Play();
+    controller.OnFrame();
+    EXPECT_EQ(controller.m_iCurrentTick, 1);
+}
+
+TEST_F(ControllerTest, Record_StartCorrectState)
+{
+    controller.Record_Start();
+    EXPECT_GE(controller.GetPlayState(), 0);
+}
+
+TEST_F(ControllerTest, Record_CurrentMatchesPlayback)
+{
+    controller.Record_Start();
+    controller.OnFrame();
+    controller.Record_Stop();
+    controller.OnFrame();
+    EXPECT_EQ(controller.m_iCurrentPlaybackTick, controller.m_iCurrentTick);
+    controller.Record_Start();
+    controller.OnFrame();
+    EXPECT_EQ(controller.m_iCurrentPlaybackTick, controller.m_iCurrentTick);
+    controller.OnFrame();
+    EXPECT_EQ(controller.m_iCurrentPlaybackTick, controller.m_iCurrentTick);
+}

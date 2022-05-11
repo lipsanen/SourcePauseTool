@@ -176,8 +176,10 @@ namespace srctas
 		if(_ShouldIgnoreRecordingBulk())
 		{
 			// Extend the current bulk if we are recording
-			if (m_sScript.m_vFrameBulks.size() != 0 && IsRecording())
+			if (IsRecording())
 			{
+				if(m_sScript.m_vFrameBulks.empty())
+					m_sScript.m_vFrameBulks.push_back(FrameBulk());
 				m_sScript.m_vFrameBulks[m_iCurrentFramebulkIndex].m_iTicks =
 				    m_iTickInBulk;
 			}
@@ -411,8 +413,7 @@ namespace srctas
 	Error ScriptController::Record_Stop()
 	{
 		CHECK_INIT();
-		m_bRecording = false;
-		m_iTargetTick = m_iCurrentTick;
+		m_iTargetTick = m_iCurrentTick + 1;
 		return Error();
 	}
 
@@ -465,6 +466,7 @@ namespace srctas
 			int state = GetPlayState();
 			if(state > 0)
 				OnFrame_HandleEdits();
+
 
 			if (!m_bPaused)
 			{
@@ -520,12 +522,6 @@ namespace srctas
 
 	Error ScriptController::OnFrame_Playing()
 	{
-		if(m_iCurrentTick < m_iCurrentPlaybackTick)
-		{
-			Advance(1);
-			return Error();
-		}
-
 		srctas::Error error;
 		std::string command = GetCommandForCurrentTick(error);
 
@@ -560,13 +556,24 @@ namespace srctas
 
 	Error ScriptController::OnFrame_Paused(int state)
 	{
-		if (state < 0)
+		// Stop recording once we pause
+		if (m_bRecording && m_iTargetTick != PLAY_TO_END)
 		{
-			Advance(-1);
+			_AddRecordingBulk();
+			m_recordingNewBulk = FrameBulk();
+			m_bRecording = false;
 		}
-		else if (state > 0)
+
+		if (!m_bRecording)
 		{
-			Advance(1);
+			if (state < 0)
+			{
+				Advance(-1);
+			}
+			else if (state > 0)
+			{
+				Advance(1);
+			}
 		}
 
 		return Error();
@@ -615,12 +622,15 @@ namespace srctas
 
 	int ScriptController::GetPlayState()
 	{
-		if(m_iTargetTick == NOT_PLAYING)
+		if (m_iTargetTick == PLAY_TO_END)
+		{
+			return 1;
+		}
+		else if(m_iTargetTick == NOT_PLAYING)
 		{
 			return 0;
 		}
-
-		if(m_iCurrentTick < m_iTargetTick)
+		else if(m_iCurrentTick < m_iTargetTick)
 		{
 			return 1;
 		}
