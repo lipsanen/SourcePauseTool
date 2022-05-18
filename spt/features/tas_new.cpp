@@ -20,17 +20,17 @@
 typedef bool(__fastcall* _CCommandBuffer__DequeueNextCommand)(CCommandBuffer* thisptr, int edx);
 typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
 
-ConVar tas_loop_cmd("tas_loop_cmd",
+ConVar tas2_loop_cmd("tas_loop_cmd",
                     "",
                     0,
                     "This command is executed every frame when a TAS is played back or recorded\n");
-ConVar tas_record_optimizebulks("tas_record_optimizebulks",
+ConVar tas2_record_optimizebulks("tas_record_optimizebulks",
                                 "0",
                                 0,
                                 "When set to 1, view commands will not be recorded if the view does not change.\n");
-CON_COMMAND_TOGGLE(tas_forward, "Play back TAS forward");
-CON_COMMAND_TOGGLE(tas_backward, "Play back TAS backward");
-ConVar tas_hud("tas_hud", "1", 0, "Enables TAS hud");
+CON_COMMAND_TOGGLE(tas2_forward, "Play back TAS forward");
+CON_COMMAND_TOGGLE(tas2_backward, "Play back TAS backward");
+ConVar tas2_hud("tas2_hud", "1", 0, "Enables TAS hud");
 
 // New TASing system
 class NewTASFeature : public FeatureWrapper<NewTASFeature>
@@ -124,7 +124,7 @@ void NewTASFeature::UnloadFeature() {}
 
 int GetRewindState()
 {
-	float state = keyState_tas_forward.KeyState() - keyState_tas_backward.KeyState();
+	float state = keyState_tas2_forward.KeyState() - keyState_tas2_backward.KeyState();
 
 	if (state > 0)
 		return 1;
@@ -290,20 +290,8 @@ bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CComman
 	return rval;
 }
 
-CON_COMMAND(tas_freetimes, "print freetimes")
-{
-	for (int i = 0; i < 2048; ++i)
-	{
-		auto ent = interfaces::engine_server->PEntityOfEntIndex(i);
-		if (ent)
-		{
-			Msg("%d: %f\n", i, ent->freetime);
-		}
-	}
-}
-
 CON_COMMAND_AUTOCOMPLETEFILE(
-    tas_load,
+    tas2_load,
     "Loads and executes an .src2tas script. If an extra ticks argument is given, the script is played back at maximal FPS and without rendering until that many ticks before the end of the script. Usage: tas_load_script [script] [ticks]",
     0,
     "",
@@ -329,17 +317,12 @@ CON_COMMAND_AUTOCOMPLETEFILE(
 	}
 }
 
-CON_COMMAND(tas_edit_autocollapse, "Automatically collapses multiple framebulks into one when possible")
+CON_COMMAND(tas2_save, "Saves the TAS.")
 {
 	tas_state.controller.SaveToFile();
 }
 
-CON_COMMAND(tas_save, "Saves the TAS.")
-{
-	tas_state.controller.SaveToFile();
-}
-
-CON_COMMAND(tas_init, "Inits an empty TAS.")
+CON_COMMAND(tas2_init, "Inits an empty TAS.")
 {
 	if (args.ArgC() == 1)
 	{
@@ -351,31 +334,63 @@ CON_COMMAND(tas_init, "Inits an empty TAS.")
 	tas_state.controller.InitEmptyScript(filepath.c_str());
 }
 
-CON_COMMAND(tas_play, "Starts playing the TAS.")
+CON_COMMAND(tas2_play, "Starts playing the TAS.")
 {
 	tas_state.controller.Play();
 }
 
-CON_COMMAND(tas_skip, "Skip to tick in TAS.")
+CON_COMMAND(tas2_skip, "Skip to tick in TAS.")
 {
-	/*auto error = tas_state.controller.Skip();
+	if (args.ArgC() == 1)
+	{
+		Msg("Usage: tas_skip <tick>\n");
+		return;
+	}
+
+	int tick = std::atoi(args.Arg(1));
+	auto error = tas_state.controller.Skip(tick);
 	if (error.m_bError)
 	{
 		Warning(error.m_sMessage.c_str());
-	}*/
+	}
 }
 
-CON_COMMAND(tas_record_start, "Starts recording a TAS.")
+CON_COMMAND(tas2_skip_offset, "Skip to offset tick in TAS.")
+{
+	if (args.ArgC() == 1)
+	{
+		Msg("Usage: tas_skip_offset <tick>\n");
+		return;
+	}
+
+	int tick = std::atoi(args.Arg(1));
+	auto error = tas_state.controller.SkipOffset(tick);
+	if (error.m_bError)
+	{
+		Warning(error.m_sMessage.c_str());
+	}
+}
+
+CON_COMMAND(tas2_reset_rewind, "Go back to playback tick")
+{
+	auto error = tas_state.controller.ResetToPlaybackTick();
+	if (error.m_bError)
+	{
+		Warning(error.m_sMessage.c_str());
+	}
+}
+
+CON_COMMAND(tas2_record_start, "Starts recording a TAS.")
 {
 	tas_state.controller.Record_Start();
 }
 
-CON_COMMAND(tas_record_stop, "Stops a TAS recording.")
+CON_COMMAND(tas2_record_stop, "Stops a TAS recording.")
 {
 	tas_state.controller.Record_Stop();
 }
 
-CON_COMMAND(tas_pause, "Pauses TAS playback.")
+CON_COMMAND(tas2_pause, "Pauses TAS playback.")
 {
 	auto error = tas_state.controller.Pause();
 	if(error.m_bError)
@@ -384,7 +399,7 @@ CON_COMMAND(tas_pause, "Pauses TAS playback.")
 	}
 }
 
-CON_COMMAND(tas_stop, "Stops TAS playback.")
+CON_COMMAND(tas2_stop, "Stops TAS playback.")
 {
 	auto error = tas_state.controller.Stop();
 	if (error.m_bError)
@@ -402,21 +417,19 @@ void NewTASFeature::LoadFeature()
 		tas_state.controller.m_fSetView = [](float* pos, float* ang) { tas_state.SetView(pos, ang); };
 
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
-		InitCommand(tas_init);
-		InitCommand(tas_load);
-		InitCommand(tas_stop);
-		InitCommand(tas_play);
-		InitCommand(tas_record_start);
-		InitCommand(tas_record_stop);
-		InitCommand(tas_save);
-		InitCommand(tas_skip);
-		InitConcommandBase(tas_loop_cmd);
-		InitConcommandBase(tas_record_optimizebulks);
-		InitToggle(tas_forward);
-		InitToggle(tas_backward);
+		InitCommand(tas2_init);
+		InitCommand(tas2_load);
+		InitCommand(tas2_stop);
+		InitCommand(tas2_play);
+		InitCommand(tas2_record_start);
+		InitCommand(tas2_record_stop);
+		InitCommand(tas2_save);
+		InitCommand(tas2_skip);
+		InitConcommandBase(tas2_loop_cmd);
+		InitConcommandBase(tas2_record_optimizebulks);
+		InitToggle(tas2_forward);
+		InitToggle(tas2_backward);
 	}
-
-	InitCommand(tas_freetimes);
 
 	if(CViewRender__RenderViewSignal.Works)
 	{
@@ -443,7 +456,7 @@ void NewTASFeature::LoadFeature()
 
 	if (ORIG_Host_AccumulateTime && ORIG__Host_RunFrame)
 	{
-		InitCommand(tas_pause);
+		InitCommand(tas2_pause);
 	}
 
 	AddHudCallback(
@@ -453,5 +466,5 @@ void NewTASFeature::LoadFeature()
 		    spt_hud.DrawTopHudElement(L"TAS tick: %d", tas_state.controller.m_iCurrentTick);
 		    spt_hud.DrawTopHudElement(L"TAS playback tick: %d", tas_state.controller.m_iCurrentPlaybackTick);
 	    },
-	    tas_hud);
+	    tas2_hud);
 }
