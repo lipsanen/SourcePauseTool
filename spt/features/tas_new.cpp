@@ -188,7 +188,8 @@ static bool IsRecordable(const CCommand& command)
 			return false;
 	}
 
-	return true;
+	// Make sure the command is not an alias
+	return interfaces::g_pCVar->FindCommand(cmd) != nullptr;
 }
 
 CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
@@ -257,14 +258,30 @@ void __fastcall NewTASFeature::HOOKED_ProcessMovement(void* thisptr, int edx, vo
 	    mv->m_flMaxSpeed);
 }
 
+// Remove keycodes from toggles
+static void RemoveKeycodes(CCommand& command)
+{
+	const char* cmd = command.Arg(0);
+
+	if (cmd && (cmd[0] == '+' || cmd[0] == '-'))
+	{
+		char BUFFER[128];
+		strncpy(BUFFER, cmd, sizeof(BUFFER));
+		command.Reset();
+		command.Tokenize(BUFFER);
+	}
+}
+
 bool __fastcall NewTASFeature::HOOKED_CCommandBuffer__DequeueNextCommand(CCommandBuffer* thisptr, int edx)
 {
 	bool rval = spt_tas.ORIG_CCommandBuffer__DequeueNextCommand(thisptr, edx);
 	if (rval)
 	{
-		auto command = thisptr->GetCommand();
+		CCommand& command = const_cast<CCommand&>(thisptr->GetCommand());
+
 		if (tas_state.controller.IsRecording() && IsRecordable(command))
 		{
+			RemoveKeycodes(command);
 			const char* cmd = ToString(command);
 			tas_state.controller.OnCommandExecuted(cmd);
 		}

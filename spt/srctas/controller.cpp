@@ -23,6 +23,7 @@ namespace srctas
 		m_fSetTimeScale = [](auto a) {};
 		m_fSetView = [](auto a, auto b) {};
 		m_fResetView = []() {};
+		m_fReset = []() {};
 	}
 
 	Error ScriptController::InitEmptyScript(const char* filepath)
@@ -136,7 +137,6 @@ namespace srctas
 		m_iTickInBulk = 0;
 		m_iCurrentFramebulkIndex = 0;
 		m_iLastValidTick = 0;
-		m_fSetTimeScale(1);
 		m_bPaused = false;
 		m_bRecording = false;
 		m_recordingNewBulk = FrameBulk();
@@ -246,6 +246,22 @@ namespace srctas
 		m_recordingNewBulk.ApplyCommand(commandsExecuted);
 
 		return error;
+	}
+
+	Error ScriptController::ResetToPlaybackTick()
+	{
+		return Advance(m_iCurrentPlaybackTick - m_iCurrentTick);
+	}
+
+	Error ScriptController::SkipOffset(int offset)
+	{
+		int target = std::max(0, m_iCurrentTick + offset);
+		return Skip(target);
+	}
+
+	void ScriptController::SetTimescale(float timescale)
+	{
+		m_fTimescale = std::max(0.01f, timescale);
 	}
 
 	void ScriptController::SetRewindState(int rewind)
@@ -366,7 +382,7 @@ namespace srctas
 		int ticks = GetTotalTicks(error);
 		if(error.m_bError)
 			return error;
-		error = Skip(ticks, 1);
+		error = Skip(ticks, false);
 		return error;
 	}
 
@@ -417,11 +433,16 @@ namespace srctas
 		return Error();
 	}
 
-	Error ScriptController::Skip(int tick, float timescale)
+	Error ScriptController::Skip(int tick, bool fastmode)
 	{
 		CHECK_INIT();
 
 		Error err;
+
+		if (fastmode)
+		{
+			m_bSkipping = true;
+		}
 
 		if(tick < 0)
 		{
@@ -439,7 +460,6 @@ namespace srctas
 		}
 
 		m_iTargetTick = tick;
-		m_fSetTimeScale(timescale);
 
 		if (m_bAutoPause)
 		{
@@ -538,9 +558,13 @@ namespace srctas
 		m_iLastValidTick = m_iCurrentPlaybackTick;
 		Advance(1);
 
-		if (m_iTargetTick <= m_iCurrentTick && m_iTargetTick >= 0)
+		if (!m_bSkipping)
 		{
-			m_fSetTimeScale(1);
+			m_fSetTimeScale(m_fTimescale);
+		}
+		else
+		{
+			m_fSetTimeScale(99.0f);
 		}
 
 		return error;
@@ -556,8 +580,20 @@ namespace srctas
 
 	Error ScriptController::OnFrame_Paused(int state)
 	{
+		if (m_iCurrentTick == m_iCurrentPlaybackTick && GetPlayState() > 0)
+		{
+			return Error();
+		}
+
+		// Stop skipping once we pause
+		if (m_bSkipping)
+		{
+			m_fSetTimeScale(m_fTimescale);
+			m_bSkipping = false;
+		}
+
 		// Stop recording once we pause
-		if (m_bRecording && m_iTargetTick != PLAY_TO_END)
+		if (m_bRecording)
 		{
 			_AddRecordingBulk();
 			m_recordingNewBulk = FrameBulk();

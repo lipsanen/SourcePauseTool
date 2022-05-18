@@ -422,9 +422,10 @@ TEST(Controller, SkipTimescaleWorks)
     controller.Skip(5);
     for(int i=0; i < 5; ++i)
     {
-        GTEST_ASSERT_GT(timescale, 1);
         controller.OnFrame();
+        GTEST_ASSERT_GT(timescale, 1);
     }
+    controller.OnFrame();
     GTEST_ASSERT_EQ(controller.m_iCurrentTick, 5);
     GTEST_ASSERT_EQ(timescale, 1);
 }
@@ -651,4 +652,33 @@ TEST_F(ControllerTest, Record_CurrentMatchesPlayback)
     EXPECT_EQ(controller.m_iCurrentPlaybackTick, controller.m_iCurrentTick);
     controller.OnFrame();
     EXPECT_EQ(controller.m_iCurrentPlaybackTick, controller.m_iCurrentTick);
+}
+
+
+TEST_F(ControllerTest, PlaySetsTimescale)
+{
+    float timescale = 1.0f;
+    auto func = [&timescale](float ts) {
+        timescale = ts;
+    };
+    controller.m_fSetTimeScale = func;
+    controller.SetTimescale(1.5f);
+    controller.Skip(5, false);
+    controller.OnFrame();
+    EXPECT_EQ(timescale, 1.5f);
+}
+
+TEST_F(ControllerTest, ForwardDoesntTimescaleAfterSkip)
+{
+    float timescale = 1;
+    controller.m_fSetTimeScale = [&timescale](float t)
+    {
+        timescale = t;
+    };
+
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    TEST_Skip(5);
+    controller.SetRewindState(1);
+    controller.OnFrame();
+    EXPECT_EQ(timescale, 1);
 }
