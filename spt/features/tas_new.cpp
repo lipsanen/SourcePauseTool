@@ -169,11 +169,9 @@ static const char* IGNORED_COMMAND_PREFIXES[] = {"exec",
                                                  "changelevel2",
                                                  "cl_predict",
                                                  "dsp_player",
-												 "+tas_forward",
-												 "-tas_forward",
-												 "+tas_backward",
-												 "-tas_backward",
-												 "tas_record"};
+												 "+tas2_",
+												 "-tas2_",
+												 "tas2_"};
 
 static bool IsRecordable(const CCommand& command)
 {
