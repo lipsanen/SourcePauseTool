@@ -412,17 +412,23 @@ namespace srctas
 	{
 		CHECK_INIT();
 
-		if(!LastTick())
-		{
-			Error err;
-			err.m_bError = true;
-			err.m_sMessage = "Not at the end of the TAS, cannot start recording.";
-			return err;
-		}
-
 		m_bRecording = true;
 		m_iTargetTick = PLAY_TO_END;
 		m_sPrevRecordingAngle.Reset();
+
+		std::vector<FrameBulk>& framebulks = m_sScript.m_vFrameBulks;
+		std::vector<FrameBulk>::const_iterator remove_start = framebulks.begin();
+
+		for (int i = 0; i < m_iCurrentFramebulkIndex && remove_start != framebulks.end(); ++i)
+		{
+			++remove_start;
+		}
+
+		if (remove_start != framebulks.end())
+		{
+			framebulks.erase(remove_start, framebulks.end());
+		}
+
 		return Error();
 	}
 

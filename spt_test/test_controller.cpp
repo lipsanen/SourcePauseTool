@@ -529,16 +529,6 @@ TEST_F(ControllerTest, CommandsGetBufferedDuringPause)
     GTEST_ASSERT_EQ(bulk.GetCommand(), ";echo test");
 }
 
-TEST_F(ControllerTest, RecordAssertsLastTick)
-{
-    controller.LoadFromFile("./test_scripts/recording.src2tas");
-    TEST_Skip(-2);
-    auto error = controller.Record_Start();
-    GTEST_ASSERT_EQ(error.m_bError, true);
-    TEST_Skip(-1);
-    error = controller.Record_Start();
-    GTEST_ASSERT_EQ(error.m_bError, false);
-}
 
 TEST_F(ControllerTest, SkipNegativeWorks)
 {
@@ -694,4 +684,16 @@ TEST_F(ControllerTest, ForwardDoesntTimescaleAfterSkip)
     controller.SetRewindState(1);
     controller.OnFrame();
     EXPECT_EQ(timescale, 1);
+}
+
+TEST_F(ControllerTest, RecordOverwritesOldData)
+{
+    auto error = controller.LoadFromFile("./test_scripts/multi.src2tas");
+    controller.Record_Start();
+    controller.OnCommandExecuted("echo xd");
+    controller.OnFrame();
+    controller.OnFrame();
+    controller.Record_Stop();
+    ASSERT_EQ(controller.m_sScript.m_vFrameBulks.size(), 1);
+    auto bulk = controller.m_sScript.m_vFrameBulks[0];
 }
