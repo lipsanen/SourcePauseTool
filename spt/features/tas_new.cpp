@@ -8,6 +8,7 @@
 #include "math.hpp"
 #include "signals.hpp"
 #include "spt\srctas\controller.hpp"
+#include "spt\srctas\reset.hpp"
 #include "spt\sptlib-wrapper.hpp"
 #include "string_utils.hpp"
 #include "pause.hpp"
@@ -20,17 +21,10 @@
 typedef bool(__fastcall* _CCommandBuffer__DequeueNextCommand)(CCommandBuffer* thisptr, int edx);
 typedef void(__fastcall* _ProcessMovement)(void* thisptr, int edx, void* pPlayer, void* pMove);
 
-ConVar tas2_loop_cmd("tas_loop_cmd",
-                    "",
-                    0,
-                    "This command is executed every frame when a TAS is played back or recorded\n");
-ConVar tas2_record_optimizebulks("tas_record_optimizebulks",
-                                "0",
-                                0,
-                                "When set to 1, view commands will not be recorded if the view does not change.\n");
 CON_COMMAND_TOGGLE(tas2_forward, "Play back TAS forward");
 CON_COMMAND_TOGGLE(tas2_backward, "Play back TAS backward");
 ConVar tas2_hud("tas2_hud", "1", 0, "Enables TAS hud");
+extern ConVar tas2_timescale;
 
 // New TASing system
 class NewTASFeature : public FeatureWrapper<NewTASFeature>
@@ -44,6 +38,8 @@ public:
 
 	virtual void UnloadFeature() override;
 
+	void SetTimescale(float timescale);
+
 	void OnFrame();
 	uintptr_t ORIG__Host_RunFrame = 0;
 	CDECL_DETOUR(void, Host_AccumulateTime, float dt);
@@ -54,6 +50,8 @@ public:
 	_CCommandBuffer__DequeueNextCommand ORIG_CCommandBuffer__DequeueNextCommand = nullptr;
 	float* pHost_Frametime = nullptr;
 	float* pHost_Realtime = nullptr;
+	ConVar* _host_framerate = nullptr;
+	ConVar* _fps_max = nullptr;
 };
 
 struct TASState
@@ -118,9 +116,18 @@ void NewTASFeature::InitHooks()
 		AddVFTableHook(VFTableHook(vftable, 1, (void*)HOOKED_ProcessMovement, (void**)&ORIG_ProcessMovement),
 		               "server");
 	}
+
+	_host_framerate = interfaces::g_pCVar->FindVar("host_framerate");
+	_fps_max = interfaces::g_pCVar->FindVar("fps_max");
 }
 
 void NewTASFeature::UnloadFeature() {}
+
+void NewTASFeature::SetTimescale(float timescale)
+{
+	_host_framerate->SetValue(0.015f);
+	_fps_max->SetValue(1 / _host_framerate->GetFloat() * timescale);
+}
 
 int GetRewindState()
 {
@@ -187,7 +194,7 @@ static bool IsRecordable(const CCommand& command)
 	}
 
 	// Make sure the command is not an alias
-	return interfaces::g_pCVar->FindCommand(cmd) != nullptr;
+	return interfaces::g_pCVar->FindCommandBase(cmd) != nullptr;
 }
 
 CDECL_HOOK(void, NewTASFeature, Host_AccumulateTime, float dt)
@@ -406,6 +413,21 @@ CON_COMMAND(tas2_stop, "Stops TAS playback.")
 	}
 }
 
+CON_COMMAND(tas2_reset, "Reset all things related to TASing to their default values")
+{
+	srctas::ResetConvars();
+}
+
+// tas2_init_map - for initializing a TAS script from a map
+// tas2_init_save - initializes a TAS script from a save
+
+void TimescaleChanged(IConVar* var, const char* pOldValue, float flOldValue)
+{
+	tas_state.controller.SetTimescale(tas2_timescale.GetFloat());
+}
+
+ConVar tas2_timescale("tas2_timescale", "1", 0, "Timescale used when playing back or recording TASes.\n", TimescaleChanged);
+
 void NewTASFeature::LoadFeature()
 {
 	if (FrameSignal.Works)
@@ -413,6 +435,7 @@ void NewTASFeature::LoadFeature()
 		tas_state.controller.m_fExecConCmd = EngineConCmd;
 		tas_state.controller.m_fResetView = []() { tas_state.ResetView(); };
 		tas_state.controller.m_fSetView = [](float* pos, float* ang) { tas_state.SetView(pos, ang); };
+		tas_state.controller.m_fSetTimeScale = [](float timescale) { spt_tas.SetTimescale(timescale); };
 
 		FrameSignal.Connect(this, &NewTASFeature::OnFrame);
 		InitCommand(tas2_init);
@@ -421,10 +444,10 @@ void NewTASFeature::LoadFeature()
 		InitCommand(tas2_play);
 		InitCommand(tas2_record_start);
 		InitCommand(tas2_record_stop);
+		InitCommand(tas2_reset);
 		InitCommand(tas2_save);
 		InitCommand(tas2_skip);
-		InitConcommandBase(tas2_loop_cmd);
-		InitConcommandBase(tas2_record_optimizebulks);
+		InitConcommandBase(tas2_timescale);
 		InitToggle(tas2_forward);
 		InitToggle(tas2_backward);
 	}

@@ -1388,6 +1388,7 @@
     <ClCompile Include="spt\srctas\cmd_parsing.cpp" />
     <ClCompile Include="spt\srctas\controller.cpp" />
     <ClCompile Include="spt\srctas\framebulk.cpp" />
+    <ClCompile Include="spt\srctas\reset.cpp" />
     <ClCompile Include="spt\srctas\script.cpp" />
     <ClCompile Include="spt\srctas\utils.cpp" />
     <ClCompile Include="spt\stdafx.cpp">
@@ -1515,6 +1516,7 @@
     <ClInclude Include="spt\srctas\cmd_parsing.hpp" />
     <ClInclude Include="spt\srctas\controller.hpp" />
     <ClInclude Include="spt\srctas\framebulk.hpp" />
+    <ClInclude Include="spt\srctas\reset.hpp" />
     <ClInclude Include="spt\srctas\script.hpp" />
     <ClInclude Include="spt\srctas\utils.hpp" />
     <ClInclude Include="spt\stdafx.hpp" />

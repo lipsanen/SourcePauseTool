@@ -572,6 +572,7 @@ namespace srctas
 
 	Error ScriptController::OnFrame_Recording()
 	{
+		m_fSetTimeScale(m_fTimescale);
 		m_iCurrentPlaybackTick += 1;
 		m_iLastValidTick = m_iCurrentPlaybackTick;
 		Advance(1);

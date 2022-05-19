@@ -259,6 +259,9 @@
     <ClCompile Include="spt\utils\kbutton.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
+    <ClCompile Include="spt\srctas\reset.cpp">
+      <Filter>spt\srctas</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\public\tier0\basetypes.h">
@@ -566,6 +569,9 @@
     </ClInclude>
     <ClInclude Include="spt\utils\kbutton.hpp">
       <Filter>spt\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="spt\srctas\reset.hpp">
+      <Filter>spt\srctas</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

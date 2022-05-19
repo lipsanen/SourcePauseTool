@@ -54,7 +54,6 @@ namespace scripts
 		bool ParseLine();
 		void SetNewLine();
 		void ReplaceVariables();
-		void ResetConvars();
 
 		void InitPropertyHandlers();
 		void ParseProps();

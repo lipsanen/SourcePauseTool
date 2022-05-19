@@ -668,6 +668,19 @@ TEST_F(ControllerTest, PlaySetsTimescale)
     EXPECT_EQ(timescale, 1.5f);
 }
 
+TEST_F(ControllerTest, RecordSetsTimescale)
+{
+    float timescale = 1.0f;
+    auto func = [&timescale](float ts) {
+        timescale = ts;
+    };
+    controller.m_fSetTimeScale = func;
+    controller.SetTimescale(1.5f);
+    controller.Record_Start();
+    controller.OnFrame();
+    EXPECT_EQ(timescale, 1.5f);
+}
+
 TEST_F(ControllerTest, ForwardDoesntTimescaleAfterSkip)
 {
     float timescale = 1;
