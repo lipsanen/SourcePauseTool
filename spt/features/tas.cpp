@@ -155,10 +155,47 @@ bool TASFeature::ShouldLoadFeature()
 	return interfaces::engine != nullptr;
 }
 
+Strafe::StrafeInput GetStrafeInput(float forwardmove, float sidemove, float yaw)
+{
+	Strafe::StrafeInput input;
+	input.Scale = tas_strafe_scale.GetFloat();
+	const float eps = 0.001f;
+
+	if (tas_strafe_dir.GetInt() == static_cast<int>(Strafe::StrafeDir::BUTTONS))
+	{
+		double theta = std::atan2(-sidemove, forwardmove);
+
+		if ((std::abs(forwardmove) < eps && std::abs(sidemove) < eps) || !std::isfinite(theta))
+		{
+			input.TargetYaw = utils::NormalizeDeg(yaw);
+		}
+		else
+		{
+			input.TargetYaw = utils::NormalizeDeg(yaw + utils::M_RAD2DEG * theta);
+		}
+
+		input.Vectorial = true;
+		input.AFH = true;
+		input.JumpOverride = false;
+	}
+	else
+	{
+		input.TargetYaw = tas_strafe_yaw.GetFloat();
+		input.Vectorial = tas_strafe_vectorial.GetBool();
+		input.AFH = tas_strafe_afh.GetBool();
+		input.JumpOverride = tas_strafe_allow_jump_override.GetBool();
+	}
+
+	return input;
+}
+
 void TASFeature::Strafe(float* va, bool yawChanged)
 {
 	auto vars = spt_playerio.GetMovementVars();
 	auto pl = spt_playerio.GetPlayerData();
+	float forwardmove, sidemove;
+	spt_playerio.GetMoveInput(forwardmove, sidemove);
+	auto input = GetStrafeInput(forwardmove, sidemove, va[YAW]);
 
 	bool jumped = false;
 
@@ -198,20 +235,10 @@ void TASFeature::Strafe(float* va, bool yawChanged)
 
 	Strafe::Friction(pl, vars.OnGround, vars);
 
-	if (tas_strafe_vectorial
-	        .GetBool()) // Can do vectorial strafing even with locked camera, provided we are not jumping
-		Strafe::StrafeVectorial(pl,
-		                        vars,
-		                        jumped,
-		                        type,
-		                        dir,
-		                        tas_strafe_yaw.GetFloat(),
-		                        va[YAW],
-		                        out,
-		                        yawChanged);
+	if (input.Vectorial) // Can do vectorial strafing even with locked camera, provided we are not jumping
+		Strafe::StrafeVectorial(pl, vars, input, jumped, type, dir, va[YAW], out, yawChanged);
 	else if (!yawChanged) // not changing yaw, can do regular strafe
-		Strafe::Strafe(
-		    pl, vars, jumped, type, dir, tas_strafe_yaw.GetFloat(), va[YAW], out, btns, usingButtons);
+		Strafe::Strafe(pl, vars, input, jumped, type, dir, va[YAW], out, btns, usingButtons);
 
 	spt_playerio.SetTASInput(va, out);
 }
@@ -286,7 +313,8 @@ void TASFeature::LoadFeature()
 #endif
 	}
 
-	tasAddressesWereFound = spt_generic.ORIG_AdjustAngles && spt_playerio.PlayerIOAddressesFound();
+	tasAddressesWereFound =
+	    (spt_generic.ORIG_AdjustAngles || spt_generic.ORIG_ControllerMove) && spt_playerio.PlayerIOAddressesFound();
 
 	if (tasAddressesWereFound)
 	{

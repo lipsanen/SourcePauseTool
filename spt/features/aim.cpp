@@ -222,7 +222,7 @@ CON_COMMAND(_y_spt_setangle,
 
 void AimFeature::LoadFeature()
 {
-	if (spt_generic.ORIG_AdjustAngles && spt_playerio.ORIG_CreateMove)
+	if ((spt_generic.ORIG_AdjustAngles || spt_generic.ORIG_ControllerMove) && spt_playerio.ORIG_CreateMove)
 	{
 		InitCommand(tas_aim_reset);
 		InitCommand(tas_aim);
