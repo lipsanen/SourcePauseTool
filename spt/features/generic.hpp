@@ -28,7 +28,6 @@ public:
 	_FinishRestore ORIG_FinishRestore = nullptr;
 	_MainViewOrigin ORIG_MainViewOrigin = nullptr;
 	_GetClientModeNormal ORIG_GetClientModeNormal = nullptr;
-	_AdjustAngles ORIG_AdjustAngles = nullptr;
 	_ControllerMove ORIG_ControllerMove = nullptr;
 
 	bool shouldPreventNextUnpause = false;

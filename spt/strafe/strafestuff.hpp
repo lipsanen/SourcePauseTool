@@ -21,11 +21,14 @@ namespace Strafe
 	struct StrafeInput
 	{
 		double TargetYaw;
+		float VectorialOffset;
 		float AngleSpeed;
 		float Scale;
 		bool AFH;
 		bool Vectorial;
 		bool JumpOverride;
+		bool Strafe;
+		int Version;
 	};
 
 	struct MovementVars

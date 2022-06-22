@@ -1068,7 +1068,6 @@ namespace Strafe
 	void StrafeVectorial(PlayerData& player,
 	                     const MovementVars& vars,
 	                     const StrafeInput& strafeInput,
-
 	                     bool jumped,
 	                     StrafeType type,
 	                     StrafeDir dir,
@@ -1098,12 +1097,11 @@ namespace Strafe
 		if (dummy.Forward)
 		{
 			// Outdated angle change stuff, now resides in aim.cpp
-			if (!yawChanged && tas_strafe_vectorial_increment.GetFloat() > 0
-			    && tas_strafe_version.GetInt() <= 3)
+			if (!yawChanged && tas_strafe_vectorial_increment.GetFloat() > 0 && strafeInput.Version <= 3)
 			{
 				// Calculate updated yaw
 				double adjustedTarget =
-				    NormalizeDeg(strafeInput.TargetYaw + tas_strafe_vectorial_offset.GetFloat());
+				    NormalizeDeg(strafeInput.TargetYaw + strafeInput.VectorialOffset);
 				double normalizedDiff = NormalizeDeg(adjustedTarget - vel_yaw);
 				double additionAbs =
 				    std::min(static_cast<double>(tas_strafe_vectorial_increment.GetFloat()),

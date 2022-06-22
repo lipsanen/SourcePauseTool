@@ -23,12 +23,12 @@ ConVar tas_anglespeed("tas_anglespeed",
 
 AimFeature spt_aim;
 
-void AimFeature::HandleAiming(float* va, bool& yawChanged)
+void AimFeature::HandleAiming(float* va, bool& yawChanged, const Strafe::StrafeInput& input)
 {
 	// Use tas_aim stuff for tas_strafe_version >= 4
-	if (tas_strafe_version.GetInt() >= 4)
+	if (input.Version >= 4)
 	{
-		spt_aim.viewState.UpdateView(va[PITCH], va[YAW]);
+		spt_aim.viewState.UpdateView(va[PITCH], va[YAW], input);
 	}
 
 	double pitchSpeed = atof(_y_spt_pitchspeed.GetString()), yawSpeed = atof(_y_spt_yawspeed.GetString());
