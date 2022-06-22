@@ -330,8 +330,7 @@ void TASFeature::LoadFeature()
 #endif
 	}
 
-	tasAddressesWereFound =
-	    (spt_generic.ORIG_AdjustAngles || spt_generic.ORIG_ControllerMove) && spt_playerio.PlayerIOAddressesFound();
+	tasAddressesWereFound = spt_generic.ORIG_ControllerMove && spt_playerio.PlayerIOAddressesFound();
 
 	if (tasAddressesWereFound)
 	{
