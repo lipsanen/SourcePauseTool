@@ -31,63 +31,14 @@ namespace scripts
 		iterationFinished = true;
 	}
 
-	void SourceTASReader::ExecuteScript(const std::string& script)
-	{
-		freezeVariables = false;
-		fileName = script;
-		CommonExecuteScript(false);
-	}
-
-	void SourceTASReader::ExecuteScriptWithResume(const std::string& script, int resumeTicks)
-	{
-		char buffer[80];
-		freezeVariables = false;
-		fileName = script;
-		CommonExecuteScript(false);
-
-		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
-		tickTime = spt_tickrate.GetTickrate();
-		snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
-		int resumeTick = GetCurrentScriptLength() - resumeTicks;
-		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
-	}
-
-	void SourceTASReader::StartSearch(const std::string& script)
-	{
-		freezeVariables = false;
-		fileName = script;
-		CommonExecuteScript(true);
-		freezeVariables = true;
-	}
-
-	void SourceTASReader::SearchResult(scripts::SearchResult result)
+	void SourceTASReader::ParseScript(const std::string& script, bool search)
 	{
 		try
 		{
-			variables.SetResult(result);
-			CommonExecuteScript(true);
-		}
-		catch (const std::exception& ex)
-		{
-			Msg("Error setting result: %s\n", ex.what());
-		}
-		catch (const SearchDoneException&)
-		{
-			Msg("Search done.\n");
-			variables.PrintBest();
-			iterationFinished = true;
-		}
-		catch (...)
-		{
-			Msg("Unexpected exception on line %i\n", currentLine);
-		}
-	}
-
-	void SourceTASReader::CommonExecuteScript(bool search)
-	{
-		try
-		{
+			if (!search)
+				freezeVariables = false;
 			Reset();
+			fileName = script;
 #if OE
 			const char* dir = y_spt_gamedir.GetString();
 			if (dir == NULL || dir[0] == '\0')
@@ -116,8 +67,7 @@ namespace scripts
 					throw std::exception(
 					    "Unexpected section order in file. Expected order is props - variables - frames");
 			}
-
-			Execute();
+			FinishParsing();
 		}
 		catch (const std::exception& ex)
 		{
@@ -134,6 +84,64 @@ namespace scripts
 		}
 
 		scriptStream.close();
+	}
+
+	void SourceTASReader::StartSearch(const std::string& script)
+	{
+		freezeVariables = false;
+		fileName = script;
+		ParseScript(script, true);
+		Execute();
+		freezeVariables = true;
+	}
+
+	void SourceTASReader::SearchResult(scripts::SearchResult result)
+	{
+		try
+		{
+			variables.SetResult(result);
+			ParseScript(fileName, true);
+			Execute();
+		}
+		catch (const std::exception& ex)
+		{
+			Msg("Error setting result: %s\n", ex.what());
+		}
+		catch (const SearchDoneException&)
+		{
+			Msg("Search done.\n");
+			variables.PrintBest();
+			iterationFinished = true;
+		}
+		catch (...)
+		{
+			Msg("Unexpected exception on line %i\n", currentLine);
+		}
+	}
+
+	void SourceTASReader::FinishParsing()
+	{
+		SetFpsAndPlayspeed();
+		currentScript.Init(fileName);
+
+		auto demoName = currentScript.GetDemoName();
+
+		if (spt_demostuff.Demo_IsAutoRecordingAvailable())
+		{
+			currentScript.AddAfterFramesEntry(demoDelay, "y_spt_record " + demoName);
+		}
+		else
+		{
+			currentScript.AddAfterFramesEntry(demoDelay, "record " + demoName);
+		}
+
+		for (auto& entry : currentScript.afterFramesEntries)
+		{
+			if (entry.framesLeft == NO_AFTERFRAMES_BULK)
+			{
+				currentScript.AddDuringLoadCmd(entry.command);
+			}
+		}
 	}
 
 	void SourceTASReader::OnAfterFrames()
@@ -187,42 +195,14 @@ namespace scripts
 	void SourceTASReader::Execute()
 	{
 		iterationFinished = false;
-		SetFpsAndPlayspeed();
 		spt_demostuff.Demo_StopRecording();
 		currentTick = 0;
 		spt_afterframes.ResetAfterframesQueue();
-		currentScript.Init(fileName);
-
-		auto demoName = currentScript.GetDemoName();
-
-		if (spt_demostuff.Demo_IsAutoRecordingAvailable())
-		{
-			currentScript.AddAfterFramesEntry(demoDelay, "y_spt_record " + demoName);
-		}
-		else
-		{
-			currentScript.AddAfterFramesEntry(demoDelay, "record " + demoName);
-		}
-
-		for (auto& entry : currentScript.afterFramesEntries)
-		{
-			if (entry.framesLeft == NO_AFTERFRAMES_BULK)
-			{
-				currentScript.AddDuringLoadCmd(entry.command);
-			}
-		}
 
 		std::string startCmd(currentScript.initCommand + ";" + currentScript.duringLoad);
 		EngineConCmd(startCmd.c_str());
 		DevMsg("Executing start command: %s\n", startCmd.c_str());
-
-		for (auto& entry : currentScript.afterFramesEntries)
-		{
-			if (entry.framesLeft != NO_AFTERFRAMES_BULK)
-			{
-				spt_afterframes.AddAfterFramesEntry(entry);
-			}
-		}
+		currentScript.GetAfterframesEntries(spt_afterframes.GetAfterframesQueuePtr(), 0, -1);
 	}
 
 	void SourceTASReader::SetFpsAndPlayspeed()
@@ -329,7 +309,6 @@ namespace scripts
 
 	void SourceTASReader::ResetIterationState()
 	{
-		ResetConvars();
 		conditions.clear();
 		scriptStream.clear();
 		lineStream.clear();

@@ -17,14 +17,15 @@ namespace scripts
 	{
 	public:
 		SourceTASReader();
-		void ExecuteScript(const std::string& script);
-		void ExecuteScriptWithResume(const std::string& script, int resumeTicks);
+		void Execute();
+		void ParseScript(const std::string& script, bool search);
 		void StartSearch(const std::string& script);
 		void SearchResult(scripts::SearchResult result);
 		void OnAfterFrames();
 		int GetCurrentTick();
 		int GetCurrentScriptLength();
 		bool IsExecutingScript();
+		void ResetConvars();
 
 	private:
 		bool iterationFinished;
@@ -45,16 +46,14 @@ namespace scripts
 		std::map<std::string, void (SourceTASReader::*)(const std::string&)> propertyHandlers;
 		std::vector<std::unique_ptr<Condition>> conditions;
 
-		void CommonExecuteScript(bool search);
+		void FinishParsing();
 		void Reset();
 		void ResetIterationState();
-		void Execute();
 		void SetFpsAndPlayspeed();
 
 		bool ParseLine();
 		void SetNewLine();
 		void ReplaceVariables();
-		void ResetConvars();
 
 		void InitPropertyHandlers();
 		void ParseProps();

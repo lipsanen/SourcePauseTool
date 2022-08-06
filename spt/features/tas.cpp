@@ -252,21 +252,35 @@ void TASFeature::Strafe()
 	EngineSetViewAngles(va);
 }
 
+CON_COMMAND(tas_reset, "Resets stuff before a TAS is played back.")
+{
+	// Add more stuff here to simplify the init command for starting a TAS
+	scripts::g_TASReader.ResetConvars();
+}
+
 CON_COMMAND_AUTOCOMPLETEFILE(
-    tas_script_load,
-    "Loads and executes an .srctas script. If an extra ticks argument is given, the script is played back at maximal FPS and without rendering until that many ticks before the end of the script. Usage: tas_load_script [script] [ticks]",
+    tas_script_play,
+    "tas_script_play [filename] - Plays a TAS script. If no argument is given, play the TAS script that is currently loaded.",
     0,
     "",
     ".srctas")
 {
 	if (args.ArgC() == 2)
-		scripts::g_TASReader.ExecuteScript(args.Arg(1));
-	else if (args.ArgC() == 3)
-	{
-		scripts::g_TASReader.ExecuteScriptWithResume(args.Arg(1), std::stoi(args.Arg(2)));
-	}
+		scripts::g_TASReader.ParseScript(args.Arg(1), false);
+	scripts::g_TASReader.Execute();
+}
+
+CON_COMMAND_AUTOCOMPLETEFILE(
+    tas_script_load,
+    "Loads an .srctas script. If an extra ticks argument is given, the script is played back at maximal FPS and without rendering until that many ticks before the end of the script. Usage: tas_load_script [script] [ticks]",
+    0,
+    "",
+    ".srctas")
+{
+	if (args.ArgC() == 2)
+		scripts::g_TASReader.ParseScript(args.Arg(1), false);
 	else
-		Msg("Loads and executes an .srctas script. Usage: tas_load_script [script]\n");
+		Msg("Loads an .srctas script. Usage: tas_load_script [script]\n");
 }
 
 CON_COMMAND(tas_script_search, "Starts a variable search for an .srctas script. Usage: tas_load_search [script]")
@@ -296,7 +310,9 @@ void TASFeature::LoadFeature()
 {
 	if (AfterFramesSignal.Works)
 	{
+		InitCommand(tas_reset);
 		InitCommand(tas_script_load);
+		InitCommand(tas_script_play);
 		InitCommand(tas_script_search);
 		InitCommand(tas_script_result_success);
 		InitCommand(tas_script_result_fail);
@@ -310,8 +326,7 @@ void TASFeature::LoadFeature()
 #if defined(SSDK2007)
 		AddHudCallback(
 		    "frame",
-		    [this]()
-		    {
+		    [this]() {
 			    spt_hud.DrawTopHudElement(L"frame: %d / %d",
 			                              scripts::g_TASReader.GetCurrentTick(),
 			                              scripts::g_TASReader.GetCurrentScriptLength());

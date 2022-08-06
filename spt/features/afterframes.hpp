@@ -24,6 +24,7 @@ public:
 	void ResetAfterframesQueue();
 	void PauseAfterframesQueue();
 	void ResumeAfterframesQueue();
+	std::vector<afterframes_entry_t>* GetAfterframesQueuePtr();
 
 protected:
 	virtual bool ShouldLoadFeature() override;

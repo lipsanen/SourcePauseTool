@@ -44,7 +44,8 @@ namespace scripts
 				testItems = GetTestData(TestDataFile(testName));
 			}
 
-			g_TASReader.ExecuteScript(testName);
+			g_TASReader.ParseScript(testName, false);
+			g_TASReader.Execute();
 			lastTick = g_TASReader.GetCurrentScriptLength();
 		}
 		catch (const std::exception& ex)

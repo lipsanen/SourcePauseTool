@@ -43,6 +43,11 @@ void AfterframesFeature::ResumeAfterframesQueue()
 	afterframesPaused = false;
 }
 
+std::vector<afterframes_entry_t>* AfterframesFeature::GetAfterframesQueuePtr()
+{
+	return &afterframesQueue;
+}
+
 bool AfterframesFeature::ShouldLoadFeature()
 {
 	return true;

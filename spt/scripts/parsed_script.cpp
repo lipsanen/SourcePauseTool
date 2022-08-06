@@ -87,7 +87,7 @@ namespace scripts
 		afterFramesEntries.clear();
 		saveStateIndexes.clear();
 		initCommand =
-		    "sv_cheats 1; y_spt_pause 0;_y_spt_afterframes_await_load; _y_spt_afterframes_reset_on_server_activate 0; _y_spt_resetpitchyaw;"
+		    "tas_reset; sv_cheats 1; y_spt_pause 0;_y_spt_afterframes_await_load; _y_spt_afterframes_reset_on_server_activate 0; _y_spt_resetpitchyaw;"
 		    "tas_aim_reset";
 		duringLoad.clear();
 		saveName.clear();
@@ -155,6 +155,24 @@ namespace scripts
 	{
 		rtrim(save);
 		saveName = save;
+	}
+
+	void ParsedScript::GetAfterframesEntries(std::vector<afterframes_entry_t>* out, int startTick, int endTick)
+	{
+		if (endTick == -1)
+		{
+			endTick = afterFramesTick;
+		}
+
+		for (afterframes_entry_t entry : afterFramesEntries)
+		{
+			if (entry.framesLeft >= startTick && entry.framesLeft < endTick)
+			{
+				entry.framesLeft -= startTick;
+				entry.framesLeft = std::max(0LL, entry.framesLeft);
+				out->push_back(entry);
+			}
+		}
 	}
 
 	Savestate ParsedScript::GetSaveStateInfo()

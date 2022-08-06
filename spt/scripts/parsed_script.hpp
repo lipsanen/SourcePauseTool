@@ -44,6 +44,7 @@ namespace scripts
 		void AddSaveLoad();
 		void AddAfterFramesEntry(long long int tick, std::string command);
 		void SetSave(std::string save);
+		void GetAfterframesEntries(std::vector<afterframes_entry_t>* out, int startTick, int endTick);
 		int GetScriptLength()
 		{
 			return afterFramesTick;
