@@ -4,6 +4,7 @@
 #include "command.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "..\strafe\strafestuff.hpp"
+#include "..\scripts2\srctas_reader2.hpp"
 #include "..\scripts\srctas_reader.hpp"
 #include "aim.hpp"
 #include "generic.hpp"
@@ -259,11 +260,16 @@ CON_COMMAND_AUTOCOMPLETEFILE(
     "",
     ".srctas")
 {
-	if (args.ArgC() == 2)
-		scripts::g_TASReader.ExecuteScript(args.Arg(1));
+	if (args.ArgC() == 2) {
+		auto result = scripts2::g_TASReader.ExecuteScript(args.Arg(1));
+		if (result == scripts2::LoadResult::V1Script)
+			scripts::g_TASReader.ExecuteScript(args.Arg(1));
+	}
 	else if (args.ArgC() == 3)
 	{
-		scripts::g_TASReader.ExecuteScriptWithResume(args.Arg(1), std::stoi(args.Arg(2)));
+		auto result = scripts2::g_TASReader.ExecuteScriptWithResume(args.Arg(1), std::stoi(args.Arg(2)));
+		if (result == scripts2::LoadResult::V1Script)
+			scripts::g_TASReader.ExecuteScriptWithResume(args.Arg(1), std::stoi(args.Arg(2)));
 	}
 	else
 		Msg("Loads and executes an .srctas script. Usage: tas_load_script [script]\n");

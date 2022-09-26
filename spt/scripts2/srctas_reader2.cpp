@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "srctas_reader.hpp"
+#include "srctas_reader2.hpp"
 
 #include "..\spt-serverplugin.hpp"
 
@@ -12,11 +12,11 @@
 #include "string_utils.hpp"
 #include "..\cvars.hpp"
 #include "..\features\tickrate.hpp"
-#include "framebulk_handler.hpp"
+#include "framebulk_handler2.hpp"
 #include "..\features\afterframes.hpp"
 #include "..\features\demo.hpp"
 
-namespace scripts
+namespace scripts2
 {
 	SourceTASReader g_TASReader;
 	const std::string SCRIPT_EXT = ".srctas";
@@ -31,25 +31,30 @@ namespace scripts
 		iterationFinished = true;
 	}
 
-	void SourceTASReader::ExecuteScript(const std::string& script)
+	LoadResult SourceTASReader::ExecuteScript(const std::string& script)
 	{
 		freezeVariables = false;
 		fileName = script;
-		CommonExecuteScript(false);
+		return CommonExecuteScript(false);
 	}
 
-	void SourceTASReader::ExecuteScriptWithResume(const std::string& script, int resumeTicks)
+	LoadResult SourceTASReader::ExecuteScriptWithResume(const std::string& script, int resumeTicks)
 	{
 		char buffer[80];
 		freezeVariables = false;
 		fileName = script;
-		CommonExecuteScript(false);
+		auto result = CommonExecuteScript(false);
 
-		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
-		tickTime = spt_tickrate.GetTickrate();
-		snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
-		int resumeTick = GetCurrentScriptLength() - resumeTicks;
-		spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
+		if (result == LoadResult::Success)
+		{
+			spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(0, "y_spt_cvar fps_max 0; mat_norendering 1"));
+			tickTime = spt_tickrate.GetTickrate();
+			snprintf(buffer, ARRAYSIZE(buffer), "y_spt_cvar fps_max %.6f; mat_norendering 0", 1 / tickTime);
+			int resumeTick = GetCurrentScriptLength() - resumeTicks;
+			spt_afterframes.AddAfterFramesEntry(afterframes_entry_t(resumeTick, buffer));
+		}
+
+		return result;
 	}
 
 	void SourceTASReader::StartSearch(const std::string& script)
@@ -60,7 +65,7 @@ namespace scripts
 		freezeVariables = true;
 	}
 
-	void SourceTASReader::SearchResult(scripts::SearchResult result)
+	void SourceTASReader::SearchResult(scripts2::SearchResult result)
 	{
 		try
 		{
@@ -83,11 +88,12 @@ namespace scripts
 		}
 	}
 
-	void SourceTASReader::CommonExecuteScript(bool search)
+	LoadResult SourceTASReader::CommonExecuteScript(bool search)
 	{
+		LoadResult result = LoadResult::Success;
 		try
 		{
-			DevMsg("Attempting to parse a version 1 TAS script...\n");
+			DevMsg("Attempting to parse a version 2 TAS script...\n");
 			Reset();
 #if OE
 			const char* dir = y_spt_gamedir.GetString();
@@ -100,29 +106,37 @@ namespace scripts
 
 			if (!scriptStream.is_open())
 				throw std::exception("File does not exist");
-			ParseProps();
+			auto propResult = ParseProps();
 
-			if (search && searchType == SearchType::None)
-				throw std::exception("In search mode but search property is not set");
-			else if (!search && searchType != SearchType::None)
-				throw std::exception("Not in search mode but search property is set");
-
-			while (!scriptStream.eof())
+			if (propResult == LoadResult::V1Script)
 			{
-				if (IsFramesLine())
-					ParseFrames();
-				else if (IsVarsLine())
-					ParseVariables();
-				else
-					throw std::exception(
-					    "Unexpected section order in file. Expected order is props - variables - frames");
+				result = LoadResult::V1Script; // Tried to parse a v1 script
 			}
+			else
+			{
+				if (search && searchType == SearchType::None)
+					throw std::exception("In search mode but search property is not set");
+				else if (!search && searchType != SearchType::None)
+					throw std::exception("Not in search mode but search property is set");
 
-			Execute();
+				while (!scriptStream.eof())
+				{
+					if (IsFramesLine())
+						ParseFrames();
+					else if (IsVarsLine())
+						ParseVariables();
+					else
+						throw std::exception(
+							"Unexpected section order in file. Expected order is props - variables - frames");
+				}
+
+				Execute();
+			}
 		}
 		catch (const std::exception& ex)
 		{
 			Msg("Error in line %i: %s!\n", currentLine, ex.what());
+			result = LoadResult::Error;
 		}
 		catch (const SearchDoneException&)
 		{
@@ -132,9 +146,11 @@ namespace scripts
 		catch (...)
 		{
 			Msg("Unexpected exception on line %i\n", currentLine);
+			result = LoadResult::Error;
 		}
 
 		scriptStream.close();
+		return result;
 	}
 
 	void SourceTASReader::OnAfterFrames()
@@ -188,51 +204,14 @@ namespace scripts
 	void SourceTASReader::Execute()
 	{
 		iterationFinished = false;
-		SetFpsAndPlayspeed();
-		spt_demostuff.Demo_StopRecording();
+		ResetConvars();
 		currentTick = 0;
-		spt_afterframes.ResetAfterframesQueue();
 		currentScript.Init(fileName);
 
-		auto demoName = currentScript.GetDemoName();
-
-		if (spt_demostuff.Demo_IsAutoRecordingAvailable())
-		{
-			currentScript.AddAfterFramesEntry(demoDelay, "y_spt_record " + demoName);
-		}
-		else
-		{
-			currentScript.AddAfterFramesEntry(demoDelay, "record " + demoName);
-		}
-
 		for (auto& entry : currentScript.afterFramesEntries)
 		{
-			if (entry.framesLeft == NO_AFTERFRAMES_BULK)
-			{
-				currentScript.AddDuringLoadCmd(entry.command);
-			}
+			spt_afterframes.AddAfterFramesEntry(entry);
 		}
-
-		std::string startCmd(currentScript.initCommand + ";" + currentScript.duringLoad);
-		EngineConCmd(startCmd.c_str());
-		DevMsg("Executing start command: %s\n", startCmd.c_str());
-
-		for (auto& entry : currentScript.afterFramesEntries)
-		{
-			if (entry.framesLeft != NO_AFTERFRAMES_BULK)
-			{
-				spt_afterframes.AddAfterFramesEntry(entry);
-			}
-		}
-	}
-
-	void SourceTASReader::SetFpsAndPlayspeed()
-	{
-		std::ostringstream os;
-		tickTime = spt_tickrate.GetTickrate();
-		float fps = 1.0f / tickTime * playbackSpeed;
-		os << "host_framerate " << tickTime << "; fps_max " << fps;
-		currentScript.AddDuringLoadCmd(os.str());
 	}
 
 	bool SourceTASReader::ParseLine()
@@ -330,7 +309,6 @@ namespace scripts
 
 	void SourceTASReader::ResetIterationState()
 	{
-		ResetConvars();
 		conditions.clear();
 		scriptStream.clear();
 		lineStream.clear();
@@ -342,16 +320,33 @@ namespace scripts
 		currentScript.Reset();
 	}
 
-	void SourceTASReader::ParseProps()
+	LoadResult SourceTASReader::ParseProps()
 	{
-		while (ParseLine())
+		for (int i=0; ParseLine(); ++i)
 		{
+			if (i == 0)
+			{
+				if (IsVersionLine())
+				{
+					const char* str = line.c_str() + strlen("version");
+					int version = std::atoi(str);
+					if (version >= 2)
+					{
+						continue;
+					}
+				}
+
+				return LoadResult::V1Script;
+			}
+
 			if (IsFramesLine() || IsVarsLine())
 			{
 				break;
 			}
 			ParseProp();
 		}
+
+		return LoadResult::Success;
 	}
 
 	void SourceTASReader::ParseProp()
@@ -371,11 +366,6 @@ namespace scripts
 		}
 		else
 			throw std::exception("Unknown property name");
-	}
-
-	void SourceTASReader::HandleSettings(const std::string& value)
-	{
-		currentScript.AddDuringLoadCmd(value);
 	}
 
 	void SourceTASReader::ParseVariables()
@@ -421,14 +411,6 @@ namespace scripts
 		{
 			return;
 		}
-		else if (line.find("ss") == 0)
-		{
-			currentScript.AddSaveState();
-		}
-		else if (line.find("sl") == 0)
-		{
-			currentScript.AddSaveLoad();
-		}
 		else
 		{
 			FrameBulkInfo info(lineStream);
@@ -440,12 +422,8 @@ namespace scripts
 
 	void SourceTASReader::InitPropertyHandlers()
 	{
-		propertyHandlers["save"] = &SourceTASReader::HandleSave;
-		propertyHandlers["demo"] = &SourceTASReader::HandleDemo;
-		propertyHandlers["demodelay"] = &SourceTASReader::HandleDemoDelay;
 		propertyHandlers["search"] = &SourceTASReader::HandleSearch;
 		propertyHandlers["playspeed"] = &SourceTASReader::HandlePlaybackSpeed;
-		propertyHandlers["settings"] = &SourceTASReader::HandleSettings;
 
 		// Conditions for automated searching
 		propertyHandlers["tick"] = &SourceTASReader::HandleTickRange;
@@ -469,21 +447,6 @@ namespace scripts
 			propertyHandlers["portal_bubble"] = &SourceTASReader::HandlePBubbleCondition;
 		}
 #endif
-	}
-
-	void SourceTASReader::HandleSave(const std::string& value)
-	{
-		currentScript.SetSave(value);
-	}
-
-	void SourceTASReader::HandleDemo(const std::string& value)
-	{
-		currentScript.SetDemoName(value);
-	}
-
-	void SourceTASReader::HandleDemoDelay(const std::string& value)
-	{
-		demoDelay = ParseValue<int>(value);
 	}
 
 	void SourceTASReader::HandleSearch(const std::string& value)
@@ -581,6 +544,11 @@ namespace scripts
 	bool SourceTASReader::IsVarsLine()
 	{
 		return line.find("vars") == 0;
+	}
+
+	bool SourceTASReader::IsVersionLine()
+	{
+		return line.find("version") == 0;
 	}
 
 	std::string GetVarIdentifier(std::string name)
