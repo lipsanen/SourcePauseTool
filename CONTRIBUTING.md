@@ -1,3 +1,16 @@
+# Project structure
+- libMinhook contains hooking stuff
+- SPTLib contains some more library code for hooking (shared between Bunnymod XT and SPT)
+- SPTLib2 contains other library code for SPT
+- SPT is the main project used to compile the spt.dll
+- SPTLib2Test is for writing unit tests for SPTLib2 code
+
+# Running unit tests
+1. Build SPTLib2Test
+2. Place a tier0.dll from the relevant game into Release\SPTLib2Test (or whatever configuration directory you are building into)
+3. Right click on SPTLib2Test -> Set as Startup Project
+4. Press F5
+
 # How to add a new feature
 1. Copy and paste the spt/features/template.cpp.txt file
 2. Rename to yourfeature.cpp
