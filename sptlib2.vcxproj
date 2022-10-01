@@ -281,10 +281,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message />
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -355,11 +351,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -429,11 +420,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\bms\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -503,11 +489,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "E:\SteamLibrary\steamapps\common\Dark Messiah Might and Magic Single Player\bin\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\episode1\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -583,10 +564,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message />
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\orangebox\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -664,11 +641,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\sdk2013\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -746,11 +718,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\bms\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>
@@ -829,11 +796,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release OE|Win32'">
     <PreBuildEvent>
@@ -907,11 +869,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "E:\SteamLibrary\steamapps\common\Dark Messiah Might and Magic Single Player\bin\"</Command>
-    </PostBuildEvent>
     <Lib>
       <AdditionalLibraryDirectories>SDK\episode1\lib\public</AdditionalLibraryDirectories>
       <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;tier0.lib;tier1.lib;mathlib.lib</AdditionalDependencies>

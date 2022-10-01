@@ -276,10 +276,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message />
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug 2013|Win32'">
     <PreBuildEvent>
@@ -346,11 +342,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug BMS|Win32'">
     <PreBuildEvent>
@@ -417,11 +408,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug OE|Win32'">
     <PreBuildEvent>
@@ -488,11 +474,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "E:\SteamLibrary\steamapps\common\Dark Messiah Might and Magic Single Player\bin\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
@@ -565,10 +546,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message />
-      <Command>copy "$(TargetPath)" "D:\Games\Source Unpack\portal\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release 2013|Win32'">
     <PreBuildEvent>
@@ -643,11 +620,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release BMS|Win32'">
     <PreBuildEvent>
@@ -722,11 +694,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug blank|Win32'">
     <PreBuildEvent>
@@ -801,11 +768,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "D:\Games\SteamLibrary\steamapps\common\Black Mesa\bms\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release OE|Win32'">
     <PreBuildEvent>
@@ -880,11 +842,6 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(OutDir)spt.bsc</OutputFile>
     </Bscmake>
-    <PostBuildEvent>
-      <Message>
-      </Message>
-      <Command>copy "$(TargetPath)" "E:\SteamLibrary\steamapps\common\Dark Messiah Might and Magic Single Player\bin\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="sptlib\Hooks.cpp">
