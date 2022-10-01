@@ -8,7 +8,7 @@
 #include "game_detection.hpp"
 #include "file.hpp"
 #include "interfaces.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "string_utils.hpp"
 #include "..\cvars.hpp"
 #include "..\features\tickrate.hpp"

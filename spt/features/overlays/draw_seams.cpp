@@ -7,7 +7,7 @@
 #include "spt\feature.hpp"
 #include "spt\utils\signals.hpp"
 #include "spt\features\ent_props.hpp"
-#include "spt\utils\math.hpp"
+#include "SPTLib2\math.hpp"
 #include "spt\sptlib-wrapper.hpp"
 #include "spt\features\tracing.hpp"
 #include "spt\features\generic.hpp"

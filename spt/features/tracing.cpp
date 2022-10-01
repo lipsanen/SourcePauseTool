@@ -4,7 +4,7 @@
 #include "game_detection.hpp"
 #include "generic.hpp"
 #include "hud.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "interfaces.hpp"
 #include "convar.h"
 #include "string_utils.hpp"

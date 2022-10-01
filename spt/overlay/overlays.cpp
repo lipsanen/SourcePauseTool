@@ -3,7 +3,7 @@
 #ifndef OE
 #include "..\sptlib-wrapper.hpp"
 #include "ent_utils.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "..\features\shadow.hpp"
 #include "..\features\playerio.hpp"
 #include "overlays.hpp"

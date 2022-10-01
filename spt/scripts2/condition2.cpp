@@ -5,7 +5,7 @@
 #include "..\overlay\portal_camera.hpp"
 
 #include "ent_utils.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "property_getter.hpp"
 #include "..\features\playerio.hpp"
 

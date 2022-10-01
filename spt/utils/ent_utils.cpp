@@ -16,7 +16,7 @@
 #include "game_detection.hpp"
 #include "property_getter.hpp"
 #include "string_utils.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "game_detection.hpp"
 #include "..\features\playerio.hpp"
 #include "..\features\tickrate.hpp"

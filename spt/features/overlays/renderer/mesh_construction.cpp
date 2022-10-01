@@ -8,7 +8,7 @@
 
 #include "spt\feature.hpp"
 #include "spt\features\ent_props.hpp"
-#include "spt\utils\math.hpp"
+#include "SPTLib2\math.hpp"
 
 /**************************************** COLLIDE TO MESH ****************************************/
 

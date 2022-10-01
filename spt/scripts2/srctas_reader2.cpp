@@ -4,7 +4,7 @@
 #include "framebulk_handler2.hpp"
 #include "game_detection.hpp"
 #include "interfaces.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "srctas_reader2.hpp"
 #include "string_utils.hpp"
 

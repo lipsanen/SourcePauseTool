@@ -133,9 +133,6 @@
     <ClCompile Include="spt\utils\game_detection.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
-    <ClCompile Include="spt\utils\math.cpp">
-      <Filter>spt\utils</Filter>
-    </ClCompile>
     <ClCompile Include="spt\utils\property_getter.cpp">
       <Filter>spt\utils</Filter>
     </ClCompile>
@@ -285,63 +282,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\public\tier0\basetypes.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\Color.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier0\dbg.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\eiface.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\filesystem.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\vstdlib\ICommandLine.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\igameevents.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier1\interface.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\game\server\iplayerinfo.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\engine\iserverplugin.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier1\KeyValues.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier0\mem.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier0\memalloc.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier0\memdbgon.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\vstdlib\strtools.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier1\utlbuffer.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier1\utlmemory.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\tier1\utlvector.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\public\vstdlib\vstdlib.h">
-      <Filter>SDK includes &amp; libs</Filter>
-    </ClInclude>
     <ClInclude Include="SDK\igamemovement.h">
       <Filter>SDK</Filter>
     </ClInclude>
@@ -457,9 +397,6 @@
       <Filter>spt\utils</Filter>
     </ClInclude>
     <ClInclude Include="spt\utils\interfaces.hpp">
-      <Filter>spt\utils</Filter>
-    </ClInclude>
-    <ClInclude Include="spt\utils\math.hpp">
       <Filter>spt\utils</Filter>
     </ClInclude>
     <ClInclude Include="spt\utils\property_getter.hpp">
@@ -599,20 +536,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\lib\public\mathlib.lib">
-      <Filter>SDK includes &amp; libs</Filter>
-    </Library>
-    <Library Include="..\..\lib\public\tier0.lib">
-      <Filter>SDK includes &amp; libs</Filter>
-    </Library>
-    <Library Include="..\..\lib\public\tier1.lib">
-      <Filter>SDK includes &amp; libs</Filter>
-    </Library>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="SDK includes &amp; libs">
-      <UniqueIdentifier>{eade2e26-4b70-429d-ac6b-01135e887da7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="spt">
       <UniqueIdentifier>{42277bb4-807d-445f-8dc9-abaf03016da9}</UniqueIdentifier>
     </Filter>

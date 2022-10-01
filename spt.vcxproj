@@ -249,7 +249,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -318,7 +319,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -388,7 +390,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -458,7 +461,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -531,7 +535,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -608,7 +613,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -686,7 +692,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -843,7 +850,8 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib</AdditionalDependencies>
+      <AdditionalDependencies>
+      </AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -1307,7 +1315,6 @@
     <ClCompile Include="spt\utils\ent_utils.cpp" />
     <ClCompile Include="spt\utils\file.cpp" />
     <ClCompile Include="spt\utils\game_detection.cpp" />
-    <ClCompile Include="spt\utils\math.cpp" />
     <ClCompile Include="spt\utils\property_getter.cpp" />
     <ClCompile Include="spt\utils\signals.cpp" />
     <ClCompile Include="spt\utils\string_utils.cpp" />
@@ -1315,30 +1322,6 @@
     <ClCompile Include="thirdparty\md5.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\lib\public\mathlib.lib" />
-    <Library Include="..\..\lib\public\tier0.lib" />
-    <Library Include="..\..\lib\public\tier1.lib" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\public\tier0\basetypes.h" />
-    <ClInclude Include="..\..\public\Color.h" />
-    <ClInclude Include="..\..\public\tier0\dbg.h" />
-    <ClInclude Include="..\..\public\eiface.h" />
-    <ClInclude Include="..\..\public\filesystem.h" />
-    <ClInclude Include="..\..\public\vstdlib\ICommandLine.h" />
-    <ClInclude Include="..\..\public\igameevents.h" />
-    <ClInclude Include="..\..\public\tier1\interface.h" />
-    <ClInclude Include="..\..\public\game\server\iplayerinfo.h" />
-    <ClInclude Include="..\..\public\engine\iserverplugin.h" />
-    <ClInclude Include="..\..\public\tier1\KeyValues.h" />
-    <ClInclude Include="..\..\public\tier0\mem.h" />
-    <ClInclude Include="..\..\public\tier0\memalloc.h" />
-    <ClInclude Include="..\..\public\tier0\memdbgon.h" />
-    <ClInclude Include="..\..\public\vstdlib\strtools.h" />
-    <ClInclude Include="..\..\public\tier1\utlbuffer.h" />
-    <ClInclude Include="..\..\public\tier1\utlmemory.h" />
-    <ClInclude Include="..\..\public\tier1\utlvector.h" />
-    <ClInclude Include="..\..\public\vstdlib\vstdlib.h" />
     <ClInclude Include="SDK\hl_movedata.h" />
     <ClInclude Include="SDK\igamemovement.h" />
     <ClInclude Include="SDK\imovehelper.h" />
@@ -1413,7 +1396,6 @@
     <ClInclude Include="spt\utils\game_detection.hpp" />
     <ClInclude Include="spt\utils\interfaces.hpp" />
     <ClInclude Include="spt\utils\ivp_maths.hpp" />
-    <ClInclude Include="spt\utils\math.hpp" />
     <ClInclude Include="spt\utils\property_getter.hpp" />
     <ClInclude Include="spt\utils\signals.hpp" />
     <ClInclude Include="spt\utils\string_utils.hpp" />
@@ -1425,6 +1407,9 @@
     <ClInclude Include="thirdparty\Signal.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="sptlib2.vcxproj">
+      <Project>{45d3306b-74c0-4ac5-a0be-ae60f7060ba1}</Project>
+    </ProjectReference>
     <ProjectReference Include="SPTLib\Windows\minhook\build\VC15\libMinHook.vcxproj">
       <Project>{f142a341-5ee0-442d-a15f-98ae9b48dbae}</Project>
     </ProjectReference>

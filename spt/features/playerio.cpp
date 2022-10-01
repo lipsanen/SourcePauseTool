@@ -5,7 +5,7 @@
 #include "aim.hpp"
 #include "hud.hpp"
 #include "game_detection.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "playerio.hpp"
 #include "ent_utils.hpp"
 #include "interfaces.hpp"

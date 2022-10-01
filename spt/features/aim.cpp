@@ -3,7 +3,7 @@
 #include "aim.hpp"
 #include "generic.hpp"
 #include "ent_utils.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "playerio.hpp"
 
 #undef min

@@ -10,7 +10,7 @@
 #include "spt-serverplugin.hpp"
 #include "..\sptlib-wrapper.hpp"
 #include "ent_utils.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "string_utils.hpp"
 #include "game_detection.hpp"
 #include "..\features\generic.hpp"

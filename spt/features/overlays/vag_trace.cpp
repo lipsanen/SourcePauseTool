@@ -10,7 +10,7 @@
 #include "spt\overlay\portal_camera.hpp"
 #include "spt\utils\ent_utils.hpp"
 #include "spt\features\ent_props.hpp"
-#include "spt\utils\math.hpp"
+#include "SPTLib2\math.hpp"
 #include "spt\features\playerio.hpp"
 
 ConVar y_spt_draw_vag_trace("y_spt_draw_vag_trace", "0", FCVAR_CHEAT, "Draw VAG teleport destination(s)");

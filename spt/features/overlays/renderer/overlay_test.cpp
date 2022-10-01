@@ -4,7 +4,7 @@
 
 #ifdef SPT_OVERLAY_RENDERER_ENABLED
 
-#include "spt\utils\math.hpp"
+#include "SPTLib2\math.hpp"
 #include "spt\feature.hpp"
 #include "spt\utils\signals.hpp"
 #include "spt\utils\interfaces.hpp"

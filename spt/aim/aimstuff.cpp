@@ -3,7 +3,7 @@
 #include "aimstuff.hpp"
 
 #include "convar.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "ent_utils.hpp"
 #include "..\cvars.hpp"
 #include "spt/sptlib-wrapper.hpp"

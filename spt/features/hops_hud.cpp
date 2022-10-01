@@ -5,7 +5,7 @@
 #include "convar.hpp"
 #include "hud.hpp"
 #include "interfaces.hpp"
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "signals.hpp"
 #include "playerio.hpp"
 #include "property_getter.hpp"

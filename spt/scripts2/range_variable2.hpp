@@ -1,5 +1,5 @@
 #pragma once
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "string_utils.hpp"
 #include <random>
 #include <sstream>

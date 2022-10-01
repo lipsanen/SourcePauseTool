@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "..\feature.hpp"
 #include "convar.hpp"
-#include "..\utils\math.hpp"
+#include "SPTLib2\math.hpp"
 #include "..\utils\command.hpp"
 #include "interfaces.hpp"
 #include <string>

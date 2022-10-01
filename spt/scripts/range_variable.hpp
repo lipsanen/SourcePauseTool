@@ -1,7 +1,7 @@
 #pragma once
 #include <random>
 #include <sstream>
-#include "math.hpp"
+#include "SPTLib2\math.hpp"
 #include "string_utils.hpp"
 
 namespace scripts
