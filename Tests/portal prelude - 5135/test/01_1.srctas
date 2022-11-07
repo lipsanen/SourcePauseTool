@@ -1,0 +1,44 @@
+// This is the first script from the Portal Prelude TAS
+
+demo 01_boost // Record to demo 01_boost
+save _start // Load from a save called start
+playspeed 16 // Playback speed is set to 1
+playspeed 16
+settings tas_strafe_hull_is_line 1; cl_mouseenable 0; _y_spt_afterframes_await_legacy 1; tas_strafe_version 1; y_spt_set_ivp_seed_on_load 0
+
+vars
+var wakeup_wait 769
+var use_wait 6
+var jump_wait 25
+
+var jump_pitch 29.5
+var anglespeed 2.51
+var jump_yaw -170.87
+
+var radio_grab_wait 26
+
+frames
+// Initial framebulk that sets vec strafing on, and disables the automatic camera movement in vec strafing.
+// Disabling camera movement is particularly useful in this seg, because we want to manipulate the radio while strafing.
+----------|------|------|-|-|0|tas_strafe_vectorial 1; tas_strafe_vectorial_increment 0 
+
+// Wait for the bed to rise up before giving any inputs
+----------|------|------|-|-|[wakeup_wait]|
+
+// Set yaw to -132.5 and pitch to 20, the length being 0 means that the next framebulk gets executed immediately
+----------|------|------|-132.5|20|0|_y_spt_anglesetspeed 6
+
+s01-------|------|------|170|-|[use_wait]| // Strafe towards yaw 170
+s01-------|------|--u---|170|-|2|// Grab radio
+
+// Set yaw and pitch for the radio boost
+----------|------|------|[jump_yaw]|[jump_pitch]|0|_y_spt_anglesetspeed [anglespeed]
+
+// Strafe towards 170 for some time
+s01-------|------|------|170|-|[jump_wait]|
+
+// Jump holding W
+----------|f-----|j-----|-|-|[radio_grab_wait]|
+
+// Segment and stop the demo
+----------|------|------|-|-|0|pause
