@@ -23,7 +23,6 @@ struct FeatureCommand
 	bool unhideOnUnregister;
 };
 static std::vector<FeatureCommand> cmd_to_feature;
-static bool first_time_init = true;
 static ConCommandBase** pluginCommandListHead = nullptr;
 
 void Cvar_InitConCommandBase(ConCommandBase& concommand, void* owner)
@@ -39,15 +38,6 @@ void Cvar_InitConCommandBase(ConCommandBase& concommand, void* owner)
 
 	FeatureCommand cmd = {owner, &concommand, false, false, false};
 	cmd_to_feature.push_back(cmd);
-	// Add command to command list since it got wiped after registering commands the first time
-	if (!first_time_init)
-	{
-		if (pluginCommandListHead && !concommand.IsFlagSet(FCVAR_UNREGISTERED))
-		{
-			reinterpret_cast<ConCommandBase_guts&>(concommand).m_pNext = *pluginCommandListHead;
-			*pluginCommandListHead = &concommand;
-		}
-	}
 }
 
 void FormatConCmd(const char* fmt, ...)
@@ -88,23 +78,20 @@ extern "C" ICvar* GetCVarIF()
 	}
 }
 
-static void RemoveCommandFromList(ConCommandBase** head, ConCommandBase* command)
+static void RemoveCommandFromList(ConCommandBase* command)
 {
-	if (head == NULL)
-		return;
-
-	ConCommandBase_guts* pPrev = NULL;
-	for (ConCommandBase_guts* pCommand = *(ConCommandBase_guts**)head; pCommand;
-	     pCommand = (ConCommandBase_guts*)pCommand->m_pNext)
+	ConCommandBase* pPrev = NULL;
+	for (ConCommandBase* pCommand = ConCommandBase::s_pConCommandBases; pCommand;
+	     pCommand = pCommand->m_pNext)
 	{
-		if (pCommand != (ConCommandBase_guts*)command)
+		if (pCommand != (ConCommandBase*)command)
 		{
 			pPrev = pCommand;
 			continue;
 		}
 
 		if (pPrev == NULL)
-			*head = pCommand->m_pNext;
+			ConCommandBase::s_pConCommandBases = pCommand->m_pNext;
 		else
 			pPrev->m_pNext = pCommand->m_pNext;
 
@@ -117,7 +104,7 @@ static void RemoveCommandFromList(ConCommandBase** head, ConCommandBase* command
 static ConCommandBase** GetGlobalCommandListHead()
 {
 	// According to the SDK, ICvar::GetCommands is position 9 on the vtable
-	void** icvarVtable = *(void***)interfaces::g_pCVar;
+	void** icvarVtable = *(void***)g_pCVar;
 	uint8_t* addr = (uint8_t*)icvarVtable[9];
 	// Follow along thunked function
 	if (*addr == X86_JMPIW)
@@ -166,7 +153,7 @@ public:
 		pCommand->SetNext(0);
 
 		// Link to engine's list instead
-		interfaces::g_pCVar->RegisterConCommandBase(pCommand);
+		g_pCVar->RegisterConCommandBase(pCommand);
 		return true;
 	}
 };
@@ -312,18 +299,11 @@ static void HandleBackwardsCompatibility(FeatureCommand& featCmd, const char* cm
 
 void Cvar_RegisterSPTCvars()
 {
-	static bool searchedForList = false;
-	if (!interfaces::g_pCVar)
+	if (!g_pCVar)
 		return;
 
-	if (!searchedForList)
-	{
-		pluginCommandListHead = GetPluginCommandListHead();
-		searchedForList = true;
-	}
-	if (!pluginCommandListHead)
-		return;
-	ConCommandBase* cmd = *pluginCommandListHead;
+	ConCommandBase* cmd = ConCommandBase::s_pConCommandBases;
+
 	while (cmd != NULL)
 	{
 		const char* cmdName = cmd->GetName();
@@ -334,59 +314,56 @@ void Cvar_RegisterSPTCvars()
 		}
 
 		auto inittedCmd = std::find_if(cmd_to_feature.begin(),
-		                               cmd_to_feature.end(),
-		                               [cmd](const FeatureCommand& fc) { return fc.command == cmd; });
-		// This will only ever happen on first time init
+			cmd_to_feature.end(),
+			[cmd](const FeatureCommand& fc) { return fc.command == cmd; });
+
 		if (inittedCmd == cmd_to_feature.end())
 		{
 			DevWarning("Command %s was unloaded, because it was not initialized!\n", cmdName);
 			ConCommandBase* todelete = cmd;
 			cmd = (ConCommandBase*)cmd->GetNext();
-			RemoveCommandFromList(pluginCommandListHead, todelete);
+			RemoveCommandFromList(todelete);
 			continue;
 		}
+		else
+		{
+			cmd = (ConCommandBase*)cmd->GetNext();
+		}
+
 		HandleBackwardsCompatibility(*inittedCmd, cmdName);
 #ifdef OE
 		if (cmd->IsBitSet(FCVAR_HIDDEN))
 			spt_cvarstuff.hidden_cvars.push_back(cmd);
 #endif
-		cmd = (ConCommandBase*)cmd->GetNext();
 	}
-#ifndef OE
-	ConVar_Register(0);
-#else
-	ConCommandBaseMgr::OneTimeInit(&g_ConVarAccessor);
-	// Clear the list head like newer engines do and reset s_pAccessor so the list doesn't break
-	// next time SPT commands are registered
-	*pluginCommandListHead = NULL;
-	ConCommandBaseMgr::OneTimeInit(NULL);
-#endif
 
-	first_time_init = false;
+	cmd = ConCommandBase::s_pConCommandBases;
+
+	while (cmd != NULL)
+	{
+		auto next = cmd->GetNext();
+		g_pCVar->RegisterConCommand(cmd);
+		cmd = next;
+	}
 }
 
 void Cvar_UnregisterSPTCvars()
 {
-	if (!interfaces::g_pCVar)
+	if (!g_pCVar)
 		return;
 
 	for (auto& cmd : cmd_to_feature)
 	{
-#ifdef OE
-		UnregisterConCommand(cmd.command);
-#else
-		interfaces::g_pCVar->UnregisterConCommand(cmd.command);
-#endif
-		ConCommandBase_guts* cmdGuts = reinterpret_cast<ConCommandBase_guts*>(cmd.command);
+		g_pCVar->UnregisterConCommand(cmd.command);
 		if (cmd.dynamicCommand)
 		{
 			if (cmd.dynamicName)
-				delete[] cmdGuts->m_pszName;
+				delete[] cmd.command->m_pszName;
 			delete cmd.command;
 		}
 		// Refer to comment in HandleBackwardsCompatibility
 		if (cmd.unhideOnUnregister)
-			cmdGuts->m_nFlags &= ~FCVAR_HIDDEN;
+			cmd.command->m_nFlags &= ~FCVAR_HIDDEN;
 	}
 
 	cmd_to_feature.clear();
