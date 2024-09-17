@@ -189,7 +189,7 @@ void CvarStuff::LoadFeature()
 		InitCommand(y_spt_cvar_random);
 	}
 #else
-	if (interfaces::g_pCVar)
+	if (g_pCVar)
 	{
 		UpdateCommandList();
 		InitCommand(y_spt_cvar);
