@@ -18,6 +18,9 @@
     <ClCompile Include="orangebox_new\src\all_orangebox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sdk2013_new\src\all_2013.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="orangebox_new\lib\mathlib.lib">
