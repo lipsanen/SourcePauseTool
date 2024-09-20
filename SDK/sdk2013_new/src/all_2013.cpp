@@ -11,12 +11,13 @@
 #define NOMINMAX
 #include <windows.h>
 
-
 #include "basetypes.h"
+#include "characterset.h"
 #include "Color.h"
 #include "commonmacros.h"
 #include "checksum_md5.h"
 #include "filesystem.h"
+#include "generichash.h"
 #include "tier0/dbg.h"
 #include "tier0/mem.h"
 #include "icvar.h"
@@ -31,12 +32,16 @@
 #include <KeyValues.h>
 #include <vstdlib/IKeyValuesSystem.h>
 
+#include "characterset.cpp"
 #include "checksum_md5.cpp"
 #include "cpu.cpp"
 #include "cvar.cpp"
+#include "generichash.cpp"
 #include "lib.cpp"
 #include "strtools.cpp"
-//#include "utlbuffer.cpp"
-//#include "utlstring.cpp"
+#include "strtools_unicode.cpp"
+#include "KeyValues.cpp"
+#include "utlbuffer.cpp"
+#include "utlstring.cpp"
 
 #endif

@@ -19,6 +19,7 @@ PrintFunc Warning = printf_wrapper;
 PrintFunc DevMsg = printf_wrapper;
 PrintFunc DevWarning = printf_wrapper;
 extern "C" IMemAlloc* g_pMemAlloc = nullptr;
+ICvar* g_pCVar = nullptr;
 KeyValueSystemFunc KeyValuesSystem_impl = nullptr;
 
 IKeyValuesSystem* KeyValuesSystem() {

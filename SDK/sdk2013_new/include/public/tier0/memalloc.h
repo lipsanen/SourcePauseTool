@@ -376,38 +376,9 @@ public:
 
 #define MEM_ALLOC_CREDIT()	MEM_ALLOC_CREDIT_(__FILE__)
 
-//-----------------------------------------------------------------------------
-
-#if defined(_WIN32) && ( defined(_DEBUG) || defined(USE_MEM_DEBUG) )
-
-	#pragma warning(disable:4290)
-	#pragma warning(push)
-	#include <typeinfo.h>
-
-	// MEM_DEBUG_CLASSNAME is opt-in.
-	// Note: typeid().name() is not threadsafe, so if the project needs to access it in multiple threads
-	// simultaneously, it'll need a mutex.
-	#if defined(_CPPRTTI) && defined(MEM_DEBUG_CLASSNAME)
-		#define MEM_ALLOC_CREDIT_CLASS()	MEM_ALLOC_CREDIT_( typeid(*this).name() )
-		#define MEM_ALLOC_CLASSNAME(type) (typeid((type*)(0)).name())
-	#else
-		#define MEM_ALLOC_CREDIT_CLASS()	MEM_ALLOC_CREDIT_( __FILE__ )
-		#define MEM_ALLOC_CLASSNAME(type) (__FILE__)
-	#endif
-
-	// MEM_ALLOC_CREDIT_FUNCTION is used when no this pointer is available ( inside 'new' overloads, for example )
-	#ifdef _MSC_VER
-		#define MEM_ALLOC_CREDIT_FUNCTION()		MEM_ALLOC_CREDIT_( __FUNCTION__ )
-	#else
-		#define MEM_ALLOC_CREDIT_FUNCTION() (__FILE__)
-	#endif
-
-	#pragma warning(pop)
-#else
-	#define MEM_ALLOC_CREDIT_CLASS()
-	#define MEM_ALLOC_CLASSNAME(type) NULL
-	#define MEM_ALLOC_CREDIT_FUNCTION() 
-#endif
+#define MEM_ALLOC_CREDIT_CLASS()
+#define MEM_ALLOC_CLASSNAME(type) NULL
+#define MEM_ALLOC_CREDIT_FUNCTION() 
 
 //-----------------------------------------------------------------------------
 

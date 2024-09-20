@@ -232,7 +232,7 @@ int CUtlSortVector<T, LessFunc, BaseVector>::InsertAfter( int nIndex, const T &s
 	return nInsertedIndex;
 }
 
-
+#if 0
 template <class T, class LessFunc, class BaseVector> 
 void CUtlSortVector<T, LessFunc, BaseVector>::QuickSort( LessFunc& less, int nLower, int nUpper )
 {
@@ -259,6 +259,7 @@ void CUtlSortVector<T, LessFunc, BaseVector>::QuickSort( LessFunc& less, int nLo
 	}
 #endif
 }
+#endif
 
 template <class T, class LessFunc, class BaseVector> 
 void CUtlSortVector<T, LessFunc, BaseVector>::RedoSort( bool bForceSort /*= false */ )
