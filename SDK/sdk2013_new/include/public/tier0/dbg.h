@@ -245,36 +245,8 @@ DBG_INTERFACE struct SDL_Window * GetAssertDialogParent();
 	#define DBGFLAG_ASSERTFATAL
 	#define DBGFLAG_ASSERTDEBUG
 #else
-	#define  _AssertMsg( _exp, _msg, _executeExp, _bFatal )	\
-		do {																\
-			if (!(_exp)) 													\
-			{ 																\
-				_SpewInfo( SPEW_ASSERT, __TFILE__, __LINE__ );				\
-				SpewRetval_t ret = _SpewMessage("%s", static_cast<const char*>( _msg ));	\
-				CallAssertFailedNotifyFunc( __TFILE__, __LINE__, _msg );					\
-				_executeExp; 												\
-				if ( ret == SPEW_DEBUGGER)									\
-				{															\
-					if ( !ShouldUseNewAssertDialog() || DoNewAssertDialog( __TFILE__, __LINE__, _msg ) ) \
-					{														\
-						DebuggerBreak();									\
-					}														\
-					if ( _bFatal )											\
-					{														\
-						_ExitOnFatalAssert( __TFILE__, __LINE__ );			\
-					}														\
-				}															\
-			}																\
-		} while (0)
-
-	#define  _AssertMsgOnce( _exp, _msg, _bFatal ) \
-		do {																\
-			static bool fAsserted;											\
-			if (!fAsserted )												\
-			{ 																\
-				_AssertMsg( _exp, _msg, (fAsserted = true), _bFatal );		\
-			}																\
-		} while (0)
+	#define  _AssertMsg( _exp, _msg, _executeExp, _bFatal )
+	#define  _AssertMsgOnce( _exp, _msg, _bFatal )
 #endif
 
 /* Spew macros... */
@@ -534,52 +506,17 @@ DBG_INTERFACE void _AssertValidWritePtr( void* ptr, int count = 1 );
 DBG_INTERFACE void _AssertValidReadWritePtr( void* ptr, int count = 1 );
 DBG_INTERFACE void AssertValidStringPtr( const tchar* ptr, int maxchar = 0xFFFFFF );
 
-#ifdef DBGFLAG_ASSERT
-
-FORCEINLINE void AssertValidReadPtr( const void* ptr, int count = 1 )	    { _AssertValidReadPtr( (void*)ptr, count ); }
-FORCEINLINE void AssertValidWritePtr( const void* ptr, int count = 1 )		{ _AssertValidWritePtr( (void*)ptr, count ); }
-FORCEINLINE void AssertValidReadWritePtr( const void* ptr, int count = 1 )	{ _AssertValidReadWritePtr( (void*)ptr, count ); }
-
-#else
-
 FORCEINLINE void AssertValidReadPtr( const void* ptr, int count = 1 )			 { }
 FORCEINLINE void AssertValidWritePtr( const void* ptr, int count = 1 )		     { }
 FORCEINLINE void AssertValidReadWritePtr( const void* ptr, int count = 1 )	     { }
 #define AssertValidStringPtr AssertValidReadPtr
-
-#endif
 
 #define AssertValidThis() AssertValidReadWritePtr(this,sizeof(*this))
 
 //-----------------------------------------------------------------------------
 // Macro to protect functions that are not reentrant
 
-#ifdef _DEBUG
-class CReentryGuard
-{
-public:
-	CReentryGuard(int *pSemaphore)
-	 : m_pSemaphore(pSemaphore)
-	{
-		++(*m_pSemaphore);
-	}
-	
-	~CReentryGuard()
-	{
-		--(*m_pSemaphore);
-	}
-	
-private:
-	int *m_pSemaphore;
-};
-
-#define ASSERT_NO_REENTRY() \
-	static int fSemaphore##__LINE__; \
-	Assert( !fSemaphore##__LINE__ ); \
-	CReentryGuard ReentryGuard##__LINE__( &fSemaphore##__LINE__ )
-#else
 #define ASSERT_NO_REENTRY()
-#endif
 
 //-----------------------------------------------------------------------------
 //
@@ -628,117 +565,6 @@ private:
 // Purpose: Wrap around a variable to create a simple place to put a breakpoint
 //
 
-#ifdef _DEBUG
-
-template< class Type >
-class CDataWatcher
-{
-public:
-	const Type& operator=( const Type &val ) 
-	{ 
-		return Set( val ); 
-	}
-	
-	const Type& operator=( const CDataWatcher<Type> &val ) 
-	{ 
-		return Set( val.m_Value ); 
-	}
-	
-	const Type& Set( const Type &val )
-	{
-		// Put your breakpoint here
-		m_Value = val;
-		return m_Value;
-	}
-	
-	Type& GetForModify()
-	{
-		return m_Value;
-	}
-	
-	const Type& operator+=( const Type &val ) 
-	{
-		return Set( m_Value + val ); 
-	}
-	
-	const Type& operator-=( const Type &val ) 
-	{
-		return Set( m_Value - val ); 
-	}
-	
-	const Type& operator/=( const Type &val ) 
-	{
-		return Set( m_Value / val ); 
-	}
-	
-	const Type& operator*=( const Type &val ) 
-	{
-		return Set( m_Value * val ); 
-	}
-	
-	const Type& operator^=( const Type &val ) 
-	{
-		return Set( m_Value ^ val ); 
-	}
-	
-	const Type& operator|=( const Type &val ) 
-	{
-		return Set( m_Value | val ); 
-	}
-	
-	const Type& operator++()
-	{
-		return (*this += 1);
-	}
-	
-	Type operator--()
-	{
-		return (*this -= 1);
-	}
-	
-	Type operator++( int ) // postfix version..
-	{
-		Type val = m_Value;
-		(*this += 1);
-		return val;
-	}
-	
-	Type operator--( int ) // postfix version..
-	{
-		Type val = m_Value;
-		(*this -= 1);
-		return val;
-	}
-	
-	// For some reason the compiler only generates type conversion warnings for this operator when used like 
-	// CNetworkVarBase<unsigned tchar> = 0x1
-	// (it warns about converting from an int to an unsigned char).
-	template< class C >
-	const Type& operator&=( C val ) 
-	{ 
-		return Set( m_Value & val ); 
-	}
-	
-	operator const Type&() const 
-	{
-		return m_Value; 
-	}
-	
-	const Type& Get() const 
-	{
-		return m_Value; 
-	}
-	
-	const Type* operator->() const 
-	{
-		return &m_Value; 
-	}
-	
-	Type m_Value;
-	
-};
-
-#else
 
 template< class Type >
 class CDataWatcher
@@ -746,8 +572,6 @@ class CDataWatcher
 private:
 	CDataWatcher(); // refuse to compile in non-debug builds
 };
-
-#endif
 
 //-----------------------------------------------------------------------------
 
