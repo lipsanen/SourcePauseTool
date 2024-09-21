@@ -222,11 +222,12 @@ void Cvar_RegisterSPTCvars()
 	{
 		auto next = cmd->GetNext();
 		if (strlen(cmd->GetName()) > 0) {
-			Msg("registering %s\n", cmd->GetName());
+#ifdef OE
 			cmd->AddFlags(FCVAR_PLUGIN);
-			// Unlink from plugin only list
+			// Unlink from plugin list
 			// Necessary because RegisterConCommandBase skips the command if it's next isn't null
 			cmd->SetNext(NULL);
+#endif
 			g_pCVar->RegisterConCommand(cmd);
 		}
 		cmd = next;
