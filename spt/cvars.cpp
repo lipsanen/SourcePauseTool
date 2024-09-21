@@ -206,14 +206,14 @@ void Cvar_RegisterSPTCvars()
 		}
 		else
 		{
+#ifdef OE
+			if (cmd->IsFlagSet(FCVAR_HIDDEN))
+				spt_cvarstuff.hidden_cvars.push_back(cmd);
+#endif
 			cmd = (ConCommandBase*)cmd->GetNext();
 		}
 
 		HandleBackwardsCompatibility(*inittedCmd, cmdName);
-#ifdef OE
-		if (cmd->IsBitSet(FCVAR_HIDDEN))
-			spt_cvarstuff.hidden_cvars.push_back(cmd);
-#endif
 	}
 
 	cmd = ConCommandBase::s_pConCommandBases;
@@ -221,10 +221,87 @@ void Cvar_RegisterSPTCvars()
 	while (cmd != NULL)
 	{
 		auto next = cmd->GetNext();
-		g_pCVar->RegisterConCommand(cmd);
+		if (strlen(cmd->GetName()) > 0) {
+			Msg("registering %s\n", cmd->GetName());
+			cmd->AddFlags(FCVAR_PLUGIN);
+			// Unlink from plugin only list
+			// Necessary because RegisterConCommandBase skips the command if it's next isn't null
+			cmd->SetNext(NULL);
+			g_pCVar->RegisterConCommand(cmd);
+		}
 		cmd = next;
 	}
 }
+
+static ConCommandBase** GetGlobalCommandListHead()
+{
+	// According to the SDK, ICvar::GetCommands is position 9 on the vtable
+	void** icvarVtable = *(void***)g_pCVar;
+	uint8_t* addr = (uint8_t*)icvarVtable[9];
+	// Follow along thunked function
+	if (*addr == X86_JMPIW)
+	{
+		uint32_t offset = *(uint32_t*)(addr + 1);
+		addr += x86_len(addr) + offset;
+	}
+	// Check if it's the right instruction
+	if (*addr == X86_MOVEAXII)
+		return *(ConCommandBase***)(addr + 1);
+	return NULL;
+}
+
+static void RemoveCommandFromList(ConCommandBase** head, ConCommandBase* command)
+{
+	if (head == NULL)
+		return;
+
+	ConCommandBase* pPrev = NULL;
+	for (ConCommandBase* pCommand = *head; pCommand;
+		pCommand = pCommand->m_pNext)
+	{
+		if (pCommand != command)
+		{
+			pPrev = pCommand;
+			continue;
+		}
+
+		if (pPrev == NULL)
+			*head = pCommand->m_pNext;
+		else
+			pPrev->m_pNext = pCommand->m_pNext;
+
+		pCommand->m_pNext = NULL;
+		break;
+	}
+}
+
+static void UnregisterConCommand(ConCommandBase* pCommandToRemove)
+{
+#ifdef OE
+	static bool searchedForList = false;
+	static ConCommandBase** globalCommandListHead = nullptr;
+
+	// Look for the global command list head once
+	if (!searchedForList)
+	{
+		globalCommandListHead = GetGlobalCommandListHead();
+		searchedForList = true;
+	}
+
+	if (!globalCommandListHead)
+		return;
+
+	// Not registered? Don't bother
+	if (!pCommandToRemove->IsRegistered())
+		return;
+
+	reinterpret_cast<ConCommandBase*>(pCommandToRemove)->m_bRegistered = false;
+	RemoveCommandFromList(globalCommandListHead, pCommandToRemove);
+#else
+	g_pCVar->UnregisterConCommand(pCommandToRemove);
+#endif
+}
+
 
 void Cvar_UnregisterSPTCvars()
 {
@@ -233,7 +310,7 @@ void Cvar_UnregisterSPTCvars()
 
 	for (auto& cmd : cmd_to_feature)
 	{
-		g_pCVar->UnregisterConCommand(cmd.command);
+		UnregisterConCommand(cmd.command);
 		if (cmd.dynamicCommand)
 		{
 			if (cmd.dynamicName)

@@ -1,8 +1,5 @@
 #ifdef SSDK2007
 
-//#define STATIC_TIER0
-//#define TIER0_DLL_EXPORT
-
 #include <algorithm>
 #include <cctype>
 #include <limits.h>

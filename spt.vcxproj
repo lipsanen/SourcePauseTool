@@ -448,7 +448,7 @@ del "$(OutDir)spt-version.obj"</Command>
     </PreBuildEvent>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1_new\include\common;SDK\episode1_new\include\public;SDK\episode1_new\include\public\tier0;SDK\episode1_new\include\public\tier1;SDK\episode1_new\include\game\server;SDK\episode1_new\include\game\client;SDK\episode1_new\include\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OE;WIN32;_WIN32;_DEBUG;DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions);TARGET_NAME="$(TargetName).dll"</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -855,7 +855,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1\common;SDK\episode1\public;SDK\episode1\public\tier0;SDK\episode1\public\tier1;SDK\episode1\game\server;SDK\episode1\game\client;SDK\episode1\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>spt\utils;thirdparty\curl\include;.;SDK\episode1_new\include\common;SDK\episode1_new\include\public;SDK\episode1_new\include\public\tier0;SDK\episode1_new\include\public\tier1;SDK\episode1_new\include\game\server;SDK\episode1_new\include\game\client;SDK\episode1_new\include\game\shared;SPTLib\Windows\minhook\include;SPTLib\Windows\Minhook\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>OE;WIN32;_WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;sptONLY;_MBCS;%(PreprocessorDefinitions);TARGET_NAME="$(TargetName).dll"</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>

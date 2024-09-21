@@ -92,7 +92,7 @@ extern ConVar tas_reset_surface_friction;
 // useful helper func
 inline bool FStrEq(const char* sz1, const char* sz2)
 {
-	return (Q_stricmp(sz1, sz2) == 0);
+	return (stricmp(sz1, sz2) == 0);
 }
 
 void CallServerCommand(const char* cmd)
