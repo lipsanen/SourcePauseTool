@@ -1,19 +1,3 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-//=============================================================================
-
-#define __STDC_LIMIT_MACROS
-#include <stdint.h>
-
-#include "tier1/utlstring.h"
-#include "tier1/strtools.h"
-#include <ctype.h>
-
-// NOTE: This has to be the last file included!
-#include "tier0/memdbgon.h"
-
 //-----------------------------------------------------------------------------
 // Simple string class. 
 //-----------------------------------------------------------------------------

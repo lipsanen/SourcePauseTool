@@ -1,37 +1,3 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//=============================================================================//
-
-#if defined( _WIN32 ) && !defined( _X360 )
-#include <windows.h>		// for WideCharToMultiByte and MultiByteToWideChar
-#elif defined(POSIX)
-#include <wchar.h> // wcslen()
-#define _alloca alloca
-#define _wtoi(arg) wcstol(arg, NULL, 10)
-#define _wtoi64(arg) wcstoll(arg, NULL, 10)
-#endif
-
-#include <KeyValues.h>
-#include "filesystem.h"
-#include <vstdlib/IKeyValuesSystem.h>
-
-#include <Color.h>
-#include <stdlib.h>
-#include "tier0/dbg.h"
-#include "tier0/mem.h"
-#include "utlvector.h"
-#include "utlbuffer.h"
-#include "utlhash.h"
-#include "UtlSortVector.h"
-#include "convar.h"
-
-// memdbgon must be the last include file in a .cpp file!!!
-#include <tier0/memdbgon.h>
-
 template<typename T>
 T *KVStringAlloc(size_t nLength)
 {

@@ -1,36 +1,3 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//===========================================================================//
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "basetypes.h"
-#include "tier1/convar.h"
-#include "tier1/strtools.h"
-#include "tier1/characterset.h"
-#include "tier1/utlbuffer.h"
-#include "tier1/tier1.h"
-#include "tier1/convar_serverbounded.h"
-#include "icvar.h"
-#include "tier0/dbg.h"
-#include "Color.h"
-#if defined( _X360 )
-#include "xbox/xbox_console.h"
-#endif
-#include "tier0/memdbgon.h"
-
-#ifndef NDEBUG
-// Comment this out when we release.
-#define ALLOW_DEVELOPMENT_CVARS
-#endif
-
-
-
 //-----------------------------------------------------------------------------
 // Statically constructed list of ConCommandBases, 
 // used for registering them with the ICVar interface

@@ -1,15 +1,3 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//=============================================================================//
-
-#include <limits.h>
-#include "tier0/dbg.h"
-#include "tier1/strtools.h"
-
 // This code was copied from steam
 #define DbgAssert Assert
 
@@ -570,3 +558,4 @@ int Q_UnicodeRepair( uchar32 *pUTF32, EStringConvertErrorPolicy ePolicy )
 	return Q_UnicodeConvertT< uchar32, uchar32, true, Q_UTF32ToUChar32, Q_UChar32ToUTF32Len, Q_UChar32ToUTF32 >( pUTF32, 0, pUTF32, INT_MAX/sizeof(uchar32), ePolicy );
 }
 
+#undef DgbAssert

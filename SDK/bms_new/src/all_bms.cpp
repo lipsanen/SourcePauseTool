@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 #define NOMINMAX
+#include <direct.h>
 #include <windows.h>
 
 #include "basetypes.h"
@@ -26,11 +27,14 @@
 #include "tier1/convar_serverbounded.h"
 #include "tier1/interface.h"
 #include "tier1/strtools.h"
+#include "tier1/utlhash.h"
+#include "tier1/utlsortvector.h"
 #include "tier1/utlstring.h"
 #include "tier1/utlvector.h"
 #include "tier1/utlbuffer.h"
 #include <KeyValues.h>
 #include <vstdlib/IKeyValuesSystem.h>
+
 
 #include "characterset.cpp"
 #include "checksum_md5.cpp"
