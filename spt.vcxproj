@@ -255,7 +255,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -330,7 +330,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -406,7 +406,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -482,7 +482,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -561,7 +561,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -644,7 +644,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -728,7 +728,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -891,7 +891,7 @@ del "$(OutDir)spt-version.obj"</Command>
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib;vstdlib.lib</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;ws2_32.lib;Normaliz.lib;Wldap32.lib;Crypt32.lib;advapi32.lib;Dbghelp.lib;libcurl_a.lib</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
