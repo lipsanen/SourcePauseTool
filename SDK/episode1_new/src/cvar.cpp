@@ -50,6 +50,9 @@ ConCommandBase::ConCommandBase( const char *pName, const char *pHelpString /*=0*
 //-----------------------------------------------------------------------------
 ConCommandBase::~ConCommandBase( void )
 {
+	if (s_pConCommandBases == this) {
+		s_pConCommandBases = m_pNext;
+	}
 }
 
 //-----------------------------------------------------------------------------

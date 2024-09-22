@@ -145,6 +145,10 @@ static void HandleBackwardsCompatibility(FeatureCommand& featCmd, const char* cm
 	bool allocatedName;
 	const char* newName = WrangleLegacyCommandName(cmdName, false, &allocatedName);
 
+	if (newName == cmdName) {
+		return;
+	}
+
 	// New commands are added to the beginning of the linked list, so it's safe to do this
 	// while iterating through the list. s_pAccessor needs to be NULL here or else the
 	// constructor calls below will break the local command list
@@ -216,21 +220,21 @@ void Cvar_RegisterSPTCvars()
 		HandleBackwardsCompatibility(*inittedCmd, cmdName);
 	}
 
-	cmd = ConCommandBase::s_pConCommandBases;
-
-	while (cmd != NULL)
+	for (auto& featCmd : cmd_to_feature)
 	{
-		auto next = cmd->GetNext();
-		if (strlen(cmd->GetName()) > 0) {
+		auto regcmd = featCmd.command;
+		if (strlen(regcmd->GetName()) > 0) {
 #ifdef OE
-			cmd->AddFlags(FCVAR_PLUGIN);
+			regcmd->AddFlags(FCVAR_PLUGIN);
 			// Unlink from plugin list
 			// Necessary because RegisterConCommandBase skips the command if it's next isn't null
-			cmd->SetNext(NULL);
+			regcmd->SetNext(NULL);
 #endif
-			g_pCVar->RegisterConCommand(cmd);
+			g_pCVar->RegisterConCommand(regcmd);
+			if (regcmd->m_bRegistered) {
+				Msg("command %s was registered\n", regcmd->GetName());
+			}
 		}
-		cmd = next;
 	}
 }
 
@@ -281,6 +285,7 @@ static void UnregisterConCommand(ConCommandBase* pCommandToRemove)
 #ifdef OE
 	static bool searchedForList = false;
 	static ConCommandBase** globalCommandListHead = nullptr;
+	Msg("Unregistering %s\n", pCommandToRemove->GetName());
 
 	// Look for the global command list head once
 	if (!searchedForList)
@@ -292,11 +297,7 @@ static void UnregisterConCommand(ConCommandBase* pCommandToRemove)
 	if (!globalCommandListHead)
 		return;
 
-	// Not registered? Don't bother
-	if (!pCommandToRemove->IsRegistered())
-		return;
-
-	reinterpret_cast<ConCommandBase*>(pCommandToRemove)->m_bRegistered = false;
+	pCommandToRemove->m_bRegistered = false;
 	RemoveCommandFromList(globalCommandListHead, pCommandToRemove);
 #else
 	g_pCVar->UnregisterConCommand(pCommandToRemove);
@@ -309,6 +310,8 @@ void Cvar_UnregisterSPTCvars()
 	if (!g_pCVar)
 		return;
 
+	ConCommandBase::s_pConCommandBases = NULL;
+
 	for (auto& cmd : cmd_to_feature)
 	{
 		UnregisterConCommand(cmd.command);
@@ -318,6 +321,13 @@ void Cvar_UnregisterSPTCvars()
 				delete[] cmd.command->m_pszName;
 			delete cmd.command;
 		}
+		else
+		{
+			// Add back to plugin list
+			cmd.command->m_pNext = ConCommandBase::s_pConCommandBases;
+			ConCommandBase::s_pConCommandBases = cmd.command;
+		}
+
 		// Refer to comment in HandleBackwardsCompatibility
 		if (cmd.unhideOnUnregister)
 			cmd.command->m_nFlags &= ~FCVAR_HIDDEN;
