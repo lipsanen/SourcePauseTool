@@ -278,9 +278,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;BMS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;SSDK2007;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>bms_new/include/common;bms_new/include/game;bms_new/include/public;bms_new/include/public/tier0;bms_new/include/public/tier1;bms_new/include/game/server;bms_new/include/game/client;bms_new/include/game/shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>orangebox_new/include/common;orangebox_new/include/game;orangebox_new/include/public;orangebox_new/include/public/tier0;orangebox_new/include/public/tier1;orangebox_new/include/game/server;orangebox_new/include/game/client;orangebox_new/include/game/shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
