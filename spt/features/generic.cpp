@@ -292,7 +292,6 @@ void __fastcall GenericFeature::HOOKED_SetPaused(void* thisptr, int edx, bool pa
 
 void __fastcall GenericFeature::HOOKED_ControllerMove(void* thisptr, int edx, float frametime, void* cmd)
 {
-	spt_playerio.Set_cinput_thisptr(thisptr);
 	spt_generic.ORIG_ControllerMove(thisptr, edx, frametime, cmd);
 
 	if (!spt_playerio.pCmd)

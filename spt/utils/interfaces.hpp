@@ -17,11 +17,13 @@
 #include "vphysics_interface.h"
 #include "engine\IStaticPropMgr.h"
 #include "SDK\shaderapi\IShaderDevice.h"
+#include "SDK\cinput.h"
 
 class IGameMovement;
 
 namespace interfaces
 {
+	extern CInput* cinput;
 	extern std::unique_ptr<EngineClientWrapper> engine;
 	extern IVEngineServer* engine_server;
 	extern IVEngineClient* engine_client;

@@ -49,7 +49,6 @@ public:
 	bool IsGroundEntitySet();
 	bool TryJump();
 	bool PlayerIOAddressesFound();
-	void Set_cinput_thisptr(void* thisptr);
 	void GetPlayerFields();
 	void OnTick();
 

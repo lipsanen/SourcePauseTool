@@ -16,6 +16,7 @@
 #include "spt\utils\convar.hpp"
 #include "..\strafe\strafestuff.hpp"
 #include "visualizations/imgui/imgui_interface.hpp"
+#include "thirdparty/x86.h"
 
 #ifdef SSDK2007
 #include "mathlib\vmatrix.h"
@@ -25,7 +26,6 @@
 #undef min
 
 PlayerIOFeature spt_playerio;
-static void* cinput_thisptr = nullptr;
 
 ConVar spt_hud_position("spt_hud_position",
                         "0",
@@ -126,7 +126,6 @@ bool PlayerIOFeature::ShouldLoadFeature()
 void PlayerIOFeature::UnloadFeature()
 {
 	fetchedPlayerFields = false;
-	cinput_thisptr = nullptr;
 }
 
 void PlayerIOFeature::PreHook()
@@ -173,7 +172,7 @@ Strafe::MovementVars PlayerIOFeature::GetMovementVars()
 {
 	auto vars = Strafe::MovementVars();
 
-	if (!playerioAddressesWereFound || cinput_thisptr == nullptr)
+	if (!playerioAddressesWereFound || interfaces::cinput == nullptr)
 	{
 		return vars;
 	}
@@ -285,13 +284,15 @@ void __fastcall PlayerIOFeature::HOOKED_CreateMove_Func(void* thisptr,
                                                         float input_sample_frametime,
                                                         bool active)
 {
-	auto m_pCommands = *reinterpret_cast<uintptr_t*>(reinterpret_cast<uintptr_t>(thisptr) + offM_pCommands);
-	pCmd = m_pCommands + sizeofCUserCmd * (sequence_number % 90);
+	pCmd = (uintptr_t)interfaces::cinput->GetUserCmd(sequence_number - 90);
+	if (pCmd == 0) {
+		pCmd = (uintptr_t)interfaces::cinput->GetUserCmd(0);
+	}
 
 	ORIG_CreateMove(thisptr, edx, sequence_number, input_sample_frametime, active);
-
-	CreateMoveSignal(pCmd);
-
+	if (pCmd) {
+		CreateMoveSignal(pCmd);
+	}
 	pCmd = 0;
 }
 
@@ -349,7 +350,7 @@ Strafe::PlayerData PlayerIOFeature::GetPlayerData()
 	const int IN_DUCK = 1 << 2;
 
 	data.Ducking = GetFlagsDucking();
-	data.DuckPressed = (ORIG_GetButtonBits(cinput_thisptr, 0, 0) & IN_DUCK);
+	data.DuckPressed = (ORIG_GetButtonBits(interfaces::cinput, 0, 0) & IN_DUCK);
 	data.UnduckedOrigin = m_vecAbsOrigin.GetValue();
 	data.Velocity = GetPlayerVelocity();
 	data.Basevelocity = Vector();
@@ -425,6 +426,7 @@ void PlayerIOFeature::GetPlayerFields()
 	fetchedPlayerFields = true;
 }
 
+
 bool PlayerIOFeature::IsGroundEntitySet()
 {
 	if (tas_strafe_version.GetInt() <= 4)
@@ -449,7 +451,7 @@ bool PlayerIOFeature::IsGroundEntitySet()
 bool PlayerIOFeature::TryJump()
 {
 	const int IN_JUMP = (1 << 1);
-	return ORIG_GetButtonBits(cinput_thisptr, 0, 0) & IN_JUMP;
+	return ORIG_GetButtonBits(interfaces::cinput, 0, 0) & IN_JUMP;
 }
 
 bool PlayerIOFeature::PlayerIOAddressesFound()
@@ -463,7 +465,7 @@ bool PlayerIOFeature::PlayerIOAddressesFound()
 	    m_vecAbsOrigin.Found() && m_flMaxspeed.Found() && m_fFlags.Found() && m_bDucking.Found()
 	    && m_flDuckJumpTime.Found() && m_hGroundEntity.Found() && ORIG_CreateMove && ORIG_GetButtonBits
 	    && _sv_airaccelerate && _sv_accelerate && _sv_friction && _sv_maxspeed && _sv_stopspeed
-	    && interfaces::engine_server != nullptr;
+	    && interfaces::engine_server != nullptr && interfaces::cinput != nullptr;
 }
 
 void PlayerIOFeature::GetMoveInput(float& forwardmove, float& sidemove)
@@ -514,11 +516,6 @@ void PlayerIOFeature::SetTASInput(float* va, const Strafe::ProcessedFrame& _out)
 double PlayerIOFeature::GetDuckJumpTime()
 {
 	return m_flDuckJumpTime.GetValue();
-}
-
-void PlayerIOFeature::Set_cinput_thisptr(void* thisptr)
-{
-	cinput_thisptr = thisptr;
 }
 
 void PlayerIOFeature::OnTick()

@@ -42,12 +42,14 @@
 #include "mathlib\vmatrix.h"
 #endif
 
+#include "thirdparty/x86.h"
 #include "SPTLib\sptlib.hpp"
 #include "tier0\memdbgoff.h" // YaLTeR - switch off the memory debugging.
 using namespace std::literals;
 
 namespace interfaces
 {
+	CInput* cinput = nullptr;
 	std::unique_ptr<EngineClientWrapper> engine;
 	IVEngineServer* engine_server = nullptr;
 	IVEngineClient* engine_client = nullptr;
@@ -273,6 +275,23 @@ static void GrabTier0Stuff()
 	}
 }
 
+static void* FindCInput(void* clientInterface)
+{
+	void* input = nullptr;
+	constexpr size_t vtidx = 22;
+	void* decodeusercmd =
+		(*(void***)clientInterface)[vtidx];
+	for (uchar* p = (uchar*)decodeusercmd; p - (uchar*)decodeusercmd < 32;) {
+		if (p[0] == X86_MOVRMW && p[1] == X86_MODRM(0, 1, 5)) {
+			void** indirect = *(void***)(p + 2);
+			input = *indirect;
+			break;
+		}
+		p += x86_len(p);
+	}
+	return input;
+}
+
 bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
 	auto startTime = std::chrono::high_resolution_clock::now();
@@ -337,6 +356,8 @@ bool CSourcePauseTool::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceF
 	interfaces::staticpropmgr =
 	    (IStaticPropMgrServer*)interfaceFactory(INTERFACEVERSION_STATICPROPMGR_SERVER, NULL);
 	interfaces::shaderDevice = (IShaderDevice*)interfaceFactory(SHADER_DEVICE_INTERFACE_VERSION, NULL);
+
+	interfaces::cinput = (CInput*)FindCInput(interfaces::clientInterface);
 
 	if (interfaces::gm)
 	{
