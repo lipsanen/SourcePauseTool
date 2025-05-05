@@ -32,6 +32,9 @@ A plugin for all your pausing needs.
     * You must `disconnect` first in Black Mesa.
     * Add `plugin_load spt` to `cfg/autoexec.cfg` to load SourcePauseTool automatically.
 
+### Instructions
+You can find other instructions on how to use SPT in [INSTRUCTIONS.md](INSTRUCTIONS.md)
+
 ### Building
 0. You will need [Visual Studio 2022](https://visualstudio.microsoft.com/free-developer-offers/) (or later) and [git](https://git-scm.com).
 1. Open Visual Studio 2022. Click on Tools → Get Tools and Features... from the top bar of the window.
