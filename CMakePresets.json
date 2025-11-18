@@ -1,0 +1,94 @@
+{
+	"version": 6,
+	"cmakeMinimumRequired": {
+		"major": 4,
+		"minor": 0
+	},
+	"configurePresets": [
+		{
+			"name": "base-x86",
+			"hidden": true,
+			"generator": "Visual Studio 17 2022",
+			"architecture": "Win32",
+			"toolset": "v143",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"cacheVariables": {
+				"CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+				"SPT_BUILD_ORANGE_BOX": "OFF",
+				"SPT_BUILD_2013": "OFF",
+				"SPT_BUILD_BMS": "OFF",
+				"SPT_BUILD_OE": "OFF"
+			}
+		},
+		{
+			"name": "ORANGE_BOX",
+			"inherits": "base-x86",
+			"cacheVariables": {
+				"SPT_BUILD_ORANGE_BOX": "ON"
+			}
+		},
+		{
+			"name": "2013",
+			"inherits": "base-x86",
+			"cacheVariables": {
+				"SPT_BUILD_2013": "ON"
+			}
+		},
+		{
+			"name": "BMS",
+			"inherits": "base-x86",
+			"cacheVariables": {
+				"SPT_BUILD_BMS": "ON"
+			}
+		},
+		{
+			"name": "OE",
+			"inherits": "base-x86",
+			"cacheVariables": {
+				"SPT_BUILD_OE": "ON"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "Debug",
+			"configurePreset": "ORANGE_BOX",
+			"configuration": "Debug"
+		},
+		{
+			"name": "Debug 2013",
+			"configurePreset": "2013",
+			"configuration": "Debug"
+		},
+		{
+			"name": "Debug BMS",
+			"configurePreset": "BMS",
+			"configuration": "Debug"
+		},
+		{
+			"name": "Debug OE",
+			"configurePreset": "OE",
+			"configuration": "Debug"
+		},
+		{
+			"name": "Release",
+			"configurePreset": "ORANGE_BOX",
+			"configuration": "Release"
+		},
+		{
+			"name": "Release 2013",
+			"configurePreset": "2013",
+			"configuration": "Release"
+		},
+		{
+			"name": "Release BMS",
+			"configurePreset": "BMS",
+			"configuration": "Release"
+		},
+		{
+			"name": "Release OE",
+			"configurePreset": "OE",
+			"configuration": "Release"
+		}
+	]
+}
